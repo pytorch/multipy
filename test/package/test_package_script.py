@@ -775,7 +775,7 @@ class TestPackageScript(PackageTestCase):
         original_tensor = torch.ones(0)
 
         f = BytesIO()
-        with torch.package.PackageExporter(f) as exporter:
+        with package.PackageExporter(f) as exporter:
             exporter.save_pickle("model", "model.pkl", scripted_m)
             exporter.save_pickle("model", "input.pkl", original_tensor)
 
