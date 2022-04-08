@@ -263,7 +263,7 @@ class PackageImporter(Importer):
 
     def id(self):
         """
-        Returns internal identifier that torch.package uses to distinguish :class:`PackageImporter` instances.
+        Returns internal identifier that package uses to distinguish :class:`PackageImporter` instances.
         Looks like::
 
             <torch_package_0>

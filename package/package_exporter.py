@@ -74,7 +74,7 @@ class PackagingErrorReason(Enum):
         return "<%s.%s>" % (self.__class__.__name__, self.name)
 
     IS_EXTENSION_MODULE = (
-        "Module is a C extension module. torch.package supports Python modules only."
+        "Module is a C extension module. package supports Python modules only."
     )
     NO_DUNDER_FILE = "Module had no __file__ defined."
     SOURCE_FILE_NOT_FOUND = (
@@ -583,7 +583,7 @@ class PackageExporter:
 
         assert (pickle_protocol == 4) or (
             pickle_protocol == 3
-        ), "torch.package only supports pickle protocols 3 and 4"
+        ), "package only supports pickle protocols 3 and 4"
 
         filename = self._filename(package, resource)
         # Write the pickle data for `obj`
@@ -912,7 +912,7 @@ class PackageExporter:
                 raise Exception(
                     "Serializing ScriptModules directly into a package is a beta feature. "
                     "To use, set global "
-                    "`torch.package.package_exporter._gate_torchscript_serialization` to `False`."
+                    "`package.package_exporter._gate_torchscript_serialization` to `False`."
                 )
             if self.serialized_reduces.get(id(obj)) is None:
                 self.serialized_reduces[id(obj)] = (
@@ -949,8 +949,8 @@ class PackageExporter:
 
         if is_mangled(filename):
             raise AssertionError(
-                f"Tried to save a torch.package'd module as '{filename}'. "
-                "Directly saving torch.package'd modules is not allowed."
+                f"Tried to save a package'd module as '{filename}'. "
+                "Directly saving package'd modules is not allowed."
             )
         if isinstance(str_or_bytes, str):
             str_or_bytes = str_or_bytes.encode("utf-8")

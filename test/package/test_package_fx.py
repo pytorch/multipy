@@ -4,7 +4,7 @@ from io import BytesIO
 
 import torch
 from torch.fx import Graph, GraphModule, symbolic_trace
-from torch.package import (
+from package import (
     ObjMismatchError,
     PackageExporter,
     PackageImporter,

@@ -8,8 +8,8 @@ from pathlib import Path
 from textwrap import dedent
 from unittest import skipIf
 
-from torch.package import PackageExporter, PackageImporter, is_from_package
-from torch.package.package_exporter import PackagingError
+from package import PackageExporter, PackageImporter, is_from_package
+from package.package_exporter import PackagingError
 from torch.testing._internal.common_utils import IS_FBCODE, IS_SANDCASTLE, run_tests
 
 try:

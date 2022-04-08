@@ -2,11 +2,11 @@ from pathlib import Path
 
 import torch
 from torch.fx import symbolic_trace
-from torch.package import PackageExporter
+from package import PackageExporter
 from torch.testing._internal.common_utils import IS_FBCODE, IS_SANDCASTLE
 
 packaging_directory = f"{Path(__file__).parent}/package_bc"
-torch.package.package_exporter._gate_torchscript_serialization = False
+package.package_exporter._gate_torchscript_serialization = False
 
 
 def generate_bc_packages():

@@ -1,6 +1,6 @@
 # Owner(s): ["oncall: package/deploy"]
 
-from torch.package._digraph import DiGraph
+from package._digraph import DiGraph
 from torch.testing._internal.common_utils import run_tests
 
 try:

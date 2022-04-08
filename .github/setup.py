@@ -59,7 +59,7 @@ if __name__ == "__main__":
         author="MultiPy Devs",
         # TODO: @sahanp create email for MultiPy
         author_email="sahanp@fb.com",
-        description="torch.package + torch::deploy",
+        description="package + torch::deploy",
         long_description=readme,
         long_description_content_type="text/markdown",
         url="https://github.com/pytorch/torchx",
