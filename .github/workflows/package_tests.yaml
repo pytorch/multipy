@@ -31,4 +31,4 @@ jobs:
           pip install coverage codecov
           pip install -r requirements.txt
       - name: Run tests
-        run: coverage run -m unittest discover --verbose --start-directory . --pattern "test/package/test_glob_group.py"
+        run: coverage run -m unittest discover --verbose --start-directory . --pattern "test_*.py"
