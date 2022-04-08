@@ -74,7 +74,7 @@ if __name__ == "__main__":
             "console_scripts": [
                 "torchx=torchx.cli.main:main",
             ],
-        },,
+        },
         # PyPI package information.
         classifiers=[
             "Development Status :: 4 - Beta",
