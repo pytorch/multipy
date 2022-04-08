@@ -30,6 +30,5 @@ jobs:
           set -eux
           pip install coverage codecov
           pip install -r requirements.txt
-          pip install -e .[dev]
       - name: Run tests
         run: coverage run -m unittest discover --verbose --start-directory . --pattern "test/package/test_*.py"
