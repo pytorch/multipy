@@ -6,8 +6,8 @@ from sys import version_info
 from textwrap import dedent
 from unittest import skipIf
 
-from torch.package import EmptyMatchError, Importer, PackageExporter, PackageImporter
-from torch.package.package_exporter import PackagingError
+from package import EmptyMatchError, Importer, PackageExporter, PackageImporter
+from package_exporter import PackagingError
 from torch.testing._internal.common_utils import IS_WINDOWS, run_tests
 
 try:
@@ -289,7 +289,7 @@ class TestDependencyAPI(PackageTestCase):
             str(e.exception),
             dedent(
                 """
-                * Module is a C extension module. torch.package supports Python modules only.
+                * Module is a C extension module. package supports Python modules only.
                     foo
                     bar
                 """

@@ -3,7 +3,7 @@
 from io import BytesIO
 
 import torch
-from torch.package import (
+from package import (
     Importer,
     OrderedImporter,
     PackageExporter,

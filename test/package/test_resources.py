@@ -6,7 +6,7 @@ from sys import version_info
 from textwrap import dedent
 from unittest import skipIf
 
-from torch.package import PackageExporter, PackageImporter
+from package import PackageExporter, PackageImporter
 from torch.testing._internal.common_utils import run_tests
 
 try:

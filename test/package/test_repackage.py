@@ -2,7 +2,7 @@
 
 from io import BytesIO
 
-from torch.package import (
+from package import (
     PackageExporter,
     PackageImporter,
     sys_importer,
