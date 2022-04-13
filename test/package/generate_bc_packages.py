@@ -1,8 +1,8 @@
 from pathlib import Path
 
 import torch
-from torch.fx import symbolic_trace
 from package import PackageExporter
+from torch.fx import symbolic_trace
 from torch.testing._internal.common_utils import IS_FBCODE, IS_SANDCASTLE
 
 packaging_directory = f"{Path(__file__).parent}/package_bc"

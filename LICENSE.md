@@ -1,4 +1,3 @@
-
 BSD License
 
 For MultiPy software
