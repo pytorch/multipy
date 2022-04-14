@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import package
 import torch
 from package import PackageExporter
 from torch.fx import symbolic_trace
