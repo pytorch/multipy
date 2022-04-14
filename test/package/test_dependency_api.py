@@ -261,6 +261,9 @@ class TestDependencyAPI(PackageTestCase):
                 * Module did not match against any action pattern. Extern, mock, or intern it.
                     package_a
                     package_a.subpackage
+                We offer tools to help you figure out why modules were included as a dependency
+                to help you figure out if they are actually needed here:
+                https://pytorch.org/docs/stable/package.html#see-why-a-given-module-was-included-as-a-dependency.
                 """
             ),
         )
@@ -308,6 +311,9 @@ class TestDependencyAPI(PackageTestCase):
                 * Module is a C extension module. package supports Python modules only.
                     foo
                     bar
+                We offer tools to help you figure out why modules were included as a dependency
+                to help you figure out if they are actually needed here:
+                https://pytorch.org/docs/stable/package.html#see-why-a-given-module-was-included-as-a-dependency.
                 """
             ),
         )
@@ -327,6 +333,9 @@ class TestDependencyAPI(PackageTestCase):
                 * Dependency resolution failed.
                     foo
                       Context: attempted relative import beyond top-level package
+                We offer tools to help you figure out why modules were included as a dependency
+                to help you figure out if they are actually needed here:
+                https://pytorch.org/docs/stable/package.html#see-why-a-given-module-was-included-as-a-dependency.
                 """
             ),
         )
