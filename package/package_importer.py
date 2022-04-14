@@ -13,7 +13,7 @@ from weakref import WeakValueDictionary
 import torch
 from torch.serialization import _get_restore_location, _maybe_decode_ascii
 
-from ._directory_reader import DirectoryReader
+from ._directory_reader_torchscript import TorchScriptDirectoryReader as DirectoryReader
 from ._importlib import (
     _calc___package__,
     _normalize_line_endings,
