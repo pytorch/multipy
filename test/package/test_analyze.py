@@ -15,6 +15,7 @@ class TestAnalyze(PackageTestCase):
     """Dependency analysis API tests."""
 
     def test_trace_dependencies(self):
+
         import test_trace_dep
 
         obj = test_trace_dep.SumMod()
