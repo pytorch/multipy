@@ -9,7 +9,7 @@ from textwrap import dedent
 from unittest import skipIf
 
 from package import PackageExporter, PackageImporter, is_from_package
-from package.package_exporter import PackagingError
+from package.package_exporter_no_torch import PackagingError
 from torch.testing._internal.common_utils import IS_FBCODE, IS_SANDCASTLE, run_tests
 
 try:
