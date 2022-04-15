@@ -10,4 +10,5 @@ from .importer import (  # noqa
 )
 from .package_exporter import PackageExporter  # noqa
 from .package_exporter_no_torch import EmptyMatchError, PackagingError  # noqa
+from .package_exporter import EmptyMatchError, PackageExporter, PackagingError  # noqa
 from .package_importer import PackageImporter  # noqa
