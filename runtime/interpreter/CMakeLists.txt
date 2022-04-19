@@ -1,32 +1,11 @@
 SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" )
 SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" PARENT_SCOPE)
+find_package(fmt REQUIRED)
+find_package(pybind11 REQUIRED)
+find_package(Torch REQUIRED)
 
 SET(PYTORCH_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../pytorch/torch")
 SET(MULTIPY_UTILS "${CMAKE_CURRENT_SOURCE_DIR}/../../utils/")
-
-  set(GENERATED_CXX_PYTHON
-    "${PYTORCH_ROOT}/csrc/autograd/generated/python_functions_0.cpp"
-    "${PYTORCH_ROOT}/csrc/autograd/generated/python_functions_1.cpp"
-    "${PYTORCH_ROOT}/csrc/autograd/generated/python_functions_2.cpp"
-    "${PYTORCH_ROOT}/csrc/autograd/generated/python_functions_3.cpp"
-    "${PYTORCH_ROOT}/csrc/autograd/generated/python_functions_4.cpp"
-    "${PYTORCH_ROOT}/csrc/autograd/generated/python_variable_methods.cpp"
-    "${PYTORCH_ROOT}/csrc/autograd/generated/python_torch_functions_0.cpp"
-    "${PYTORCH_ROOT}/csrc/autograd/generated/python_torch_functions_1.cpp"
-    "${PYTORCH_ROOT}/csrc/autograd/generated/python_torch_functions_2.cpp"
-    "${PYTORCH_ROOT}/csrc/autograd/generated/python_nn_functions.cpp"
-    "${PYTORCH_ROOT}/csrc/autograd/generated/python_fft_functions.cpp"
-    "${PYTORCH_ROOT}/csrc/autograd/generated/python_linalg_functions.cpp"
-    "${PYTORCH_ROOT}/csrc/autograd/generated/python_sparse_functions.cpp"
-    "${PYTORCH_ROOT}/csrc/autograd/generated/python_special_functions.cpp"
-    "${PYTORCH_ROOT}/csrc/autograd/generated/python_return_types.cpp"
-    )
-
-set(TORCH_PYTHON_SRCS
-    ${GENERATED_THNN_CXX}
-    ${GENERATED_CXX_PYTHON}
-    )
-add_library(torch_python_obj OBJECT ${TORCH_PYTHON_SRCS})
 
 # Build cpython
 SET(PYTHON_INSTALL_DIR "${INTERPRETER_DIR}/cpython")
@@ -54,7 +33,7 @@ ExternalProject_Add(
 # the modules in a strange nested path, and then that path is relative to the
 # Cmake ExternalProject root in the cmake build dir.
 ExternalProject_Get_property(cpython SOURCE_DIR)
-SET(PYTHON_MODULE_DIR "${SOURCE_DIR}/build/temp.linux-x86_64-3.8/${SOURCE_DIR}/Modules")
+SET(PYTHON_MODULE_DIR "${SOURCE_DIR}/build/temp.linux-x86_64-3.8/data/users/sahanp/multipy/runtime/build/interpreter/cpython/src/cpython/Modules")
 SET(PYTHON_STDLIB_DIR "${SOURCE_DIR}/Lib")
 SET(PYTHON_STDLIB "${PYTHON_INSTALL_DIR}/lib/libpython_stdlib3.8.a")
 # Then we use a hardcoded list of expected module names and include them in our lib
@@ -134,4 +113,4 @@ target_include_directories(torch_deployinterpreter BEFORE PUBLIC ${PYTHON_INC_DI
 target_link_libraries(torch_deployinterpreter PRIVATE ${PYTHON_LIB} ${PYTHON_STDLIB} torch_python_static)
 target_link_libraries(torch_deployinterpreter PRIVATE fmt::fmt-header-only)
 target_link_libraries(torch_deployinterpreter PRIVATE ${PYTHON_INSTALL_DIR}/lib/libssl.a ${PYTHON_INSTALL_DIR}/lib/libcrypto.a)
-target_link_libraries(torch_deployinterpreter PRIVATE pybind::pybind11)
+target_link_libraries(torch_deployinterpreter PRIVATE pybind11)

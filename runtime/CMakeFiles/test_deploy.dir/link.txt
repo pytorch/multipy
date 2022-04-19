@@ -1,1 +1,0 @@
-/usr/bin/clang++ CMakeFiles/test_deploy.dir/test_deploy.cpp.o -o test_deploy  -Wl,--no-as-needed -rdynamic -lgtest -ldl libtorch_deploy.a -lcrypt -lpthread -ldl -lutil -lm -lz -lffi -llzma -lreadline -lnsl -lncursesw -lpanelw -lshm -ltorch 

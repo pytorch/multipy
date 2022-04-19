@@ -1,9 +1,14 @@
-cmake_minimum_required(VERSION 3.10)
-project(torch_deploy VERSION 1.0)
+cmake_minimum_required(VERSION 3.19)
 set(DEPLOY_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+add_subdirectory(third-party/fmt)
+add_subdirectory(third-party/pybind11)
 add_subdirectory(interpreter)
 find_package(fmt REQUIRED)
-
+find_package(pybind11 REQUIRED)
+find_package(Torch REQUIRED)
+if(COMMAND cmake_policy)
+  cmake_policy(SET CMP0003 NEW)
+endif(COMMAND cmake_policy)
 include_directories(${PYTORCH_FMT_INCLUDE_PATH})
 
 # we do not want to have torch_deployinterpreter linked against libstdc++ or libc because
@@ -58,7 +63,7 @@ target_link_libraries(test_deploy_gpu
 add_library(test_deploy_lib SHARED test_deploy_lib.cpp)
 add_dependencies(test_deploy_lib cpython)
 target_include_directories(test_deploy_lib BEFORE PRIVATE ${PYTHON_INC_DIR})
-target_link_libraries(test_deploy_lib PRIVATE pybind::pybind11)
+target_link_libraries(test_deploy_lib PRIVATE pybind11)
 
 add_executable(deploy_benchmark ${DEPLOY_DIR}/example/benchmark.cpp)
 target_include_directories(deploy_benchmark PRIVATE ${PYTORCH_ROOT}/torch)

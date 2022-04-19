@@ -1,1 +1,0 @@
-cmd='PYTHON_INSTALL_DIR=/home/sahanp/local/multipy/runtime/interpreter/cpython;/home/sahanp/local/multipy/runtime/interpreter/configure_cpython.sh'
