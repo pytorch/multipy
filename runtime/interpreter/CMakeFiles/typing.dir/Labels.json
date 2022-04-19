@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/home/sahanp/local/multipy/runtime/interpreter/CMakeFiles/typing"
+		},
+		{
+			"file" : "/home/sahanp/local/multipy/runtime/interpreter/CMakeFiles/typing.rule"
+		},
+		{
+			"file" : "/home/sahanp/local/multipy/runtime/interpreter/CMakeFiles/typing-complete.rule"
+		},
+		{
+			"file" : "/home/sahanp/local/multipy/runtime/interpreter/typing/src/typing-stamp/typing-install.rule"
+		},
+		{
+			"file" : "/home/sahanp/local/multipy/runtime/interpreter/typing/src/typing-stamp/typing-mkdir.rule"
+		},
+		{
+			"file" : "/home/sahanp/local/multipy/runtime/interpreter/typing/src/typing-stamp/typing-download.rule"
+		},
+		{
+			"file" : "/home/sahanp/local/multipy/runtime/interpreter/typing/src/typing-stamp/typing-update.rule"
+		},
+		{
+			"file" : "/home/sahanp/local/multipy/runtime/interpreter/typing/src/typing-stamp/typing-patch.rule"
+		},
+		{
+			"file" : "/home/sahanp/local/multipy/runtime/interpreter/typing/src/typing-stamp/typing-configure.rule"
+		},
+		{
+			"file" : "/home/sahanp/local/multipy/runtime/interpreter/typing/src/typing-stamp/typing-build.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"typing"
+		],
+		"name" : "typing"
+	}
+}

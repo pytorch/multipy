@@ -1,0 +1,93 @@
+# @noautodeps
+
+load("@fbcode_macros//build_defs:cpp_binary.bzl", "cpp_binary")
+load("@fbcode_macros//build_defs:cpp_library.bzl", "cpp_library")
+load("//caffe2/torch/csrc/deploy/unity:unity.bzl", "build_unity")
+
+build_unity(
+    name = "example",
+    srcs = [
+        "example.py",
+    ],
+    main_module = "caffe2.torch.csrc.deploy.unity.example",
+    par_style = "xar",
+    deps = [
+        "fbsource//third-party/pypi/scipy:scipy",
+
+        # This dependency is added only to force a large xar file in the demo
+        # and make sure unity works in that case. Remove it if you want to make
+        # the demo builds faster and make the xar/binary smaller.
+        "//caffe2:torch",
+    ],
+)
+
+cpp_library(
+    name = "unity_core",
+    srcs = [
+        "xar_environment.cpp",
+    ],
+    headers = [
+        "xar_environment.h",
+    ],
+    linker_flags = [
+        "-rpath=/tmp/torch_deploy_python_app/python_app_root/",
+    ],
+    exported_deps = [
+        "fbsource//third-party/fmt:fmt",
+        "//caffe2:torch-cpp-cuda",
+        "//caffe2/torch/csrc/deploy:torch_deploy",
+        "//caffe2/torch/csrc/deploy/interpreter:embedded_interpreter_all",
+    ],
+)
+
+cpp_binary(
+    name = "unity_demo",
+    srcs = [
+        "main.cpp",
+    ],
+    deps = [
+        ":example_unity_lib",
+    ],
+)
+
+cpp_binary(
+    name = "inference_model_demo",
+    srcs = [
+        "main.cpp",
+    ],
+    deps = [
+        "//fblearner/predictor/tests:inference_model_unity_lib",
+    ],
+)
+
+build_unity(
+    name = "textray",
+    srcs = [
+        "fb/textray.py",
+    ],
+    main_module = "caffe2.torch.csrc.deploy.unity.fb.textray",
+    par_style = "xar",
+    deps = [
+        "//pytext/contrib/pytext_lib/models:models",
+    ],
+)
+
+cpp_binary(
+    name = "textray_demo",
+    srcs = [
+        "main.cpp",
+    ],
+    deps = [
+        ":textray_unity_lib",
+    ],
+)
+
+cpp_binary(
+    name = "textray_unity_demo",
+    srcs = [
+        "main.cpp",
+    ],
+    deps = [
+        "//language_technology/pytext_service:textray_v20211208_unity_lib",
+    ],
+)

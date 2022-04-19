@@ -1,0 +1,50 @@
+# @noautodeps
+
+load("@fbcode_macros//build_defs:cpp_unittest.bzl", "cpp_unittest")
+load("//caffe2/torch/csrc/deploy/unity:unity.bzl", "build_unity")
+
+build_unity(
+    name = "sum",
+    srcs = [
+        "sum.py",
+    ],
+    base_module = "",
+    main_module = "sum",
+    par_style = "xar",
+)
+
+build_unity(
+    name = "simple_model",
+    srcs = [
+        "simple_model.py",
+    ],
+    base_module = "",
+    main_module = "simple_model",
+    par_style = "xar",
+)
+
+cpp_unittest(
+    name = "test_unity_sum",
+    srcs = [
+        "test_unity_sum.cpp",
+    ],
+    headers = [
+        "test_unity.h",
+    ],
+    deps = [
+        ":sum_unity_lib",
+    ],
+)
+
+cpp_unittest(
+    name = "test_unity_simple_model",
+    srcs = [
+        "test_unity_simple_model.cpp",
+    ],
+    headers = [
+        "test_unity.h",
+    ],
+    deps = [
+        ":simple_model_unity_lib",
+    ],
+)

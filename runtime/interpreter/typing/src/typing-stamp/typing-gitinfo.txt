@@ -1,0 +1,3 @@
+repository='https://github.com/python/typing.git'
+module=''
+tag='origin'

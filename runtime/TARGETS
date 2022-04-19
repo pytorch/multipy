@@ -1,0 +1,361 @@
+load("@fbcode_macros//build_defs:cpp_binary.bzl", "cpp_binary")
+load("@fbcode_macros//build_defs:cpp_library.bzl", "cpp_library")
+load("@fbcode_macros//build_defs:cpp_python_extension.bzl", "cpp_python_extension")
+load("@fbcode_macros//build_defs:cpp_unittest.bzl", "cpp_unittest")
+load("@fbcode_macros//build_defs:custom_rule.bzl", "custom_rule")
+load("@fbcode_macros//build_defs:native_rules.bzl", "cxx_genrule")
+load("@fbcode_macros//build_defs:python_binary.bzl", "python_binary")
+
+# @lint-ignore-every BUCKLINT
+load("@fbsource//tools/build_defs:fb_native_wrapper.bzl", "fb_native")
+
+python_binary(
+    name = "generate_packages_script",
+    srcs = {
+        "//caffe2/torch/csrc/deploy/example:examples.py": "example/examples.py",
+        "//caffe2/torch/csrc/deploy/example:fx/examples.py": "example/fx/examples.py",
+        "//caffe2/torch/csrc/deploy/example:fx/some_dependency.py": "example/fx/some_dependency.py",
+        "//caffe2/torch/csrc/deploy/example:generate_examples.py": "example/generate_examples.py",
+        "//caffe2/torch/csrc/deploy/example:tensorrt_example.py": "example/tensorrt_example.py",
+    },
+    compile = False,
+    main_module = "caffe2.torch.csrc.deploy.example.generate_examples",
+    deps = [
+        "//caffe2:torch",
+        "//caffe2:torch_fx",
+        "//deeplearning/trt/python:py_tensorrt",
+        "//pytorch/vision:torchvision",
+    ],
+)
+
+# Generate .cpp files containing serialized torch python bytecode,
+# so 'import torch' doesn't read from files
+custom_rule(
+    name = "generate_packages",
+    build_script_dep = ":generate_packages_script",
+    output_gen_files = [
+        "simple",
+        "simple_jit",
+        "resnet",
+        "resnet_jit",
+        "multi_return",
+        "multi_return_jit",
+        "load_library",
+        "simple_leaf_fx",
+        "simple_leaf_jit",
+        "batched_model",
+        "uses_distributed",
+        "make_trt_module",
+    ],
+)
+
+cpp_binary(
+    name = "libtest_deploy_lib.so",
+    srcs = ["test_deploy_lib.cpp"],
+    dlopen_enabled = True,
+    external_deps = [
+        "pybind11",
+    ],
+)
+
+cpp_unittest(
+    # @autodeps-skip
+    name = "test_deploy",
+    srcs = [
+        "test_deploy.cpp",
+    ],
+    env = {
+        "LIBTEST_DEPLOY_LIB": "$(location :libtest_deploy_lib.so)",
+        "LOAD_LIBRARY": "$(location :generate_packages[load_library])",
+        "RESNET": "$(location :generate_packages[resnet])",
+        "RESNET_JIT": "$(location :generate_packages[resnet_jit])",
+        "SIMPLE": "$(location :generate_packages[simple])",
+        "SIMPLE_JIT": "$(location :generate_packages[simple_jit])",
+        "SIMPLE_LEAF_FX": "$(location :generate_packages[simple_leaf_fx])",
+        "SIMPLE_LEAF_JIT": "$(location :generate_packages[simple_leaf_jit])",
+        "USES_DISTRIBUTED": "$(location :generate_packages[uses_distributed])",
+    },
+    preprocessor_flags = [
+        "-DHAS_NUMPY=1",
+        "-DHAS_PYYAML=1",
+    ],
+    deps = [
+        ":torch_deploy",
+        "//caffe2:torch-cpp",
+        "//caffe2/torch/csrc/deploy/interpreter:embedded_interpreter",
+    ],
+)
+
+cpp_binary(
+    name = "remove_dt_needed",
+    srcs = ["remove_dt_needed.cpp"],
+    deps = [
+        "fbsource//third-party/fmt:fmt",
+        "//caffe2/c10:c10",
+    ],
+    external_deps = [
+        ("glibc", None, "rt"),
+    ],
+)
+
+cpp_unittest(
+    # @autodeps-skip
+    name = "test_deploy_deepbind",
+    srcs = [
+        "test_deploy.cpp",
+    ],
+    env = {
+        "LIBTEST_DEPLOY_LIB": "$(location :libtest_deploy_lib.so)",
+        "LOAD_LIBRARY": "$(location :generate_packages[load_library])",
+        "RESNET": "$(location :generate_packages[resnet])",
+        "RESNET_JIT": "$(location :generate_packages[resnet_jit])",
+        "SIMPLE": "$(location :generate_packages[simple])",
+        "SIMPLE_JIT": "$(location :generate_packages[simple_jit])",
+        "SIMPLE_LEAF_FX": "$(location :generate_packages[simple_leaf_fx])",
+        "SIMPLE_LEAF_JIT": "$(location :generate_packages[simple_leaf_jit])",
+        "USES_DISTRIBUTED": "$(location :generate_packages[uses_distributed])",
+    },
+    preprocessor_flags = [
+        "-DTEST_CUSTOM_LIBRARY",
+        "-DHAS_NUMPY=1",
+        "-DHAS_PYYAML=1",
+    ],
+    deps = [
+        ":torch_deploy",
+        "//caffe2:torch-cpp",
+        "//caffe2/torch/csrc/deploy/interpreter:embedded_interpreter_all",
+    ],
+)
+
+cpp_unittest(
+    # @autodeps-skip
+    name = "test_deploy_gpu",
+    srcs = [
+        "test_deploy_gpu.cpp",
+    ],
+    env = {
+        "MAKE_TRT_MODULE": "$(location :generate_packages[make_trt_module])",
+        "SIMPLE": "$(location :generate_packages[simple])",
+        "SIMPLE_JIT": "$(location :generate_packages[simple_jit])",
+        "USES_DISTRIBUTED": "$(location :generate_packages[uses_distributed])",
+    },
+    preprocessor_flags = [
+        "-DHAS_NUMPY=1",
+        "-DHAS_PYYAML=1",
+    ],
+    tags = [
+        "re_opts_capabilities={\"platform\": \"gpu-remote-execution\", \"subplatform\": \"P100\"}",
+        "supports_remote_execution",
+    ],
+    deps = [
+        ":torch_deploy",
+        "//caffe2:torch-cpp-cuda",
+        "//caffe2/torch/csrc/deploy/interpreter:embedded_interpreter_cuda",
+        "//deeplearning/trt/EngineHolder:engine_serializer",
+    ],
+    external_deps = [
+        ("TensorRT", None, "nvinfer-lazy"),
+        ("TensorRT", None, "nvinfer_plugin-lazy"),
+    ],
+)
+
+cpp_unittest(
+    # @autodeps-skip
+    name = "test_deploy_gpu_legacy",
+    srcs = [
+        "test_deploy_gpu.cpp",
+    ],
+    env = {
+        "MAKE_TRT_MODULE": "$(location :generate_packages[make_trt_module])",
+        "SIMPLE": "$(location :generate_packages[simple])",
+        "SIMPLE_JIT": "$(location :generate_packages[simple_jit])",
+        "USES_DISTRIBUTED": "$(location :generate_packages[uses_distributed])",
+    },
+    preprocessor_flags = [
+        "-DHAS_NUMPY=1",
+        "-DHAS_PYYAML=1",
+    ],
+    tags = [
+        "re_opts_capabilities={\"platform\": \"gpu-remote-execution\", \"subplatform\": \"P100\"}",
+        "supports_remote_execution",
+    ],
+    deps = [
+        ":torch_deploy",
+        "//caffe2:torch-cpp-cuda",
+        "//caffe2/torch/csrc/deploy/interpreter:embedded_interpreter_cuda_legacy",
+        "//deeplearning/trt/EngineHolder:engine_serializer",
+    ],
+    external_deps = [
+        ("TensorRT", None, "nvinfer-lazy"),
+        ("TensorRT", None, "nvinfer_plugin-lazy"),
+    ],
+)
+
+# this is supposed to run in a non-cuda env, and simulate the case that someone
+# added the cuda dep to their target for flexibility but uses it in cpu-only
+# scenarios sometimes
+cpp_unittest(
+    # @autodeps-skip
+    name = "test_deploy_embedded_cuda_interp_without_cuda_available",
+    srcs = [
+        "test_deploy.cpp",
+    ],
+    env = {
+        "LOAD_LIBRARY": "$(location :generate_packages[load_library])",
+        "RESNET": "$(location :generate_packages[resnet])",
+        "RESNET_JIT": "$(location :generate_packages[resnet_jit])",
+        "SIMPLE": "$(location :generate_packages[simple])",
+        "SIMPLE_JIT": "$(location :generate_packages[simple_jit])",
+        "SIMPLE_LEAF_FX": "$(location :generate_packages[simple_leaf_fx])",
+        "SIMPLE_LEAF_JIT": "$(location :generate_packages[simple_leaf_jit])",
+        "USES_DISTRIBUTED": "$(location :generate_packages[uses_distributed])",
+    },
+    deps = [
+        ":torch_deploy",
+        "//caffe2:torch-cpp",
+        "//caffe2/torch/csrc/deploy/interpreter:embedded_interpreter_cuda",
+    ],
+)
+
+cpp_unittest(
+    # @autodeps-skip
+    name = "test_deploy_missing_interpreter",
+    srcs = [
+        "test_deploy_missing_interpreter.cpp",
+    ],
+    deps = [
+        ":torch_deploy",
+        "//caffe2:torch-cpp-cuda",
+    ],
+)
+
+# copies the generated zipped file to the interpreter
+cxx_genrule(
+    name = "add_zipped_torch_files",
+    out = "torch_python_modules.a",
+    cmd = """\
+    cp $(location //caffe2:gen_zipped_modules[torch_python_modules.zip]) torch_python_modules.zip
+    ld -r -m elf_x86_64 -b binary -o ${TMP}/torch_python_modules.o torch_python_modules.zip
+    objcopy --rename-section .data=.torch_python_modules,readonly,contents -N  _binary_torch_python_modules_zip_start -N  _binary_torch_python_modules_zip_end -N  _binary_torch_python_modules_zip_size ${TMP}/torch_python_modules.o
+    ar rcs ${OUT} ${TMP}/torch_python_modules.o
+    """,
+)
+
+fb_native.prebuilt_cxx_library(
+    name = "zipped_torch_python_app_lib",
+    visibility = ["PUBLIC"],
+    link_whole = True,
+    preferred_linkage = "static",
+    static_lib = ":add_zipped_torch_files",
+)
+
+cpp_library(
+    # @autodeps-skip
+    name = "loader",
+    srcs = ["loader.cpp"],
+    headers = [
+        "Exception.h",
+        "loader.h",
+        "mem_file.h",
+    ],
+    header_namespace = "torch/csrc/deploy",
+    exported_deps = [
+        "//caffe2/c10:c10",
+        "//caffe2/torch/csrc/deploy/interpreter:multipy_optional",
+    ],
+    exported_external_deps = [
+        ("glibc", None, "dl"),
+    ],
+)
+
+# Libraries embedding torch_deploy such as predictor should avoid depending on
+# embedded_interpreter targets since this leaves the choice of cuda dependency
+# (and binary size impact of even the cpu embedded interpreter) up to the final
+# application
+cpp_library(
+    # @autodeps-skip
+    name = "torch_deploy",
+    srcs = [
+        "deploy.cpp",
+        "elf_file.cpp",
+        "loader.cpp",
+        "path_environment.cpp",
+    ],
+    # these should come via a dep on libinterpreter.so
+    headers = [
+        "Exception.h",
+        "deploy.h",
+        "elf_file.h",
+        "environment.h",
+        "mem_file.h",
+        "noop_environment.h",
+        "path_environment.h",
+    ],
+    # need link_whole so loader.o is not dropped during linking
+    link_whole = True,
+    exported_deps = [
+        # the test code uses native torch jit as a reference
+        "//caffe2:torch-cpp-cpu",
+        "//caffe2:libtorch",
+        "//caffe2/torch/lib/libshm:libshm",
+        "//caffe2/torch/csrc/deploy/interpreter:interpreter_impl",
+        "//caffe2/torch/csrc/deploy/interpreter:multipy_optional",
+        "//caffe2/caffe2/serialize:inline_container",
+        "//caffe2/caffe2/serialize:read_adapter_interface",
+        ":zipped_torch_python_app_lib",
+        ":loader",
+    ],
+    exported_external_deps = [
+        ("glibc", None, "dl"),
+    ],
+)
+
+cpp_python_extension(
+    name = "test_deploy_python_ext",
+    srcs = [
+        "test_deploy_python_ext.cpp",
+    ],
+    base_module = "",
+    deps = [
+        ":torch_deploy",
+    ],
+    external_deps = [
+        ("pybind11", None),
+    ],
+)
+
+cpp_binary(
+    # @autodeps-skip
+    name = "interactive_embedded_interpreter",
+    srcs = [
+        "interactive_embedded_interpreter.cpp",
+    ],
+    include_directories = [
+        "../../..",  # add caffe2 to the include path
+    ],
+    deps = [
+        ":torch_deploy",
+        "//caffe2/torch/csrc/deploy/interpreter:embedded_interpreter_all",
+    ],
+)
+
+cpp_binary(
+    # @autodeps-skip
+    name = "interactive_embedded_interpreter_gpu",
+    srcs = [
+        "interactive_embedded_interpreter.cpp",
+    ],
+    include_directories = [
+        "../../..",  # add caffe2 to the include path
+    ],
+    deps = [
+        ":torch_deploy",
+        "//caffe2:torch-cpp-cuda",
+        "//caffe2/torch/csrc/deploy/interpreter:embedded_interpreter_cuda",
+        "//deeplearning/trt/EngineHolder:engine_serializer",
+    ],
+    external_deps = [
+        ("TensorRT", None, "nvinfer-lazy"),
+        ("TensorRT", None, "nvinfer_plugin-lazy"),
+    ],
+)

@@ -1,0 +1,14 @@
+# Target labels
+ cpython
+# Source files and their labels
+/home/sahanp/local/multipy/runtime/interpreter/CMakeFiles/cpython
+/home/sahanp/local/multipy/runtime/interpreter/CMakeFiles/cpython.rule
+/home/sahanp/local/multipy/runtime/interpreter/CMakeFiles/cpython-complete.rule
+/home/sahanp/local/multipy/runtime/interpreter/cpython/src/cpython-stamp/cpython-install.rule
+/home/sahanp/local/multipy/runtime/interpreter/cpython/src/cpython-stamp/cpython-mkdir.rule
+/home/sahanp/local/multipy/runtime/interpreter/cpython/src/cpython-stamp/cpython-download.rule
+/home/sahanp/local/multipy/runtime/interpreter/cpython/src/cpython-stamp/cpython-update.rule
+/home/sahanp/local/multipy/runtime/interpreter/cpython/src/cpython-stamp/cpython-patch.rule
+/home/sahanp/local/multipy/runtime/interpreter/cpython/src/cpython-stamp/cpython-configure.rule
+/home/sahanp/local/multipy/runtime/interpreter/cpython/src/cpython-stamp/cpython-build.rule
+/home/sahanp/local/multipy/runtime/interpreter/cpython/src/cpython-stamp/cpython-archive_stdlib.rule

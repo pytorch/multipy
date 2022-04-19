@@ -1,0 +1,15 @@
+# @noautodeps
+
+load("@fbcode_macros//build_defs:export_files.bzl", "export_files")
+
+export_files(
+    files = [
+        "examples.py",
+        "generate_examples.py",
+        "gpu_wrapper.py",
+        "simple.pt",
+        "tensorrt_example.py",
+        "fx/examples.py",
+        "fx/some_dependency.py",
+    ],
+)

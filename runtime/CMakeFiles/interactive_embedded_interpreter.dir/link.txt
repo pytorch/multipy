@@ -1,0 +1,1 @@
+/usr/bin/clang++ CMakeFiles/interactive_embedded_interpreter.dir/interactive_embedded_interpreter.cpp.o -o interactive_embedded_interpreter  -Wl,--no-as-needed -rdynamic libtorch_deploy.a -lcrypt -lpthread -ldl -lutil -lm -lz -lffi -llzma -lreadline -lnsl -lncursesw -lpanelw -lshm -ltorch 

@@ -1,0 +1,1 @@
+/usr/bin/clang++ CMakeFiles/deploy_benchmark.dir/example/benchmark.cpp.o -o deploy_benchmark  -Wl,--no-as-needed -rdynamic libtorch_deploy.a -lcrypt -lpthread -ldl -lutil -lm -lz -lffi -llzma -lreadline -lnsl -lncursesw -lpanelw -lshm -ltorch 

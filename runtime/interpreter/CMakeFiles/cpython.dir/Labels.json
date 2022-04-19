@@ -1,0 +1,46 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/home/sahanp/local/multipy/runtime/interpreter/CMakeFiles/cpython"
+		},
+		{
+			"file" : "/home/sahanp/local/multipy/runtime/interpreter/CMakeFiles/cpython.rule"
+		},
+		{
+			"file" : "/home/sahanp/local/multipy/runtime/interpreter/CMakeFiles/cpython-complete.rule"
+		},
+		{
+			"file" : "/home/sahanp/local/multipy/runtime/interpreter/cpython/src/cpython-stamp/cpython-install.rule"
+		},
+		{
+			"file" : "/home/sahanp/local/multipy/runtime/interpreter/cpython/src/cpython-stamp/cpython-mkdir.rule"
+		},
+		{
+			"file" : "/home/sahanp/local/multipy/runtime/interpreter/cpython/src/cpython-stamp/cpython-download.rule"
+		},
+		{
+			"file" : "/home/sahanp/local/multipy/runtime/interpreter/cpython/src/cpython-stamp/cpython-update.rule"
+		},
+		{
+			"file" : "/home/sahanp/local/multipy/runtime/interpreter/cpython/src/cpython-stamp/cpython-patch.rule"
+		},
+		{
+			"file" : "/home/sahanp/local/multipy/runtime/interpreter/cpython/src/cpython-stamp/cpython-configure.rule"
+		},
+		{
+			"file" : "/home/sahanp/local/multipy/runtime/interpreter/cpython/src/cpython-stamp/cpython-build.rule"
+		},
+		{
+			"file" : "/home/sahanp/local/multipy/runtime/interpreter/cpython/src/cpython-stamp/cpython-archive_stdlib.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"cpython"
+		],
+		"name" : "cpython"
+	}
+}

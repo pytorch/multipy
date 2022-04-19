@@ -1,0 +1,154 @@
+# @noautodeps
+
+load("@fbcode_macros//build_defs:cpp_library.bzl", "cpp_library")
+load("@fbcode_macros//build_defs:cpp_unittest.bzl", "cpp_unittest")
+load("@fbcode_macros//build_defs:export_files.bzl", "export_file")
+load("defs.bzl", "embedded_interpreter")
+
+export_file(
+    name = "hide_symbols.script",
+)
+
+#
+# READ BELOW IF YOU ARE USING TORCH DEPLOY
+#
+# Any binary target or test using torch_deploy must also depend on one of the
+# embedded_interpreter flavors.
+#
+# They are separated to enable apps to opt out of a cuda dependency (for binary size) or custom library loading (because it is experimental)
+
+embedded_interpreter(
+    name = "embedded_interpreter",
+    suffix = "cpu",
+)
+
+embedded_interpreter(
+    name = "embedded_interpreter_cuda",
+    suffix = "cuda",
+)
+
+embedded_interpreter(
+    name = "embedded_interpreter_cuda_legacy",
+    legacy = True,
+    suffix = "cuda",
+)
+
+embedded_interpreter(
+    name = "embedded_interpreter_all",
+    suffix = "all",
+    exported_deps = [
+        "//tools/build:nsl",
+    ],
+    exported_external_deps = [
+        ("glibc", None, "pthread"),
+        ("glibc", None, "dl"),
+        ("glibc", None, "util"),
+        ("glibc", None, "m"),
+        ("glibc", None, "rt"),
+        ("readline", None, "readline"),
+        ("ncurses", None, "ncursesw"),
+        ("ncurses", None, "panelw"),
+        ("glibc", None, "crypt"),
+        ("libffi", None, "ffi"),
+        ("openssl", None, "ssl"),
+        ("bzip2", None, "bz2"),
+        ("gdbm", None, "gdbm"),
+        ("gdbm", None, "gdbm_compat"),
+        ("zlib", None, "z"),
+        ("sqlite", None, "sqlite"),
+        ("xz", None, "lzma"),
+    ],
+)
+
+cpp_library(
+    name = "builtin_registry",
+    srcs = [
+        "builtin_registry.cpp",
+        "register_frozenpython.cpp",
+        "register_numpy.cpp",
+        "register_pyyaml.cpp",
+    ],
+    headers = [
+        "builtin_registry.h",
+    ],
+    include_directories = [
+        "../../../..",  # add caffe2 to the include path
+    ],
+    # need enable link_whole so register_numpy.cpp will be linked and regsiter
+    # the numpy builtin library and register_frozenpython.cpp will be linked
+    # and register the standard C library
+    link_whole = True,
+    preferred_linkage = "static",
+    undefined_symbols = True,
+    exported_deps = [
+        "fbsource//third-party/pypi/numpy:frozen_numpy",
+        "fbsource//third-party/pypi/pyyaml:frozen_pyyaml",
+        "//caffe2:torch_python_without_torch",
+    ],
+    exported_external_deps = [
+        ("frozenpython", None, "python-frozen"),
+        ("frozenpython", None, "python"),
+    ],
+)
+
+cpp_library(
+    name = "multipy_optional",
+    headers = [
+        "Optional.hpp",
+    ],
+    header_namespace = "torch/csrc/deploy/interpreter",
+)
+
+cpp_library(
+    name = "interpreter_impl",
+    headers = [
+        "Optional.hpp",
+        "interpreter_impl.h",
+    ],
+    header_namespace = "torch/csrc/deploy",
+    exported_deps = [
+        "//caffe2/aten:ATen-core",
+        "//caffe2/caffe2/serialize:inline_container",
+    ],
+)
+
+cpp_library(
+    name = "builtin_registry_cuda",
+    srcs = [
+        "builtin_registry.cpp",
+        "register_frozenpython.cpp",
+        "register_numpy.cpp",
+        "register_pyyaml.cpp",
+    ],
+    headers = [
+        "builtin_registry.h",
+    ],
+    include_directories = [
+        "../../../..",  # add caffe2 to the include path
+    ],
+    # need enable link_whole so the register_frozenpython.cpp will be linked
+    # and register the standard C library
+    link_whole = True,
+    preferred_linkage = "static",
+    undefined_symbols = True,
+    exported_deps = [
+        "fbsource//third-party/pypi/numpy:frozen_numpy",
+        "fbsource//third-party/pypi/pyyaml:frozen_pyyaml",
+        "//caffe2:torch_python_cuda_without_torch",
+    ],
+    exported_external_deps = [
+        ("frozenpython", None, "python-frozen"),
+        ("frozenpython", None, "python"),
+    ],
+)
+
+cpp_unittest(
+    name = "test_builtin_registry",
+    srcs = [
+        "test_builtin_registry.cpp",
+    ],
+    deps = [
+        ":builtin_registry",
+        "//caffe2:torch-cpp",
+    ],
+)

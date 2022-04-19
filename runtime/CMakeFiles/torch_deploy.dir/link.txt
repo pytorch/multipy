@@ -1,0 +1,2 @@
+/usr/bin/ar qc libtorch_deploy.a CMakeFiles/torch_deploy.dir/deploy.cpp.o CMakeFiles/torch_deploy.dir/loader.cpp.o CMakeFiles/torch_deploy.dir/path_environment.cpp.o CMakeFiles/torch_deploy.dir/elf_file.cpp.o libtorch_deployinterpreter.o
+/usr/bin/ranlib libtorch_deploy.a

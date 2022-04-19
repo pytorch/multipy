@@ -1,0 +1,1 @@
+/usr/bin/clang++ -fPIC -shared -Wl,-soname,libtest_deploy_lib.so -o libtest_deploy_lib.so CMakeFiles/test_deploy_lib.dir/test_deploy_lib.cpp.o  -lpybind::pybind11 
