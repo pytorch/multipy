@@ -1,5 +1,5 @@
 #include <Python.h>
-#include <torch/csrc/deploy/interpreter/builtin_registry.h>
+#include "builtin_registry.h"
 
 extern "C" struct _frozen _PyImport_FrozenModules_numpy[];
 

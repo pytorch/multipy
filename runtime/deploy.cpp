@@ -1,7 +1,7 @@
-#include <torch/csrc/deploy/Exception.h>
-#include <torch/csrc/deploy/deploy.h>
-#include <torch/csrc/deploy/elf_file.h>
-#include <torch/csrc/deploy/interpreter/Optional.hpp>
+#include "Exception.h"
+#include "deploy.h"
+#include "elf_file.h"
+#include "interpreter/Optional.hpp"
 
 #include <torch/cuda.h>
 
@@ -261,7 +261,7 @@ Interpreter::Interpreter(
   // note: if you want better debugging symbols for things inside
   // new_intepreter_impl, comment out this line so that the so lasts long enough
   // for the debugger to see it.
-  unlink(libraryName_.c_str());
+  // unlink(libraryName_.c_str());
 
   if (customLoader_) {
     // when using the custom loader we need to link python symbols against

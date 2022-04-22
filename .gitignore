@@ -6,3 +6,4 @@ runtime/interpreter/cpython/**
 runtime/build/**
 runtime/build
 **/CMakeFiles/**
+runtime/interpreter/frozen/**

@@ -1,4 +1,6 @@
 cmake_minimum_required(VERSION 3.19)
+project(MultipyRuntime)
+set(CMAKE_BUILD_TYPE Debug)
 set(DEPLOY_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 add_subdirectory(third-party/fmt)
 add_subdirectory(third-party/pybind11)
@@ -9,7 +11,6 @@ find_package(Torch REQUIRED)
 if(COMMAND cmake_policy)
   cmake_policy(SET CMP0003 NEW)
 endif(COMMAND cmake_policy)
-include_directories(${PYTORCH_FMT_INCLUDE_PATH})
 
 # we do not want to have torch_deployinterpreter linked against libstdc++ or libc because
 # when loading it with RTLD_DEEPBIND it will resolve std::cout/stdout to the copy in libc++/libc instead of the
@@ -22,6 +23,8 @@ include_directories(${PYTORCH_FMT_INCLUDE_PATH})
 # symbols will fallback to resolution through the main execution and get the correct values
 add_executable(remove_dt_needed remove_dt_needed.cpp)
 target_link_libraries(remove_dt_needed PRIVATE fmt::fmt-header-only)
+install(TARGETS $<TARGET_FILE:torch_deployinterpreter> DESTINATION lib)
+install(TARGETS $<TARGET_FILE:remove_dt_needed> DESTINATION lib)
 
 add_custom_command(
   OUTPUT libtorch_deployinterpreter.o

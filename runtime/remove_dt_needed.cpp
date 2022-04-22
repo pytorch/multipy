@@ -25,6 +25,10 @@ int main(int argc, const char** argv) {
     std::cout << "usage: " << argv[0] << " <input_library> <result_library>\n";
     return 1;
   }
+  std::cout << "\n\n\nI am hereee here here here here he here and my file is \n\n";
+  std::cout << argc[1];
+  std::cout << "\n\n\n";
+  ERROR(0==1, "things have just ended up failing check me message")
   const char* filename = argv[1];
   int fd_ = open(filename, O_RDWR);
   CHECK(fd_ != -1, "failed to open {}: {}", filename, strerror(errno));

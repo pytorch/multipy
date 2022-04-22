@@ -1,6 +1,6 @@
 #include <Python.h>
 #include <gtest/gtest.h>
-#include <torch/csrc/deploy/interpreter/builtin_registry.h>
+#include "builtin_registry.h"
 
 namespace torch {
 namespace deploy {

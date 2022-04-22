@@ -3,6 +3,7 @@ SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" PARENT_SCOPE)
 find_package(fmt REQUIRED)
 find_package(pybind11 REQUIRED)
 find_package(Torch REQUIRED)
+add_library(torch_python_obj::torch_python_obj STATIC IMPORTED)
 
 SET(PYTORCH_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../pytorch/torch")
 SET(MULTIPY_UTILS "${CMAKE_CURRENT_SOURCE_DIR}/../../utils/")
@@ -13,6 +14,14 @@ SET(PYTHON_INC_DIR "${PYTHON_INSTALL_DIR}/include/python3.8")
 SET(PYTHON_INC_DIR "${PYTHON_INSTALL_DIR}/include/python3.8" PARENT_SCOPE)
 SET(PYTHON_LIB "${PYTHON_INSTALL_DIR}/lib/libpython3.8.a")
 SET(PYTHON_BIN "${PYTHON_INSTALL_DIR}/bin/python3")
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/609281088cfefc76f9d0ce82e1ff6c30cc3591e5.zip
+)
+FetchContent_MakeAvailable(googletest)
+include(GoogleTest)
+
 include(ExternalProject)
 ExternalProject_Add(
   cpython
@@ -86,8 +95,10 @@ add_custom_command(
 
 # instantiate a library based on the objects that make up torch_python
 # make sure system python isn't used here
+
+include(${PYTORCH_ROOT}/lib64/cmake/torch_python_obj_lib/torch_python_obj_lib_targets.cmake)
+add_library(torch_python_obj OBJECT $<TARGET_OBJECTS:torch_python_obj::torch_python_obj_lib> )
 target_include_directories(torch_python_obj BEFORE PRIVATE ${PYTHON_INC_DIR})
-add_library(torch_python_static STATIC $<TARGET_OBJECTS:torch_python_obj>)
 # Build the interpreter lib, designed to be standalone and dlopened
 # We bake the python and torch_python binding objs into libinterpreter
 set(INTERPRETER_LIB_SOURCES
@@ -110,7 +121,9 @@ endif()
 target_include_directories(torch_deployinterpreter PRIVATE ${INTERPRETER_DIR})
 target_include_directories(torch_deployinterpreter BEFORE PUBLIC ${PYTHON_INC_DIR})
 
-target_link_libraries(torch_deployinterpreter PRIVATE ${PYTHON_LIB} ${PYTHON_STDLIB} torch_python_static)
+target_link_libraries(torch_deployinterpreter PRIVATE ${PYTHON_LIB} ${PYTHON_STDLIB} $<TARGET_OBJECTS:torch_python_obj>)
 target_link_libraries(torch_deployinterpreter PRIVATE fmt::fmt-header-only)
 target_link_libraries(torch_deployinterpreter PRIVATE ${PYTHON_INSTALL_DIR}/lib/libssl.a ${PYTHON_INSTALL_DIR}/lib/libcrypto.a)
 target_link_libraries(torch_deployinterpreter PRIVATE pybind11)
+target_link_libraries(torch_deployinterpreter PRIVATE "${TORCH_LIBRARIES}")
+target_link_libraries(torch_deployinterpreter PRIVATE gtest)
