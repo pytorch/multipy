@@ -1,3 +1,10 @@
 **/__pycache__/**
 **.coverage
 .coverage
+runtime/interpreter/cpython
+runtime/interpreter/cpython/**
+runtime/build/**
+runtime/build
+**/CMakeFiles/**
+runtime/interpreter/frozen/**
+
