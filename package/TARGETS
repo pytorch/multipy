@@ -1,0 +1,11 @@
+# @noautodeps
+load("@fbcode_macros//build_defs:python_library.bzl", "python_library")
+
+python_library(
+    name = "package",
+    srcs = glob(["**/*.py"]),
+    base_module = "package",
+    deps = [
+        "//caffe2:torch",
+    ],
+)

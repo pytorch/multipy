@@ -27,7 +27,6 @@ except ImportError:
 skipIfNoTorchVision = skipIf(not HAS_TORCHVISION, "no torchvision")
 import package
 
-
 class TestPackageScript(PackageTestCase):
     """Tests for compatibility with TorchScript."""
 

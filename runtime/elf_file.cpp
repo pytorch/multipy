@@ -1,7 +1,8 @@
 #include <c10/util/irange.h>
-#include <torch/csrc/deploy/Exception.h>
-#include <torch/csrc/deploy/elf_file.h>
-#include <torch/csrc/deploy/interpreter/Optional.hpp>
+#include "Exception.h"
+#include "elf_file.h"
+#include <iostream>
+#include "interpreter/Optional.hpp"
 
 namespace torch {
 namespace deploy {
@@ -31,6 +32,7 @@ multipy::optional<Section> ElfFile::findSection(const char* name) const {
   MULTIPY_CHECK(name != nullptr, "Null name");
   multipy::optional<Section> found = multipy::nullopt;
   for (const auto& section : sections_) {
+    // std::cout << section.name << "\n";
     if (strcmp(name, section.name) == 0) {
       found = section;
       break;

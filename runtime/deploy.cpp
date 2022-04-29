@@ -1,9 +1,9 @@
-#include <torch/csrc/deploy/Exception.h>
-#include <torch/csrc/deploy/deploy.h>
-#include <torch/csrc/deploy/elf_file.h>
-#include <torch/csrc/deploy/interpreter/Optional.hpp>
-
-#include <torch/cuda.h>
+#include "Exception.h"
+#include "deploy.h"
+#include "elf_file.h"
+#include "interpreter/Optional.hpp"
+#include <iostream>
+#include <torch/csrc/api/include/torch/cuda.h>
 
 #include <dlfcn.h>
 #include <libgen.h>
@@ -55,6 +55,7 @@ static bool writeDeployInterpreter(FILE* dst) {
   std::string exePath;
   std::ifstream("/proc/self/cmdline") >> exePath;
   ElfFile elfFile(exePath.c_str());
+  std::cout << "command line path: " << exePath.c_str() << "\n";
   for (const auto& s : pythonInterpreterSection) {
     multipy::optional<Section> payloadSection =
         elfFile.findSection(s.sectionName);
@@ -261,7 +262,7 @@ Interpreter::Interpreter(
   // note: if you want better debugging symbols for things inside
   // new_intepreter_impl, comment out this line so that the so lasts long enough
   // for the debugger to see it.
-  unlink(libraryName_.c_str());
+  // unlink(libraryName_.c_str());
 
   if (customLoader_) {
     // when using the custom loader we need to link python symbols against
@@ -301,7 +302,8 @@ int LoadBalancer::acquire() {
   size_t minusers = SIZE_MAX;
   int minIdx = 0;
   for (size_t i = 0; i < n_; ++i, ++last) {
-    if (last >= static_cast<int>(n_)) {
+    // NOLINTNEXTLINE(clang-diagnostic-sign-compare)
+    if (last >= n_) {
       last = 0;
     }
     uint64_t prev = 0;

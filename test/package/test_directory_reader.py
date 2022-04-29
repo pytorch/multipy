@@ -101,7 +101,6 @@ class DirectoryReaderTest(PackageTestCase):
         import package_a  # noqa: F401
 
         filename = self.temp()
-        print(f"filename is {filename}")
         with self.PackageExporter(filename) as e:
             e.save_module("package_a")
 

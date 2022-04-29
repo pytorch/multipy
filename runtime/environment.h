@@ -1,7 +1,7 @@
 #pragma once
 #include <fmt/format.h>
-#include <torch/csrc/deploy/Exception.h>
-#include <torch/csrc/deploy/elf_file.h>
+#include "Exception.h"
+#include "elf_file.h"
 #include <fstream>
 #include <string>
 

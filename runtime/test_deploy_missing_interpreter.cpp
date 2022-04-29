@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <torch/csrc/deploy/deploy.h>
-#include <torch/torch.h>
+#include <torch/csrc/api/include/torch/torch.h>
 
 int main(int argc, char* argv[]) {
   ::testing::InitGoogleTest(&argc, argv);

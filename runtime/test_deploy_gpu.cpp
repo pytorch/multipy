@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
-#include <torch/csrc/deploy/deploy.h>
-#include <torch/cuda.h>
+#include "deploy.h"
+#include <torch/csrc/api/include/torch/cuda.h>
 #include <torch/script.h>
-#include <torch/torch.h>
+#include <torch/csrc/api/include/torch/torch.h>
 #include <future>
 #include <iostream>
 #include <string>
