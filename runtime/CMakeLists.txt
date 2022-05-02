@@ -7,9 +7,9 @@ add_subdirectory(third-party/pybind11)
 add_subdirectory(interpreter)
 find_package(fmt REQUIRED)
 find_package(pybind11 REQUIRED)
-SET(PYTORCH_ROOT "/home/sahanp/local/pytorch/torch")
-include_directories(BEFORE "/home/sahanp/local/pytorch/torch/include")
-include_directories(BEFORE "/home/sahanp/local/pytorch/torch/csrc/api/include")
+include_directories(BEFORE "${CMAKE_CURRENT_SOURCE_DIR}/../../pytorch/torch/include")
+include_directories(BEFORE "${CMAKE_CURRENT_SOURCE_DIR}/../../pytorch/torch/include/torch/csrc/api/include/")
+include_directories(BEFORE "/home/sahanp/local/pytorch/torch/csrc/api/include/torch")
 if(COMMAND cmake_policy)
   cmake_policy(SET CMP0003 NEW)
 endif(COMMAND cmake_policy)
@@ -106,21 +106,15 @@ add_custom_command(
   # package the result into an object we can link into the libdeploy binary.
   COMMAND ld -r -b binary -o libtorch_deployinterpreter.o libtorch_deployinterpreter_all.so
   COMMAND objcopy --rename-section .data=.torch_deploy_payload.interpreter_all,readonly,contents -N _binary_libtorch_deployinterpreter_all_so_start -N _binary_libtorch_deployinterpreter_all_so_end libtorch_deployinterpreter.o
+  COMMAND rm libtorch_deployinterpreter_all.so
   DEPENDS torch_deployinterpreter remove_dt_needed
   VERBATIM
 )
 
-LINK_DIRECTORIES("${PYTORCH_ROOT}/lib")
 add_library(torch_deploy_internal STATIC libtorch_deployinterpreter.o ${DEPLOY_DIR}/deploy.cpp ${DEPLOY_DIR}/loader.cpp ${DEPLOY_DIR}/path_environment.cpp ${DEPLOY_DIR}/elf_file.cpp)
 target_link_libraries(torch_deploy_internal PRIVATE crypt pthread dl util m z ffi lzma readline nsl ncursesw panelw) # for python builtins
-target_link_libraries(torch_deploy_internal PUBLIC  shm torch fmt::fmt-header-only )
+target_link_libraries(torch_deploy_internal PUBLIC  shm torch fmt::fmt-header-only)
 caffe2_interface_library(torch_deploy_internal torch_deploy)
-
-
-LINK_DIRECTORIES("~/local/pytorch/torch/lib")
-add_library(torch_deploy_shared SHARED libtorch_deployinterpreter.o ${DEPLOY_DIR}/deploy.cpp ${DEPLOY_DIR}/loader.cpp ${DEPLOY_DIR}/path_environment.cpp ${DEPLOY_DIR}/elf_file.cpp)
-target_link_libraries(torch_deploy_shared PRIVATE crypt pthread dl util m z ffi lzma readline nsl ncursesw panelw) # for python builtins
-target_link_libraries(torch_deploy_shared PUBLIC  shm torch fmt::fmt-header-only c10)
 
 set(INTERPRETER_TEST_SOURCES
   ${DEPLOY_DIR}/test_deploy.cpp
@@ -134,7 +128,7 @@ add_executable(test_deploy ${INTERPRETER_TEST_SOURCES})
 target_compile_definitions(test_deploy PUBLIC TEST_CUSTOM_LIBRARY)
 target_include_directories(test_deploy PRIVATE ${PYTORCH_ROOT}/torch)
 target_link_libraries(test_deploy
-  PUBLIC "-Wl,--no-as-needed -Wl,--whole-archive -rdynamic" gtest dl torch_deploy torch_cpu c10
+  PUBLIC "-Wl,--no-as-needed -rdynamic" gtest dl torch_deploy  c10 torch_cpu
 )
 
 LINK_DIRECTORIES("~/local/pytorch/torch/lib")
@@ -142,7 +136,7 @@ add_executable(test_deploy_gpu ${INTERPRETER_TEST_SOURCES_GPU})
 target_compile_definitions(test_deploy_gpu PUBLIC TEST_CUSTOM_LIBRARY)
 target_include_directories(test_deploy_gpu PRIVATE ${PYTORCH_ROOT}/torch)
 target_link_libraries(test_deploy_gpu
-  PUBLIC "-Wl,--no-as-needed -rdynamic" gtest dl torch_deploy torch_cpu c10
+  PUBLIC "-Wl,--no-as-needed -rdynamic" gtest dl torch_deploy  c10 torch_cpu
 )
 
 LINK_DIRECTORIES("~/local/pytorch/torch/lib")
@@ -151,19 +145,18 @@ add_dependencies(test_deploy_lib cpython)
 target_include_directories(test_deploy_lib BEFORE PRIVATE ${PYTHON_INC_DIR})
 target_link_libraries(test_deploy_lib PRIVATE pybind11::pybind11)
 
-message(STATUS "torch - ${GENERATED_CXX_PYTHON}" )
 LINK_DIRECTORIES("~/local/pytorch/torch/lib")
 add_executable(deploy_benchmark ${DEPLOY_DIR}/example/benchmark.cpp)
 target_include_directories(deploy_benchmark PRIVATE ${PYTORCH_ROOT}/torch)
 target_link_libraries(deploy_benchmark
-  PUBLIC "-Wl,--no-as-needed -rdynamic" torch_deploy torch_cpu c10
+  PUBLIC "-Wl,--no-as-needed -rdynamic" torch_deploy  c10 torch_cpu
 )
 
 LINK_DIRECTORIES("~/local/pytorch/torch/lib")
 add_executable(interactive_embedded_interpreter ${DEPLOY_DIR}/interactive_embedded_interpreter.cpp)
 target_include_directories(interactive_embedded_interpreter PRIVATE ${PYTORCH_ROOT}/torch)
 target_link_libraries(interactive_embedded_interpreter
-  PUBLIC "-Wl,--no-as-needed -rdynamic" torch_deploy torch_cpu c10
+  PUBLIC "-Wl,--no-as-needed -rdynamic" torch_deploy c10 torch_cpu
 )
 
 if(INSTALL_TEST)

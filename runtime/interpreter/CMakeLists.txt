@@ -6,7 +6,6 @@ find_package(pybind11 REQUIRED)
 find_library(/home/sahanp/local/pytorch/torch/lib/libtorch_cpu.so torch_cpu)
 SET(PYTORCH_ROOT "/home/sahanp/local/pytorch/torch")
 include_directories(BEFORE "/home/sahanp/local/pytorch/torch/include")
-include_directories(BEFORE "/home/sahanp/local/pytorch/torch/csrc/api/include")
 SET(MULTIPY_UTILS "${CMAKE_CURRENT_SOURCE_DIR}/../../utils/")
 
 # Build cpython
@@ -114,9 +113,9 @@ set(INTERPRETER_LIB_SOURCES
 
 # instantiate a library based on the objects that make up torch_python
 # make sure system python isn't used here
-add_library(torch_python_obj STATIC IMPORTED)
-set_property(TARGET torch_python_obj PROPERTY
-             IMPORTED_LOCATION "/home/sahanp/local/pytorch/torch/lib/libtorch_python_obj.a")
+add_library(torch_python_obj_static STATIC IMPORTED)
+set_property(TARGET torch_python_obj_static PROPERTY
+             IMPORTED_LOCATION "/home/sahanp/local/pytorch/torch/lib/libtorch_python_obj_static.a")
 
 link_directories(/home/sahanp/local/pytorch/torch/lib/)
 add_library(torch_deployinterpreter SHARED ${INTERPRETER_LIB_SOURCES} ${LINKER_SCRIPT})
@@ -130,7 +129,7 @@ endif()
 target_include_directories(torch_deployinterpreter PRIVATE ${INTERPRETER_DIR})
 target_include_directories(torch_deployinterpreter BEFORE PUBLIC ${PYTHON_INC_DIR})
 target_link_libraries(torch_deployinterpreter PRIVATE ${PYTHON_LIB} ${PYTHON_STDLIB})
-target_link_libraries(torch_deployinterpreter PRIVATE  "-Wl,--no-as-needed -rdynamic" torch_python_obj)
+target_link_libraries(torch_deployinterpreter PRIVATE  "-Wl,--no-as-needed -rdynamic" torch_python_obj_static)
 target_link_libraries(torch_deployinterpreter PRIVATE fmt::fmt-header-only)
 target_link_libraries(torch_deployinterpreter PRIVATE ${PYTHON_INSTALL_DIR}/lib/libssl.a ${PYTHON_INSTALL_DIR}/lib/libcrypto.a)
 target_link_libraries(torch_deployinterpreter PRIVATE gtest)
