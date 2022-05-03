@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.19)
+project(MultipyRuntime)
 SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" )
 SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" PARENT_SCOPE)
 
@@ -82,8 +84,9 @@ add_custom_command(
 
 # instantiate a library based on the objects that make up torch_python
 # make sure system python isn't used here
-target_include_directories(torch_python_obj BEFORE PRIVATE ${PYTHON_INC_DIR})
-add_library(torch_python_static STATIC $<TARGET_OBJECTS:torch_python_obj>)
+add_library(torch_python_obj_static STATIC IMPORTED)
+set_property(TARGET torch_python_obj_static PROPERTY
+             IMPORTED_LOCATION "/home/sahanp/local/pytorch/torch/lib/libtorch_python_obj_static.a")
 # Build the interpreter lib, designed to be standalone and dlopened
 # We bake the python and torch_python binding objs into libinterpreter
 set(INTERPRETER_LIB_SOURCES
@@ -98,7 +101,6 @@ add_library(torch_deployinterpreter ${INTERPRETER_LIB_SOURCES} ${LINKER_SCRIPT})
 # need to ensure headers are present before any .cpp in interpreter are compiled,
 # but cpp themselves don't clearly depend on cpython so there is a race otherwise
 add_dependencies(torch_deployinterpreter cpython)
-add_dependencies(torch_python_obj cpython)
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   target_compile_options(torch_deployinterpreter PRIVATE -fno-gnu-unique)
 endif()
@@ -106,7 +108,8 @@ endif()
 target_include_directories(torch_deployinterpreter PRIVATE ${INTERPRETER_DIR})
 target_include_directories(torch_deployinterpreter BEFORE PUBLIC ${PYTHON_INC_DIR})
 
-target_link_libraries(torch_deployinterpreter PRIVATE ${PYTHON_LIB} ${PYTHON_STDLIB} torch_python_static)
+target_link_libraries(torch_deployinterpreter PRIVATE ${PYTHON_LIB} ${PYTHON_STDLIB})
+target_link_libraries(torch_deployinterpreter PRIVATE  "-Wl,--no-as-needed -rdynamic" torch_python_obj_static)
 target_link_libraries(torch_deployinterpreter PRIVATE fmt::fmt-header-only protobuf::libprotobuf-lite)
 target_link_libraries(torch_deployinterpreter PRIVATE ${PYTHON_INSTALL_DIR}/lib/libssl.a ${PYTHON_INSTALL_DIR}/lib/libcrypto.a)
 target_link_libraries(torch_deployinterpreter PRIVATE pybind::pybind11)
