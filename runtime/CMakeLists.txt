@@ -1,6 +1,6 @@
 set(DEPLOY_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 add_subdirectory(interpreter)
-
+include(${DEPLOY_DIR}/utils.cmake)
 if(DEFINED GLIBCXX_USE_CXX11_ABI)
   if(${GLIBCXX_USE_CXX11_ABI} EQUAL 1)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=1")

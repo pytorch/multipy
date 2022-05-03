@@ -9,6 +9,7 @@ SET(PYTHON_INC_DIR "${PYTHON_INSTALL_DIR}/include/python3.8")
 SET(PYTHON_INC_DIR "${PYTHON_INSTALL_DIR}/include/python3.8" PARENT_SCOPE)
 SET(PYTHON_LIB "${PYTHON_INSTALL_DIR}/lib/libpython3.8.a")
 SET(PYTHON_BIN "${PYTHON_INSTALL_DIR}/bin/python3")
+include(ExternalProject)
 ExternalProject_Add(
   cpython
   PREFIX cpython
