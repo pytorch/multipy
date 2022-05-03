@@ -6,6 +6,7 @@ SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" PARENT_SCOPE)
 set(PYTORCH_ROOT "/home/sahanp/local/pytorch/torch")
 include_directories(BEFORE "${PYTORCH_ROOT}/include")
 include_directories(BEFORE "${PYTORCH_ROOT}/include/torch/csrc/api/include/")
+SET(MULTIPY_UTILS "${CMAKE_CURRENT_SOURCE_DIR}/../../utils")
 
 # Build cpython
 SET(PYTHON_INSTALL_DIR "${INTERPRETER_DIR}/cpython")
@@ -28,6 +29,15 @@ ExternalProject_Add(
   BYPRODUCTS ${PYTHON_MODULES} ${PYTHON_LIB} ${PYTHON_BIN} ${PYTHON_INSTALL_DIR}/lib/libssl.a ${PYTHON_INSTALL_DIR}/lib/libcrypto.a
   LOG_OUTPUT_ON_FAILURE True
 )
+
+# add gtest dependency
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/609281088cfefc76f9d0ce82e1ff6c30cc3591e5.zip
+)
+FetchContent_MakeAvailable(googletest)
+include(GoogleTest)
 
 # We find the built python modules, this is confusing because python build already outputs
 # the modules in a strange nested path, and then that path is relative to the
@@ -79,7 +89,7 @@ add_custom_command(
    OUTPUT ${FROZEN_FILES}
    WORKING_DIRECTORY ${INTERPRETER_DIR}
    COMMAND mkdir -p ${FROZEN_DIR}
-   COMMAND ${PYTHON_BIN} ${PYTORCH_ROOT}/utils/_freeze.py ${PYTHON_STDLIB_DIR} ${TYPING_PKG} ${PYTORCH_ROOT} --oss --install_dir ${FROZEN_DIR} --verbose
+   COMMAND ${PYTHON_BIN} ${MULTIPY_UTILS}/_freeze.py ${PYTHON_STDLIB_DIR} ${TYPING_PKG} ${PYTORCH_ROOT} --oss --install_dir ${FROZEN_DIR} --verbose
    DEPENDS cpython typing ${PYTORCH_PYTHON_SOURCE_FILES}
    VERBATIM
 )
@@ -115,3 +125,4 @@ target_link_libraries(torch_deployinterpreter PRIVATE  "-Wl,--no-as-needed -rdyn
 target_link_libraries(torch_deployinterpreter PRIVATE fmt::fmt-header-only)
 target_link_libraries(torch_deployinterpreter PRIVATE ${PYTHON_INSTALL_DIR}/lib/libssl.a ${PYTHON_INSTALL_DIR}/lib/libcrypto.a)
 target_link_libraries(torch_deployinterpreter PRIVATE pybind11::pybind11)
+target_link_libraries(torch_deployinterpreter PRIVATE gtest)
