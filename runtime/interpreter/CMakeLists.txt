@@ -109,7 +109,7 @@ set(INTERPRETER_LIB_SOURCES
   ${FROZEN_FILES}
   ${LINKER_SCRIPT}
 )
-add_library(torch_deployinterpreter ${INTERPRETER_LIB_SOURCES} ${LINKER_SCRIPT})
+add_library(torch_deployinterpreter SHARED ${INTERPRETER_LIB_SOURCES} ${LINKER_SCRIPT})
 # need to ensure headers are present before any .cpp in interpreter are compiled,
 # but cpp themselves don't clearly depend on cpython so there is a race otherwise
 add_dependencies(torch_deployinterpreter cpython)
