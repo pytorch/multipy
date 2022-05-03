@@ -110,6 +110,6 @@ target_include_directories(torch_deployinterpreter BEFORE PUBLIC ${PYTHON_INC_DI
 
 target_link_libraries(torch_deployinterpreter PRIVATE ${PYTHON_LIB} ${PYTHON_STDLIB})
 target_link_libraries(torch_deployinterpreter PRIVATE  "-Wl,--no-as-needed -rdynamic" torch_python_obj_static)
-target_link_libraries(torch_deployinterpreter PRIVATE fmt::fmt-header-only protobuf::libprotobuf-lite)
+target_link_libraries(torch_deployinterpreter PRIVATE fmt::fmt-header-only)
 target_link_libraries(torch_deployinterpreter PRIVATE ${PYTHON_INSTALL_DIR}/lib/libssl.a ${PYTHON_INSTALL_DIR}/lib/libcrypto.a)
-target_link_libraries(torch_deployinterpreter PRIVATE pybind::pybind11)
+target_link_libraries(torch_deployinterpreter PRIVATE pybind11::pybind11)
