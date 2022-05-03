@@ -9,7 +9,7 @@
 #include <pybind11/functional.h>
 #include <torch/csrc/DynamicTypes.h>
 #include <torch/csrc/autograd/generated/variable_factories.h>
-#include "Exception.h"
+#include "../Exception.h"
 #include <torch/csrc/jit/python/pybind_utils.h>
 
 #include <cassert>
@@ -19,7 +19,7 @@
 #include <thread>
 
 #include <fmt/format.h>
-#include "interpreter/builtin_registry.h"
+#include "builtin_registry.h"
 
 namespace py = pybind11;
 using namespace py::literals;
