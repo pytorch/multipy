@@ -20,3 +20,32 @@ Because CPython builds successfully when optional dependencies are missing, the 
 To be safe, install the [complete list of dependencies for CPython](https://devguide.python.org/setup/#install-dependencies) for your platform, before trying to build torch with USE_DEPLOY=1.
 
 If you already built CPython without all the dependencies and want to fix it, just blow away the CPython folder under torch/csrc/deploy/third_party, install the missing system dependencies, and re-attempt the pytorch build command.
+
+## How to Build MultiPy Runtime
+
+Also before building please change PYTORCH_ROOT in `runtime/CMakeLists.txt` and `runtime/interpreter/CMakeLists.txt`
+
+```
+cd MultiPy/runtime
+
+# build third party libraries
+cd third-party/fmt
+mkdir build
+cd build
+cmake ..
+
+cd ../pybind11
+mkdir build
+cd build
+cmake ..
+cd ../..
+
+mkdir build
+cd build
+
+# build runtime
+# replace {PYTORCH_ROOT} with your path to pytorch/torch
+
+with-proxy cmake -DCMAKE_VERBOSE_MAKEFILE:BOOL=OFF -DCMAKE_PREFIX_PATH="{PYTORCH_ROOT}/lib/;../third-party/pybind11/build;../third-party/fmt/build" ..
+cmake —build . —config Release
+```
