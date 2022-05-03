@@ -3,7 +3,9 @@ project(MultipyRuntime)
 SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" )
 SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" PARENT_SCOPE)
 
-SET(PYTORCH_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../../")
+set(PYTORCH_ROOT "/home/sahanp/local/pytorch/torch")
+include_directories(BEFORE "${PYTORCH_ROOT}/include")
+include_directories(BEFORE "${PYTORCH_ROOT}/include/torch/csrc/api/include/")
 
 # Build cpython
 SET(PYTHON_INSTALL_DIR "${INTERPRETER_DIR}/cpython")
@@ -70,14 +72,14 @@ set(FROZEN_FILES
   ${FROZEN_DIR}/bytecode_4.c
 )
 
-file(GLOB_RECURSE PYTORCH_PYTHON_SOURCE_FILES ${PYTORCH_ROOT}/torch/*.py)
+file(GLOB_RECURSE PYTORCH_PYTHON_SOURCE_FILES ${PYTORCH_ROOT}/*.py)
 
 # Packages to freeze: python stdlib, typing extension, and torch
 add_custom_command(
    OUTPUT ${FROZEN_FILES}
    WORKING_DIRECTORY ${INTERPRETER_DIR}
    COMMAND mkdir -p ${FROZEN_DIR}
-   COMMAND ${PYTHON_BIN} ${PYTORCH_ROOT}/torch/utils/_freeze.py ${PYTHON_STDLIB_DIR} ${TYPING_PKG} ${PYTORCH_ROOT}/torch --oss --install_dir ${FROZEN_DIR} --verbose
+   COMMAND ${PYTHON_BIN} ${PYTORCH_ROOT}/utils/_freeze.py ${PYTHON_STDLIB_DIR} ${TYPING_PKG} ${PYTORCH_ROOT} --oss --install_dir ${FROZEN_DIR} --verbose
    DEPENDS cpython typing ${PYTORCH_PYTHON_SOURCE_FILES}
    VERBATIM
 )
@@ -86,7 +88,7 @@ add_custom_command(
 # make sure system python isn't used here
 add_library(torch_python_obj_static STATIC IMPORTED)
 set_property(TARGET torch_python_obj_static PROPERTY
-             IMPORTED_LOCATION "/home/sahanp/local/pytorch/torch/lib/libtorch_python_obj_static.a")
+             IMPORTED_LOCATION "${PYTORCH_ROOT}/lib/libtorch_python_obj_static.a")
 # Build the interpreter lib, designed to be standalone and dlopened
 # We bake the python and torch_python binding objs into libinterpreter
 set(INTERPRETER_LIB_SOURCES
