@@ -1,5 +1,5 @@
 #include <Python.h>
-#include <torch/csrc/deploy/interpreter/builtin_registry.h>
+#include "builtin_registry.h"
 
 #define FOREACH_LIBRARY(_) \
   _(array)                 \

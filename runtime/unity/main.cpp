@@ -1,5 +1,5 @@
-#include <torch/csrc/deploy/deploy.h>
-#include <torch/csrc/deploy/unity/xar_environment.h>
+#include "deploy.h"
+#include "unity/xar_environment.h"
 #include <memory>
 
 namespace torch {

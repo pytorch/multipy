@@ -1,4 +1,4 @@
-#include <torch/csrc/deploy/loader.h>
+#include "../loader.h"
 #include <sstream>
 #include <vector>
 

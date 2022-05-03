@@ -1,7 +1,7 @@
-#include <torch/csrc/deploy/Exception.h>
-#include <torch/csrc/deploy/deploy.h>
-#include <torch/csrc/deploy/elf_file.h>
-#include <torch/csrc/deploy/interpreter/Optional.hpp>
+#include "Exception.h"
+#include "deploy.h"
+#include "elf_file.h"
+#include "interpreter/Optional.hpp"
 
 #include <torch/cuda.h>
 

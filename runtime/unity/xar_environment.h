@@ -1,7 +1,7 @@
 #pragma once
 
-#include <torch/csrc/deploy/deploy.h>
-#include <torch/csrc/deploy/environment.h>
+#include "deploy.h"
+#include "environment.h"
 #include <string>
 
 namespace torch {

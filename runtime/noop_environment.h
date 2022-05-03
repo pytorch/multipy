@@ -1,6 +1,6 @@
 #pragma once
 
-#include <torch/csrc/deploy/environment.h>
+#include "environment.h"
 
 namespace torch {
 namespace deploy {
