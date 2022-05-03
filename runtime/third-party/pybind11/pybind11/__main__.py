@@ -1,13 +1,15 @@
-# pylint: disable=missing-function-docstring
+# -*- coding: utf-8 -*-
+from __future__ import print_function
 
 import argparse
 import sys
 import sysconfig
 
-from .commands import get_cmake_dir, get_include
+from .commands import get_include, get_cmake_dir
 
 
-def print_includes() -> None:
+def print_includes():
+    # type: () -> None
     dirs = [
         sysconfig.get_path("include"),
         sysconfig.get_path("platinclude"),
@@ -23,7 +25,8 @@ def print_includes() -> None:
     print(" ".join("-I" + d for d in unique_dirs))
 
 
-def main() -> None:
+def main():
+    # type: () -> None
 
     parser = argparse.ArgumentParser()
     parser.add_argument(

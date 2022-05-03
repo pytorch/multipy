@@ -38,9 +38,13 @@ using namespace py::literals;
 #endif
 
 const char* start = R"PYTHON(
+print("importing _ssl")
 import _ssl # must come before _hashlib otherwise ssl's locks will be set to a Python that might no longer exist...
+print("importing sys")
 import sys
+print("importing importlib.abc")
 import importlib.abc
+print("importing libcache")
 import linecache
 
 class RegisterModuleImporter(importlib.abc.InspectLoader):
@@ -65,31 +69,17 @@ class RegisterModuleImporter(importlib.abc.InspectLoader):
             return importlib.util.spec_from_loader(fullname, self)
         return None
 
-# print("exec_prefix:", sys.base_exec_prefix)
-# print("_base_executable:", sys._base_executable)
-# print("base_prefix:", sys.base_prefix)
-# print("exec_prefix:", sys.exec_prefix)
-# print("executable:", sys.executable)
-# print("path:", sys.path)
-# print("prefix:", sys.prefix)
-import torch # has to be done serially otherwise things will segfault
-try:
-  import torch.version # for some reason torch doesn't import this and cuda fails?
-except ModuleNotFoundError:
-  # fbcode built doesn't have version.py, workaround by faking its info...
-  from types import ModuleType
-  _v = torch.version = sys.modules['torch.version'] = ModuleType('torch.version')
-  _v.__version__ = '1.8.0a0+fake'
-  _v.debug = False
-  _v.cuda = '10.1'
-  _v.git_version = 'fake'
-  _v.hip = None
-
-
-if torch.cuda.is_available():
-  torch.zeros(1).cuda() # force cuda init...
+print("exec_prefix:", sys.base_exec_prefix)
+print("_base_executable:", sys._base_executable)
+print("base_prefix:", sys.base_prefix)
+print("exec_prefix:", sys.exec_prefix)
+print("executable:", sys.executable)
+print("path:", sys.path)
+print("prefix:", sys.prefix)
 import warnings
+print("imported warnings")
 warnings.simplefilter("ignore")
+print("ignored simple filter")
 )PYTHON";
 
 extern "C" __attribute__((__weak__)) PyObject* PyInit_tensorrt(void);

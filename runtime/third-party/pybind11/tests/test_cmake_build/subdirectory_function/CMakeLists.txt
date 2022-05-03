@@ -31,5 +31,4 @@ add_custom_target(
   PYTHONPATH=$<TARGET_FILE_DIR:test_subdirectory_function>
   ${_Python_EXECUTABLE}
   ${PROJECT_SOURCE_DIR}/../test.py
-  ${PROJECT_NAME}
-  DEPENDS test_subdirectory_function)
+  ${PROJECT_NAME})

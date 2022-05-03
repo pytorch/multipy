@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 #
 # pybind11 documentation build configuration file, created by
 # sphinx-quickstart on Sun Oct 11 19:23:48 2015.
@@ -12,11 +13,12 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import os
-import re
-import subprocess
 import sys
+import os
+import shlex
+import subprocess
 from pathlib import Path
+import re
 
 DIR = Path(__file__).parent.resolve()
 
@@ -344,9 +346,9 @@ def generate_doxygen_xml(app):
         subprocess.call(["doxygen", "--version"])
         retcode = subprocess.call(["doxygen"], cwd=app.confdir)
         if retcode < 0:
-            sys.stderr.write(f"doxygen error code: {-retcode}\n")
+            sys.stderr.write("doxygen error code: {}\n".format(-retcode))
     except OSError as e:
-        sys.stderr.write(f"doxygen execution failed: {e}\n")
+        sys.stderr.write("doxygen execution failed: {}\n".format(e))
 
 
 def prepare(app):

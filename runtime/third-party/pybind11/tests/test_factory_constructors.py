@@ -1,10 +1,12 @@
+# -*- coding: utf-8 -*-
+import pytest
 import re
 
-import pytest
+import env  # noqa: F401
 
-from pybind11_tests import ConstructorStats
 from pybind11_tests import factory_constructors as m
 from pybind11_tests.factory_constructors import tag
+from pybind11_tests import ConstructorStats
 
 
 def test_init_factory_basic():
@@ -80,7 +82,7 @@ def test_init_factory_signature(msg):
             4. m.factory_constructors.TestFactory1(arg0: handle, arg1: int, arg2: handle)
 
         Invoked with: 'invalid', 'constructor', 'arguments'
-    """
+    """  # noqa: E501 line too long
     )
 
     assert (
@@ -463,10 +465,12 @@ def test_reallocation_g(capture, msg):
     )
 
 
+@pytest.mark.skipif("env.PY2")
 def test_invalid_self():
-    """Tests invocation of the pybind-registered base class with an invalid `self` argument."""
+    """Tests invocation of the pybind-registered base class with an invalid `self` argument.  You
+    can only actually do this on Python 3: Python 2 raises an exception itself if you try."""
 
-    class NotPybindDerived:
+    class NotPybindDerived(object):
         pass
 
     # Attempts to initialize with an invalid type passed as `self`:
@@ -482,9 +486,7 @@ def test_invalid_self():
     # Same as above, but for a class with an alias:
     class BrokenTF6(m.TestFactory6):
         def __init__(self, bad):
-            if bad == 0:
-                m.TestFactory6.__init__()
-            elif bad == 1:
+            if bad == 1:
                 a = m.TestFactory2(tag.pointer, 1)
                 m.TestFactory6.__init__(a, tag.base, 1)
             elif bad == 2:
@@ -504,13 +506,13 @@ def test_invalid_self():
             BrokenTF1(arg)
         assert (
             str(excinfo.value)
-            == "__init__(self, ...) called with invalid or missing `self` argument"
+            == "__init__(self, ...) called with invalid `self` argument"
         )
 
-    for arg in (0, 1, 2, 3, 4):
+    for arg in (1, 2, 3, 4):
         with pytest.raises(TypeError) as excinfo:
             BrokenTF6(arg)
         assert (
             str(excinfo.value)
-            == "__init__(self, ...) called with invalid or missing `self` argument"
+            == "__init__(self, ...) called with invalid `self` argument"
         )
