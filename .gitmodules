@@ -1,0 +1,3 @@
+[submodule "runtime/third-party/fmt"]
+	path = runtime/third-party/fmt
+	url = git@github.com:fmtlib/fmt.git
