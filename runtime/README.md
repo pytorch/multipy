@@ -45,7 +45,6 @@ cd build
 
 # build runtime
 # replace {PYTORCH_ROOT} with your path to pytorch/torch
-
-with-proxy cmake -DCMAKE_VERBOSE_MAKEFILE:BOOL=OFF -DCMAKE_PREFIX_PATH="{PYTORCH_ROOT}/lib/;../third-party/pybind11/build;../third-party/fmt/build" ..
-cmake —build . —config Release
+cmake -DCMAKE_VERBOSE_MAKEFILE:BOOL=OFF -DCMAKE_PREFIX_PATH="{PYTORCH_ROOT}/lib/;../third-party/pybind11/build;../third-party/fmt/build" ..
+cmake --build . --config Release
 ```
