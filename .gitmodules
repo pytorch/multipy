@@ -4,3 +4,6 @@
 [submodule "runtime/third-party/pybind11"]
 	path = runtime/third-party/pybind11
 	url = git@github.com:pybind/pybind11.git
+[submodule "runtime/third-party/pytorch"]
+	path = runtime/third-party/pytorch
+	url = git@github.com:pytorch/pytorch.git
