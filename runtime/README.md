@@ -32,12 +32,16 @@ cd MultiPy/runtime
 cd third-party/fmt
 mkdir build
 cd build
-cmake ..
+cmake ../..
 
 cd ../pybind11
 mkdir build
 cd build
 cmake ..
+cd ../..
+
+cd ../pytorch
+USE_DEPLOY=1 python setup.py develop
 cd ../..
 
 mkdir build
