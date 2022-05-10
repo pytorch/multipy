@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.19)
 project(MultipyRuntime)
 set(DEPLOY_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-set(PYTORCH_ROOT "/home/sahanp/local/pytorch/torch")
+set(PYTORCH_ROOT "${DEPLOY_DIR}/third-party/pytorch")
 
 add_subdirectory(interpreter)
 add_subdirectory(third-party/fmt)
 add_subdirectory(third-party/pybind11)
-include_directories(BEFORE "${PYTORCH_ROOT}/include")
-include_directories(BEFORE "${PYTORCH_ROOT}/include/torch/csrc/api/include/")
+include_directories(BEFORE "${PYTORCH_ROOT}/torch/include")
+include_directories(BEFORE "${PYTORCH_ROOT}/torch/include/torch/csrc/api/include/")
 
 include(${DEPLOY_DIR}/utils.cmake)
 
@@ -55,38 +55,38 @@ set(INTERPRETER_TEST_SOURCES_GPU
   ${DEPLOY_DIR}/test_deploy_gpu.cpp
 )
 
-LINK_DIRECTORIES("${PYTORCH_ROOT}/lib")
+LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
 add_executable(test_deploy ${INTERPRETER_TEST_SOURCES})
 target_compile_definitions(test_deploy PUBLIC TEST_CUSTOM_LIBRARY)
-target_include_directories(test_deploy PRIVATE ${PYTORCH_ROOT})
+target_include_directories(test_deploy PRIVATE ${PYTORCH_ROOT}/torch)
 target_link_libraries(test_deploy
   PUBLIC "-Wl,--no-as-needed -rdynamic" gtest dl torch_deploy c10 torch_cpu
 )
 
-LINK_DIRECTORIES("${PYTORCH_ROOT}/lib")
+LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
 add_executable(test_deploy_gpu ${INTERPRETER_TEST_SOURCES_GPU})
 target_compile_definitions(test_deploy_gpu PUBLIC TEST_CUSTOM_LIBRARY)
-target_include_directories(test_deploy_gpu PRIVATE ${PYTORCH_ROOT})
+target_include_directories(test_deploy_gpu PRIVATE ${PYTORCH_ROOT}/torch)
 target_link_libraries(test_deploy_gpu
   PUBLIC "-Wl,--no-as-needed -rdynamic" gtest dl torch_deploy c10 torch_cpu
 )
 
-LINK_DIRECTORIES("${PYTORCH_ROOT}/lib")
+LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
 add_library(test_deploy_lib SHARED test_deploy_lib.cpp)
 add_dependencies(test_deploy_lib cpython)
 target_include_directories(test_deploy_lib BEFORE PRIVATE ${PYTHON_INC_DIR})
 target_link_libraries(test_deploy_lib PRIVATE pybind11::pybind11)
 
-LINK_DIRECTORIES("${PYTORCH_ROOT}/lib")
+LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
 add_executable(deploy_benchmark ${DEPLOY_DIR}/example/benchmark.cpp)
-target_include_directories(deploy_benchmark PRIVATE ${PYTORCH_ROOT})
+target_include_directories(deploy_benchmark PRIVATE ${PYTORCH_ROOT}/torch)
 target_link_libraries(deploy_benchmark
   PUBLIC "-Wl,--no-as-needed -rdynamic" torch_deploy c10 torch_cpu
 )
 
-LINK_DIRECTORIES("${PYTORCH_ROOT}/lib")
+LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
 add_executable(interactive_embedded_interpreter ${DEPLOY_DIR}/interactive_embedded_interpreter.cpp)
-target_include_directories(interactive_embedded_interpreter PRIVATE ${PYTORCH_ROOT})
+target_include_directories(interactive_embedded_interpreter PRIVATE ${PYTORCH_ROOT}/torch)
 target_link_libraries(interactive_embedded_interpreter
   PUBLIC "-Wl,--no-as-needed -rdynamic" torch_deploy c10 torch_cpu
 )

@@ -1,9 +1,9 @@
 SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" )
 SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" PARENT_SCOPE)
 
-set(PYTORCH_ROOT "/home/sahanp/local/pytorch/torch")
-include_directories(BEFORE "${PYTORCH_ROOT}/include")
-include_directories(BEFORE "${PYTORCH_ROOT}/include/torch/csrc/api/include/")
+set(PYTORCH_ROOT "${DEPLOY_DIR}/third-party/pytorch")
+include_directories(BEFORE "${PYTORCH_ROOT}/torch/include")
+include_directories(BEFORE "${PYTORCH_ROOT}/torch/include/torch/csrc/api/include/")
 SET(MULTIPY_UTILS "${CMAKE_CURRENT_SOURCE_DIR}/../../utils")
 
 # Build cpython
@@ -80,23 +80,23 @@ set(FROZEN_FILES
   ${FROZEN_DIR}/bytecode_4.c
 )
 
-file(GLOB_RECURSE PYTORCH_PYTHON_SOURCE_FILES ${PYTORCH_ROOT}/*.py)
+file(GLOB_RECURSE PYTORCH_PYTHON_SOURCE_FILES ${PYTORCH_ROOT}/torch/*.py)
 
 # Packages to freeze: python stdlib, typing extension, and torch
 add_custom_command(
    OUTPUT ${FROZEN_FILES}
    WORKING_DIRECTORY ${INTERPRETER_DIR}
    COMMAND mkdir -p ${FROZEN_DIR}
-   COMMAND ${PYTHON_BIN} ${MULTIPY_UTILS}/_freeze.py ${PYTHON_STDLIB_DIR} ${TYPING_PKG} ${PYTORCH_ROOT} --oss --install_dir ${FROZEN_DIR} --verbose
+   COMMAND ${PYTHON_BIN} ${MULTIPY_UTILS}/_freeze.py ${PYTHON_STDLIB_DIR} ${TYPING_PKG} ${PYTORCH_ROOT}/torch --oss --install_dir ${FROZEN_DIR} --verbose
    DEPENDS cpython typing ${PYTORCH_PYTHON_SOURCE_FILES}
    VERBATIM
 )
 
 # instantiate a library based on the objects that make up torch_python
 # make sure system python isn't used here
-add_library(torch_python_obj_static STATIC IMPORTED)
-set_property(TARGET torch_python_obj_static PROPERTY
-             IMPORTED_LOCATION "${PYTORCH_ROOT}/lib/libtorch_python_obj_static.a")
+add_library(torch_python_static STATIC IMPORTED)
+set_property(TARGET torch_python_static PROPERTY
+             IMPORTED_LOCATION "${PYTORCH_ROOT}/build/lib/libtorch_python_static.a")
 # Build the interpreter lib, designed to be standalone and dlopened
 # We bake the python and torch_python binding objs into libinterpreter
 set(INTERPRETER_LIB_SOURCES
@@ -119,7 +119,7 @@ target_include_directories(torch_deployinterpreter PRIVATE ${INTERPRETER_DIR})
 target_include_directories(torch_deployinterpreter BEFORE PUBLIC ${PYTHON_INC_DIR})
 
 target_link_libraries(torch_deployinterpreter PRIVATE ${PYTHON_LIB} ${PYTHON_STDLIB})
-target_link_libraries(torch_deployinterpreter PRIVATE  "-Wl,--no-as-needed -rdynamic" torch_python_obj_static)
+target_link_libraries(torch_deployinterpreter PRIVATE  "-Wl,--no-as-needed -rdynamic" torch_python_static)
 target_link_libraries(torch_deployinterpreter PRIVATE fmt::fmt-header-only)
 target_link_libraries(torch_deployinterpreter PRIVATE ${PYTHON_INSTALL_DIR}/lib/libssl.a ${PYTHON_INSTALL_DIR}/lib/libcrypto.a)
 target_link_libraries(torch_deployinterpreter PRIVATE pybind11::pybind11)
