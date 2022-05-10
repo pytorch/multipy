@@ -65,13 +65,13 @@ class RegisterModuleImporter(importlib.abc.InspectLoader):
             return importlib.util.spec_from_loader(fullname, self)
         return None
 
-print("exec_prefix:", sys.base_exec_prefix)
-print("_base_executable:", sys._base_executable)
-print("base_prefix:", sys.base_prefix)
-print("exec_prefix:", sys.exec_prefix)
-print("executable:", sys.executable)
-print("path:", sys.path)
-print("prefix:", sys.prefix)
+# print("exec_prefix:", sys.base_exec_prefix)
+# print("_base_executable:", sys._base_executable)
+# print("base_prefix:", sys.base_prefix)
+# print("exec_prefix:", sys.exec_prefix)
+# print("executable:", sys.executable)
+# print("path:", sys.path)
+# print("prefix:", sys.prefix)
 import torch # has to be done serially otherwise things will segfault
 try:
   import torch.version # for some reason torch doesn't import this and cuda fails?

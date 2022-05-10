@@ -96,7 +96,7 @@ add_custom_command(
 # make sure system python isn't used here
 add_library(torch_python_static STATIC IMPORTED)
 set_property(TARGET torch_python_static PROPERTY
-             IMPORTED_LOCATION "${PYTORCH_ROOT}/build/lib/libtorch_python_static.a")
+             IMPORTED_LOCATION "${PYTORCH_ROOT}/torch/lib64/libtorch_python_static.a")
 # Build the interpreter lib, designed to be standalone and dlopened
 # We bake the python and torch_python binding objs into libinterpreter
 set(INTERPRETER_LIB_SOURCES
