@@ -1,4 +1,4 @@
-#include <torch/deploy.h>
+#include "../deploy.h"
 
 #include <ATen/ATen.h>
 #include <ATen/TypeDefault.h>
