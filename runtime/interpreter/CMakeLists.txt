@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.19)
-project(MultipyRuntime)
 SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" )
 SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" PARENT_SCOPE)
 
