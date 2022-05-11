@@ -41,6 +41,7 @@ jobs:
             cd build
             pwd
             cmake ..
+            ls ..
             cd ../../pybind11
             mkdir build
             cd build
