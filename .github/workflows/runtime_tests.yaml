@@ -24,9 +24,9 @@ jobs:
         python-version: ${{ matrix.python-version }}
         activate-environment: multipy_runtime_env
     - name: Install python dependencies
-        shell: bash -l {0}
-        env:
-          PYTHON_VERSION: ${{ matrix.python-version }}
+      shell: bash -l {0}
+      env:
+        PYTHON_VERSION: ${{ matrix.python-version }}
       run: |
         conda activate multipy_runtime_env
         conda install -y astunparse numpy ninja pyyaml mkl mkl-include setuptools cmake cffi typing_extensions future six requests dataclasses
