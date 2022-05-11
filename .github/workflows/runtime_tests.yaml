@@ -1,4 +1,4 @@
-name: Package Unittests
+name: Runtime Unittests
 
 on:
   push:
@@ -34,9 +34,11 @@ jobs:
     - name: Install python dependencies
       run: |
         conda init bash
+        source /home/runner/.bashrc
         conda activate multipy_runtime
         conda install -y astunparse numpy ninja pyyaml mkl mkl-include setuptools cmake cffi typing_extensions future six requests dataclasses
     - name: Build third-party libraries
       run: |
             conda activate multipy_runtime
             pwd
+            ls
