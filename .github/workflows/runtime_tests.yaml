@@ -17,6 +17,8 @@ jobs:
     steps:
     - name: Checkout MultiPy
       uses: actions/checkout@v2
+      with:
+        submodules: true
 
     - name: create conda env
       uses: conda-incubator/setup-miniconda@v2
