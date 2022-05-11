@@ -61,3 +61,9 @@ jobs:
             cmake -DCMAKE_VERBOSE_MAKEFILE:BOOL=OFF -DCMAKE_PREFIX_PATH="../third-party/pybind11/build;../third-party/fmt/build" ..
             cmake --build . --config Release
             ./test_deploy
+    - name: Run test_deploy
+      shell: bash -l {0}
+      env:
+        PYTHON_VERSION: ${{ matrix.python-version }}
+      run: |
+            ./test_deploy
