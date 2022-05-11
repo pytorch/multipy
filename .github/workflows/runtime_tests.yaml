@@ -29,13 +29,13 @@ jobs:
         conda create --name multipy_runtime python=${{ matrix.python-version }}
         conda info
 
-      - name: Checkout MultiPy
-        uses: actions/checkout@v2
-      - name: Install python dependencies
-        run: |
-          conda activate multipy_runtime
-          conda install -y astunparse numpy ninja pyyaml mkl mkl-include setuptools cmake cffi typing_extensions future six requests dataclasses
-      - name: Build third-party libraries
-        run: |
-              conda activate multipy_runtime
-              pwd
+    - name: Checkout MultiPy
+      uses: actions/checkout@v2
+    - name: Install python dependencies
+      run: |
+        conda activate multipy_runtime
+        conda install -y astunparse numpy ninja pyyaml mkl mkl-include setuptools cmake cffi typing_extensions future six requests dataclasses
+    - name: Build third-party libraries
+      run: |
+            conda activate multipy_runtime
+            pwd
