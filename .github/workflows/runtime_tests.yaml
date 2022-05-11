@@ -36,5 +36,28 @@ jobs:
         PYTHON_VERSION: ${{ matrix.python-version }}
       run: |
             conda activate multipy_runtime_env
+            cd runtime/third-party/fmt
+            mkdir build
+            cd build
             pwd
-            ls
+            cmake ..
+            cd ../../pybind11
+            mkdir build
+            cd build
+            pwd
+            cmake ..
+            cd ../../pytorch
+            pwd
+            USE_DEPLOY=1 python setup.py develop
+            cd ../..
+            pwd
+    - name: Build multipy runtime
+      shell: bash -l {0}
+      env:
+        PYTHON_VERSION: ${{ matrix.python-version }}
+      run: |
+            mkdir build
+            cd build
+            cmake -DCMAKE_VERBOSE_MAKEFILE:BOOL=OFF -DCMAKE_PREFIX_PATH="../third-party/pybind11/build;../third-party/fmt/build" ..
+            cmake --build . --config Release
+            ./test_deploy
