@@ -20,7 +20,7 @@ jobs:
       run: |
         wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
         bash ~/miniconda.sh -b -p $HOME/miniconda
-    - name: setup Path
+    - name: Setup Path
       run: |
         echo "/home/ec2-user/miniconda/bin" >> $GITHUB_PATH
         echo "CONDA=/home/ec2-user/miniconda" >> $GITHUB_PATH
@@ -33,6 +33,7 @@ jobs:
       uses: actions/checkout@v2
     - name: Install python dependencies
       run: |
+        conda init bash
         conda activate multipy_runtime
         conda install -y astunparse numpy ninja pyyaml mkl mkl-include setuptools cmake cffi typing_extensions future six requests dataclasses
     - name: Build third-party libraries
