@@ -42,18 +42,14 @@ jobs:
             ls
             mkdir build
             cd build
-            pwd
             cmake ..
             cd ../../pybind11
             mkdir build
             cd build
-            pwd
             cmake ..
             cd ../../pytorch
-            pwd
             USE_DEPLOY=1 python setup.py develop
             cd ../..
-            pwd
     - name: Build multipy runtime
       shell: bash -l {0}
       env:
@@ -63,10 +59,12 @@ jobs:
             cd build
             cmake -DCMAKE_VERBOSE_MAKEFILE:BOOL=OFF -DCMAKE_PREFIX_PATH="../third-party/pybind11/build;../third-party/fmt/build" ..
             cmake --build . --config Release
-            ./test_deploy
+            cd ..
     - name: Run test_deploy
       shell: bash -l {0}
       env:
         PYTHON_VERSION: ${{ matrix.python-version }}
       run: |
-            ./test_deploy
+            conda activate multipy_runtime_env
+            python example/generate_examples.py
+            ./build/test_deploy
