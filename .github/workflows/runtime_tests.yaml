@@ -35,6 +35,6 @@ jobs:
       env:
         PYTHON_VERSION: ${{ matrix.python-version }}
       run: |
-            conda activate multipy_runtime
+            conda activate multipy_runtime_env
             pwd
             ls
