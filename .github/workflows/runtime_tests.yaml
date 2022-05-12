@@ -32,6 +32,7 @@ jobs:
       run: |
         conda activate multipy_runtime_env
         conda install -y astunparse numpy ninja pyyaml mkl mkl-include setuptools cmake cffi typing_extensions future six requests dataclasses
+        conda install -y -c anaconda pytest
     - name: Build third-party libraries
       shell: bash -l {0}
       env:
