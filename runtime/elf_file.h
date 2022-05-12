@@ -1,9 +1,9 @@
 #pragma once
 
 #include <elf.h>
-#include <torch/csrc/deploy/Exception.h>
-#include <torch/csrc/deploy/interpreter/Optional.hpp>
-#include <torch/csrc/deploy/mem_file.h>
+#include "Exception.h"
+#include "interpreter/Optional.hpp"
+#include "mem_file.h"
 #include <vector>
 
 namespace torch {

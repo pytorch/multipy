@@ -1,7 +1,10 @@
 SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" )
 SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" PARENT_SCOPE)
 
-SET(PYTORCH_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../../")
+set(PYTORCH_ROOT "${DEPLOY_DIR}/third-party/pytorch")
+include_directories(BEFORE "${PYTORCH_ROOT}/torch/include")
+include_directories(BEFORE "${PYTORCH_ROOT}/torch/include/torch/csrc/api/include/")
+SET(MULTIPY_UTILS "${CMAKE_CURRENT_SOURCE_DIR}/../../utils")
 
 # Build cpython
 SET(PYTHON_INSTALL_DIR "${INTERPRETER_DIR}/cpython")
@@ -24,6 +27,15 @@ ExternalProject_Add(
   BYPRODUCTS ${PYTHON_MODULES} ${PYTHON_LIB} ${PYTHON_BIN} ${PYTHON_INSTALL_DIR}/lib/libssl.a ${PYTHON_INSTALL_DIR}/lib/libcrypto.a
   LOG_OUTPUT_ON_FAILURE True
 )
+
+# add gtest dependency
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/609281088cfefc76f9d0ce82e1ff6c30cc3591e5.zip
+)
+FetchContent_MakeAvailable(googletest)
+include(GoogleTest)
 
 # We find the built python modules, this is confusing because python build already outputs
 # the modules in a strange nested path, and then that path is relative to the
@@ -75,15 +87,16 @@ add_custom_command(
    OUTPUT ${FROZEN_FILES}
    WORKING_DIRECTORY ${INTERPRETER_DIR}
    COMMAND mkdir -p ${FROZEN_DIR}
-   COMMAND ${PYTHON_BIN} ${PYTORCH_ROOT}/torch/utils/_freeze.py ${PYTHON_STDLIB_DIR} ${TYPING_PKG} ${PYTORCH_ROOT}/torch --oss --install_dir ${FROZEN_DIR} --verbose
+   COMMAND ${PYTHON_BIN} ${MULTIPY_UTILS}/_freeze.py ${PYTHON_STDLIB_DIR} ${TYPING_PKG} ${PYTORCH_ROOT}/torch --oss --install_dir ${FROZEN_DIR} --verbose
    DEPENDS cpython typing ${PYTORCH_PYTHON_SOURCE_FILES}
    VERBATIM
 )
 
 # instantiate a library based on the objects that make up torch_python
 # make sure system python isn't used here
-target_include_directories(torch_python_obj BEFORE PRIVATE ${PYTHON_INC_DIR})
-add_library(torch_python_static STATIC $<TARGET_OBJECTS:torch_python_obj>)
+add_library(torch_python_static STATIC IMPORTED)
+set_property(TARGET torch_python_static PROPERTY
+             IMPORTED_LOCATION "${PYTORCH_ROOT}/torch/lib64/libtorch_python_static.a")
 # Build the interpreter lib, designed to be standalone and dlopened
 # We bake the python and torch_python binding objs into libinterpreter
 set(INTERPRETER_LIB_SOURCES
@@ -94,11 +107,10 @@ set(INTERPRETER_LIB_SOURCES
   ${FROZEN_FILES}
   ${LINKER_SCRIPT}
 )
-add_library(torch_deployinterpreter ${INTERPRETER_LIB_SOURCES} ${LINKER_SCRIPT})
+add_library(torch_deployinterpreter SHARED ${INTERPRETER_LIB_SOURCES} ${LINKER_SCRIPT})
 # need to ensure headers are present before any .cpp in interpreter are compiled,
 # but cpp themselves don't clearly depend on cpython so there is a race otherwise
 add_dependencies(torch_deployinterpreter cpython)
-add_dependencies(torch_python_obj cpython)
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   target_compile_options(torch_deployinterpreter PRIVATE -fno-gnu-unique)
 endif()
@@ -106,7 +118,9 @@ endif()
 target_include_directories(torch_deployinterpreter PRIVATE ${INTERPRETER_DIR})
 target_include_directories(torch_deployinterpreter BEFORE PUBLIC ${PYTHON_INC_DIR})
 
-target_link_libraries(torch_deployinterpreter PRIVATE ${PYTHON_LIB} ${PYTHON_STDLIB} torch_python_static)
-target_link_libraries(torch_deployinterpreter PRIVATE fmt::fmt-header-only protobuf::libprotobuf-lite)
+target_link_libraries(torch_deployinterpreter PRIVATE ${PYTHON_LIB} ${PYTHON_STDLIB})
+target_link_libraries(torch_deployinterpreter PRIVATE  "-Wl,--no-as-needed -rdynamic" torch_python_static)
+target_link_libraries(torch_deployinterpreter PRIVATE fmt::fmt-header-only)
 target_link_libraries(torch_deployinterpreter PRIVATE ${PYTHON_INSTALL_DIR}/lib/libssl.a ${PYTHON_INSTALL_DIR}/lib/libcrypto.a)
-target_link_libraries(torch_deployinterpreter PRIVATE pybind::pybind11)
+target_link_libraries(torch_deployinterpreter PRIVATE pybind11::pybind11)
+target_link_libraries(torch_deployinterpreter PRIVATE gtest)

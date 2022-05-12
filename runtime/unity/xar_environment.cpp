@@ -2,9 +2,9 @@
 #include <dlfcn.h>
 #include <fmt/format.h>
 #include <sys/stat.h>
-#include <torch/csrc/deploy/Exception.h>
-#include <torch/csrc/deploy/elf_file.h>
-#include <torch/csrc/deploy/unity/xar_environment.h>
+#include "Exception.h"
+#include "elf_file.h"
+#include "unity/xar_environment.h"
 
 namespace torch {
 namespace deploy {
