@@ -31,15 +31,11 @@ jobs:
           echo "/home/ec2-user/miniconda/bin" >> $GITHUB_PATH
           echo "CONDA=/home/ec2-user/miniconda" >> $GITHUB_PATH
 
-      - name: gen examples
-        run: |
-            # A minor hack to get the CI working as conda doesn't have torch,
-            # fortunately we can remove this once we have a dynamically linked torch
-            conda create --name example_env python=${{ matrix.python-version }}
-            conda run -n example_env python -m pip install torch torchvision torchaudio pathlib
+      - name: Checkout MultiPy
+        uses: actions/checkout@v2
+        with:
+          submodules: true
 
-            cd runtime/example
-            conda run -n example_env python generate_examples.py
       - name: Install C++ toolchain
         run: |
             sudo yum -y install clang llvm
@@ -50,17 +46,21 @@ jobs:
           conda create --name multipy_runtime_env python=${{ matrix.python-version }}
           conda info
 
-      - name: Checkout MultiPy
-        uses: actions/checkout@v2
-        with:
-          submodules: true
-
       - name: Install python/pytorch dependencies
         shell: bash -l {0}
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
           conda run -n multipy_runtime_env python -m pip install astunparse numpy ninja pyyaml mkl mkl-include setuptools cmake cffi typing_extensions future six requests dataclasses pytest
+      - name: gen examples
+        run: |
+            # A minor hack to get the CI working as conda doesn't have torch,
+            # fortunately we can remove this once we have a dynamically linked torch
+            conda create --name example_env python=${{ matrix.python-version }}
+            conda run -n example_env python -m pip install torch torchvision torchaudio pathlib
+
+            cd runtime/example
+            conda run -n example_env python generate_examples.py
       - name: Build third-party libraries
         shell: bash -l {0}
         env:
