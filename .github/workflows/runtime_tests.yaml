@@ -77,6 +77,11 @@ jobs:
       env:
         PYTHON_VERSION: ${{ matrix.python-version }}
       run: |
-            pwd
             conda run -n multipy_runtime_env python runtime/example/generate_examples.py
+            bash runtime/build/test_deploy
+   - name: Run test_deploy_dummy
+      shell: bash -l {0}
+      env:
+        PYTHON_VERSION: ${{ matrix.python-version }}
+      run: |
             bash runtime/build/test_deploy
