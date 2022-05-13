@@ -23,8 +23,8 @@ jobs:
           sudo yum -y install zlib-devel
       - name: gen examples
         run: |
-              # A minor hack to get the CI working as conda doesn't have torch,
-              # fortunately we can remove this once we have a dynamically linked torch
+            # A minor hack to get the CI working as conda doesn't have torch,
+            # fortunately we can remove this once we have a dynamically linked torch
             conda create --name example_env python=${{ matrix.python-version }}
             conda run -n example_env python -m pip install torch torchvision torchaudio pathlib
             conda run -n example_env python runtime/example/generate_examples.py
