@@ -53,13 +53,18 @@ jobs:
         run: |
           conda run -n multipy_runtime_env python -m pip install astunparse numpy ninja pyyaml mkl mkl-include setuptools cmake cffi typing_extensions future six requests dataclasses pytest
       - name: gen examples
+        shell: bash -l {0}
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
             # A minor hack to get the CI working as conda doesn't have torch,
             # fortunately we can remove this once we have a dynamically linked torch
+            ls
+            cd runtime
+            ls
+            cd example
             conda create --name example_env python=${{ matrix.python-version }}
             conda run -n example_env python -m pip install torch torchvision torchaudio pathlib
-
-            cd runtime/example
             conda run -n example_env python generate_examples.py
       - name: Build third-party libraries
         shell: bash -l {0}
