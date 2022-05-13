@@ -18,6 +18,10 @@ jobs:
       fail-fast: false
     runs-on: ${{ matrix.platform }}
     steps:
+      - name: Setup SSH (Click me for login details)
+        uses: ./.github/actions/setup-ssh
+        with:
+          github-secret: ${{ secrets.GITHUB_TOKEN }}
       - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:

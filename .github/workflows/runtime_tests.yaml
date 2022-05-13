@@ -20,7 +20,6 @@ jobs:
           sudo yum update -y
           sudo yum -y install git python3-pip
           sudo pip3 install --upgrade pip
-          sudo yum -y install zlib-devel
 
       - name: Setup SSH (Click me for login details)
         uses: ./.github/actions/setup-ssh
@@ -49,6 +48,8 @@ jobs:
               sudo yum -y install xz-devel bzip2-devel libnsl2-devel readline-devel expat-devel gdbm-devel glibc-devel gmp-devel libffi-devel libGL-devel libX11-devel ncurses-devel openssl-devel sqlite-devel tcl-devel tix-devel tk-devel
               sudo yum -y install lzma
               sudo yum -y install uuid
+              sudo yum install openmpi-devel
+              sudo yum -y install zlib-devel
       - name: create conda env
         run: |
           conda create --name multipy_runtime_env python=${{ matrix.python-version }}
