@@ -37,7 +37,9 @@ jobs:
             # fortunately we can remove this once we have a dynamically linked torch
             conda create --name example_env python=${{ matrix.python-version }}
             conda run -n example_env python -m pip install torch torchvision torchaudio pathlib
-            conda run -n example_env python runtime/example/generate_examples.py
+
+            cd runtime/example
+            conda run -n example_env python generate_examples.py
       - name: Install C++ toolchain
         run: |
             sudo yum -y install clang llvm
