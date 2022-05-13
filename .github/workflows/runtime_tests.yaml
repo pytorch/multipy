@@ -78,5 +78,5 @@ jobs:
         PYTHON_VERSION: ${{ matrix.python-version }}
       run: |
             pwd
-            conda run -n multipy_runtime_env python -m runtime/example/generate_examples.py
+            conda run -n multipy_runtime_env python runtime/example/generate_examples.py
             ./build/test_deploy
