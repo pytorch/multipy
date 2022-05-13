@@ -38,12 +38,12 @@ jobs:
 
       - name: Install C++ toolchain
         run: |
-            sudo yum -y install clang llvm
-            export CC=clang
-            export CXX=clang++
-            sudo yum -y install xz-devel bzip2-devel libnsl2-devel readline-devel expat-devel gdbm-devel glibc-devel gmp-devel libffi-devel libGL-devel libX11-devel ncurses-devel openssl-devel sqlite-devel tcl-devel tix-devel tk-devel
-            sudo yum -y install lzma
-            sudo yum -y install uuid
+              sudo yum -y install clang llvm
+              export CC=clang
+              export CXX=clang++
+              sudo yum -y install xz-devel bzip2-devel libnsl2-devel readline-devel expat-devel gdbm-devel glibc-devel gmp-devel libffi-devel libGL-devel libX11-devel ncurses-devel openssl-devel sqlite-devel tcl-devel tix-devel tk-devel
+              sudo yum -y install lzma
+              sudo yum -y install uuid
       - name: create conda env
         run: |
           conda create --name multipy_runtime_env python=${{ matrix.python-version }}
