@@ -64,11 +64,11 @@ jobs:
               cd build
               conda run -n multipy_runtime_env cmake ..
               cd ../../pytorch
-              USE_DEPLOY=1
-              conda run -n multipy_runtime_env python setup.py develop
-              echo "find -name *libtorch_python_static.a*"
-              find -name *libtorch_python_static.a*
-              cd ../..
+              # USE_DEPLOY=1
+              # conda run -n multipy_runtime_env python setup.py develop
+              # echo "find -name *libtorch_python_static.a*"
+              # find -name *libtorch_python_static.a*
+              # cd ../..
       - name: Build multipy runtime
         shell: bash -l {0}
         env:
