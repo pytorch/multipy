@@ -70,6 +70,9 @@ jobs:
             conda create --name example_env python=${{ matrix.python-version }}
             conda run -n example_env python -m pip install torch torchvision torchaudio pathlib
             conda run -n example_env python generate_examples.py
+            cd generated
+            echo "Multipy/runtime/example/generated ls"
+            ls
       - name: Build third-party libraries
         shell: bash -l {0}
         env:
@@ -83,12 +86,16 @@ jobs:
               mkdir build
               cd build
               conda run -n multipy_runtime_env cmake ..
-              cd ../../pytorch
+      - name: Build pytorch
+        shell: bash -l {0}
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: |
+              cd runtime/third-party/pytorch
               USE_DEPLOY=1
               conda run -n multipy_runtime_env python setup.py develop
               echo "find -name *libtorch_python_static.a*"
               find -name *libtorch_python_static.a*
-              cd ../..
       - name: Build multipy runtime
         shell: bash -l {0}
         env:
