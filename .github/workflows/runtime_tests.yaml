@@ -41,6 +41,9 @@ jobs:
             sudo yum -y install clang llvm
             export CC=clang
             export CXX=clang++
+            sudo yum install xz-devel bzip2-devel libnsl2-devel readline-devel expat-devel gdbm-devel glibc-devel gmp-devel libffi-devel libGL-devel libX11-devel ncurses-devel openssl-devel sqlite-devel tcl-devel tix-devel tk-devel
+            sudo yum install lzma
+            sudo yum -y install uuid
       - name: create conda env
         run: |
           conda create --name multipy_runtime_env python=${{ matrix.python-version }}
@@ -94,15 +97,11 @@ jobs:
               cd runtime/third-party/pytorch
               USE_DEPLOY=1
               conda run -n multipy_runtime_env python setup.py develop
-              echo "find -name *libtorch_python_static.a*"
-              find -name *libtorch_python_static.a*
       - name: Build multipy runtime
         shell: bash -l {0}
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
-              echo "find -name *libtorch_python_static.a*"
-              find -name *libtorch_python_static.a*
               cd runtime
               mkdir build
               cd build
