@@ -21,8 +21,10 @@ jobs:
           sudo yum -y install git python3-pip
           sudo pip3 install --upgrade pip
       - name: Install C++ toolchain
+        run: |
             sudo yum -y install clang llvm
             export CC=clang
+            export CXX=clang++
 
       - name: Setup conda
         run: |
