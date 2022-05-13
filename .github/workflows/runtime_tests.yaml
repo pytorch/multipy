@@ -55,7 +55,7 @@ jobs:
             conda run -n multipy_runtime_env cmake ..
             cd ../../pytorch
             USE_DEPLOY=1
-            conda run -n multipy_runtime_env -m python setup.py develop
+            conda run -n multipy_runtime_env python setup.py develop
             echo "find -name *libtorch_python_static.a*"
             find -name *libtorch_python_static.a*
             cd ../..
@@ -77,6 +77,10 @@ jobs:
       env:
         PYTHON_VERSION: ${{ matrix.python-version }}
       run: |
+            # A minor hack to get the CI working as conda doesn't have torch,
+            # fortunately we can remove this once we have a dynamically linked torch
+            conda run -n multipy_runtime_env python -m pip install
+
             conda run -n multipy_runtime_env python runtime/example/generate_examples.py
             bash runtime/build/test_deploy
     - name: Run test_deploy_dummy
