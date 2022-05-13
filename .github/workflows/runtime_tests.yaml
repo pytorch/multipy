@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.8]
-        platform: [ubuntu-18.04]
+        platform: [ubuntu-18.04, linux.2xlarge, linux.8xlarge.nvidia.gpu, linux.4xlarge.nvidia.gpu]
       fail-fast: false
     runs-on: ${{ matrix.platform }}
     steps:
@@ -41,7 +41,6 @@ jobs:
       run: |
             conda activate multipy_runtime_env
             cd runtime/third-party/fmt
-            ls
             mkdir build
             cd build
             cmake ..
@@ -51,12 +50,16 @@ jobs:
             cmake ..
             cd ../../pytorch
             USE_DEPLOY=1 python setup.py develop
+            echo "find -name *libtorch_python_static.a*"
+            find -name *libtorch_python_static.a*
             cd ../..
     - name: Build multipy runtime
       shell: bash -l {0}
       env:
         PYTHON_VERSION: ${{ matrix.python-version }}
       run: |
+            echo "find -name *libtorch_python_static.a*"
+            find -name *libtorch_python_static.a*
             cd runtime
             mkdir build
             cd build
