@@ -79,4 +79,4 @@ jobs:
       run: |
             pwd
             conda run -n multipy_runtime_env python runtime/example/generate_examples.py
-            ./build/test_deploy
+            bash runtime/build/test_deploy
