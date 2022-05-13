@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.8]
-        platform: [linux.2xlarge, linux.4xlarge]
+        platform: [linux.2xlarge, linux.4xlarge, linux.8xlarge.nvidia.gpu, linux.4xlarge.nvidia.gpu]
       fail-fast: false
     runs-on: ${{ matrix.platform }}
     steps:
@@ -20,12 +20,6 @@ jobs:
           sudo yum update -y
           sudo yum -y install git python3-pip
           sudo pip3 install --upgrade pip
-
-      - name: Setup SSH (Click me for login details)
-        uses: ./.github/actions/setup-ssh
-        with:
-          github-secret: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Setup conda
         run: |
           wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
@@ -39,7 +33,10 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: true
-
+      - name: Setup SSH (Click me for login details)
+        uses: ./.github/actions/setup-ssh
+        with:
+          github-secret: ${{ secrets.GITHUB_TOKEN }}
       - name: Install C++ toolchain
         run: |
               sudo yum -y install clang llvm
