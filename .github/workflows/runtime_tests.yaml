@@ -80,7 +80,7 @@ jobs:
               mkdir build
               cd build
               pwd
-              conda run -n multipy_runtime_env cmake -DCMAKE_VERBOSE_MAKEFILE:BOOL=OFF -DCMAKE_PREFIX_PATH="../third-party/pybind11/build;../third-party/fmt/build" ..
+              conda run -n multipy_runtime_env cmake ..
               conda run -n multipy_runtime_env cmake --build . --config Release
               cd ..
       - name: Run test_deploy
