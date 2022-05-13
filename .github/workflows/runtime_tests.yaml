@@ -20,6 +20,14 @@ jobs:
           sudo yum update -y
           sudo yum -y install git python3-pip
           sudo pip3 install --upgrade pip
+          sudo yum -y install zlib-devel
+      - name: gen examples
+        run: |
+              # A minor hack to get the CI working as conda doesn't have torch,
+              # fortunately we can remove this once we have a dynamically linked torch
+            conda create --name example_env python=${{ matrix.python-version }}
+            conda run -n example_env python -m pip install torch torchvision torchaudio pathlib
+            conda run -n example_env python runtime/example/generate_examples.py
       - name: Install C++ toolchain
         run: |
             sudo yum -y install clang llvm
@@ -83,16 +91,12 @@ jobs:
               conda run -n multipy_runtime_env cmake ..
               conda run -n multipy_runtime_env cmake --build . --config Release
               cd ..
+              bash build/test_deploy
       - name: Run test_deploy
         shell: bash -l {0}
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
-              # A minor hack to get the CI working as conda doesn't have torch,
-              # fortunately we can remove this once we have a dynamically linked torch
-              conda run -n multipy_runtime_env python -m pip install torch torchvision torchaudio
-
-              conda run -n multipy_runtime_env python runtime/example/generate_examples.py
               bash runtime/build/test_deploy
       - name: Run test_deploy_dummy
         shell: bash -l {0}
