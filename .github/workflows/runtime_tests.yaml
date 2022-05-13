@@ -59,10 +59,14 @@ jobs:
         run: |
             # A minor hack to get the CI working as conda doesn't have torch,
             # fortunately we can remove this once we have a dynamically linked torch
+            echo "Multipy ls"
             ls
             cd runtime
+            echo "Multipy/runtime/ ls"
             ls
             cd example
+            echo "Multipy/runtime/example ls"
+            ls
             conda create --name example_env python=${{ matrix.python-version }}
             conda run -n example_env python -m pip install torch torchvision torchaudio pathlib
             conda run -n example_env python generate_examples.py
