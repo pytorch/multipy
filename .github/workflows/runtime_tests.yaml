@@ -79,7 +79,7 @@ jobs:
       run: |
             # A minor hack to get the CI working as conda doesn't have torch,
             # fortunately we can remove this once we have a dynamically linked torch
-            conda run -n multipy_runtime_env python -m pip install
+            conda run -n multipy_runtime_env python -m pip install torch torchvision torchaudio
 
             conda run -n multipy_runtime_env python runtime/example/generate_examples.py
             bash runtime/build/test_deploy
