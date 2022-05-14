@@ -98,7 +98,7 @@ jobs:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
               cd runtime/third-party/pytorch
-              USE_DEPLOY=1
+              export USE_DEPLOY=1
               conda run -n multipy_runtime_env python setup.py develop
       # - name: Build multipy runtime
       #   shell: bash -l {0}
