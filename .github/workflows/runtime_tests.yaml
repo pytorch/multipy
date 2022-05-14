@@ -100,28 +100,22 @@ jobs:
               cd runtime/third-party/pytorch
               export USE_DEPLOY=1
               conda run -n multipy_runtime_env python setup.py develop
-      # - name: Build multipy runtime
-      #   shell: bash -l {0}
-      #   env:
-      #     PYTHON_VERSION: ${{ matrix.python-version }}
-      #   run: |
-      #         cd runtime
-      #         mkdir build
-      #         cd build
-      #         pwd
-      #         conda run -n multipy_runtime_env cmake ..
-      #         conda run -n multipy_runtime_env cmake --build . --config Release
-      #         cd ..
-      #         bash build/test_deploy
-      # - name: Run test_deploy
-      #   shell: bash -l {0}
-      #   env:
-      #     PYTHON_VERSION: ${{ matrix.python-version }}
-      #   run: |
-      #         bash runtime/build/test_deploy
-      # - name: Run test_deploy_dummy
-      #   shell: bash -l {0}
-      #   env:
-      #     PYTHON_VERSION: ${{ matrix.python-version }}
-      #   run: |
-      #         bash runtime/build/test_deploy
+      - name: Build multipy runtime
+        shell: bash -l {0}
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: |
+              cd runtime
+              mkdir build
+              cd build
+              pwd
+              conda run -n multipy_runtime_env cmake ..
+              conda run -n multipy_runtime_env cmake --build . --config Release
+              cd ..
+              bash build/test_deploy
+      - name: Run test_deploy
+        shell: bash -l {0}
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: |
+              bash runtime/build/test_deploy
