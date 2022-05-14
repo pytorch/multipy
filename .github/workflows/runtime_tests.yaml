@@ -111,8 +111,6 @@ jobs:
               pwd
               conda run -n multipy_runtime_env cmake ..
               conda run -n multipy_runtime_env cmake --build . --config Release
-              cd ..
-              bash build/test_deploy
       - name: Run test_deploy
         shell: bash -l {0}
         env:
