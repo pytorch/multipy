@@ -3,18 +3,9 @@
 from io import BytesIO
 
 from package import PackageExporter, PackageImporter
-from package._mangling import (
-    PackageMangler,
-    demangle,
-    get_mangle_prefix,
-    is_mangled,
-)
-from package.package_exporter_no_torch import (
-    PackageExporter as PackageExporterNoTorch,
-)
-from package.package_importer_no_torch import (
-    PackageImporter as PackageImporterNoTorch,
-)
+from package._mangling import demangle, get_mangle_prefix, is_mangled, PackageMangler
+from package.package_exporter_no_torch import PackageExporter as PackageExporterNoTorch
+from package.package_importer_no_torch import PackageImporter as PackageImporterNoTorch
 from torch.testing._internal.common_utils import run_tests
 
 try:

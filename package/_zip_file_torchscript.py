@@ -1,10 +1,10 @@
 import os.path
 from pathlib import Path
-from typing import List, BinaryIO, Union, Optional
+from typing import BinaryIO, List, Optional, Union
 
 import torch
 
-from ._directory_reader_torchscript import TorchScriptDirectoryReader, _HasStorage
+from ._directory_reader_torchscript import _HasStorage, TorchScriptDirectoryReader
 from ._zip_file import PackageZipFileReader, PackageZipFileWriter
 
 
