@@ -116,4 +116,9 @@ jobs:
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
-              bash runtime/build/test_deploy
+              ls
+              cd runtime
+              ls
+              cd build
+              ls
+              bash test_deploy
