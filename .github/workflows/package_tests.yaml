@@ -30,10 +30,6 @@ jobs:
           set -eux
           pip install coverage codecov
           pip install -r requirements.txt
-      - name: Setup SSH (Click me for login details)
-        uses: ./.github/actions/setup-ssh
-        with:
-          github-secret: ${{ secrets.GITHUB_TOKEN }}
       - name: Run tests
         run: coverage run -m unittest discover --verbose --start-directory test/package/ --pattern "test_*"
       - name: Coverage

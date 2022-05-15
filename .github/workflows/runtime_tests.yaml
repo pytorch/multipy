@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.8]
-        platform: [linux.2xlarge, linux.4xlarge, linux.8xlarge.nvidia.gpu, linux.4xlarge.nvidia.gpu]
+        platform: [linux.2xlarge]
       fail-fast: false
     runs-on: ${{ matrix.platform }}
     steps:
