@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <torch/csrc/deploy/deploy.h>
+#include "deploy.h"
 #include <torch/torch.h>
 
 int main(int argc, char* argv[]) {

@@ -1,7 +1,7 @@
 #pragma once
 #include <dlfcn.h>
 #include <elf.h>
-#include <torch/csrc/deploy/interpreter/Optional.hpp>
+#include "interpreter/Optional.hpp"
 #include <memory>
 
 namespace torch {

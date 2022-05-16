@@ -54,11 +54,11 @@
 #include <sys/user.h>
 
 #include <c10/util/irange.h>
-#include <torch/csrc/deploy/interpreter/Optional.hpp>
+#include "interpreter/Optional.hpp"
 
 #include <fmt/format.h>
-#include <torch/csrc/deploy/loader.h>
-#include <torch/csrc/deploy/mem_file.h>
+#include "loader.h"
+#include "mem_file.h"
 
 namespace torch {
 namespace deploy {

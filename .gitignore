@@ -3,8 +3,7 @@
 .coverage
 runtime/interpreter/cpython
 runtime/interpreter/cpython/**
-runtime/build/**
-runtime/build
+**/build/**
 **/CMakeFiles/**
 runtime/interpreter/frozen/**
-
+runtime/example/generated/

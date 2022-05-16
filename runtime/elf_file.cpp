@@ -1,7 +1,7 @@
 #include <c10/util/irange.h>
-#include <torch/csrc/deploy/Exception.h>
-#include <torch/csrc/deploy/elf_file.h>
-#include <torch/csrc/deploy/interpreter/Optional.hpp>
+#include "Exception.h"
+#include "elf_file.h"
+#include "interpreter/Optional.hpp"
 
 namespace torch {
 namespace deploy {

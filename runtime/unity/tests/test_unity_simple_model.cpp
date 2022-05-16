@@ -1,7 +1,7 @@
 #include <fmt/format.h>
 #include <gtest/gtest.h>
-#include <torch/csrc/deploy/unity/tests/test_unity.h>
-#include <torch/csrc/deploy/unity/xar_environment.h>
+#include "unity/tests/test_unity.h"
+#include "unity/xar_environment.h"
 
 namespace torch {
 namespace deploy {

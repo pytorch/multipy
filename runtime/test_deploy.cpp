@@ -4,7 +4,7 @@
 
 #include <c10/util/irange.h>
 #include <libgen.h>
-#include <torch/csrc/deploy/deploy.h>
+#include "deploy.h"
 #include <torch/script.h>
 #include <torch/torch.h>
 
@@ -34,8 +34,8 @@ void compare_torchpy_jit(const char* model_filename, const char* jit_filename) {
   ASSERT_TRUE(ref_output.allclose(output, 1e-03, 1e-05));
 }
 
-const char* simple = "torch/csrc/deploy/example/generated/simple";
-const char* simple_jit = "torch/csrc/deploy/example/generated/simple_jit";
+const char* simple = "../example/generated/simple";
+const char* simple_jit = "../example/generated/simple_jit";
 
 const char* path(const char* envname, const char* path) {
   const char* e = getenv(envname);
@@ -45,7 +45,7 @@ const char* path(const char* envname, const char* path) {
 TEST(TorchpyTest, LoadLibrary) {
   torch::deploy::InterpreterManager m(1);
   torch::deploy::Package p = m.loadPackage(
-      path("LOAD_LIBRARY", "torch/csrc/deploy/example/generated/load_library"));
+      path("LOAD_LIBRARY", "../example/generated/load_library"));
   auto model = p.loadPickle("fn", "fn.pkl");
   model({});
 }
@@ -76,8 +76,8 @@ TEST(TorchpyTest, SimpleModel) {
 
 TEST(TorchpyTest, ResNet) {
   compare_torchpy_jit(
-      path("RESNET", "torch/csrc/deploy/example/generated/resnet"),
-      path("RESNET_JIT", "torch/csrc/deploy/example/generated/resnet_jit"));
+      path("RESNET", "../example/generated/resnet"),
+      path("RESNET_JIT", "../example/generated/resnet_jit"));
 }
 
 TEST(TorchpyTest, Movable) {
@@ -225,7 +225,7 @@ TEST(TorchpyTest, AcquireMultipleSessionsInDifferentPackages) {
   auto I = p.acquireSession();
 
   torch::deploy::Package p1 = m.loadPackage(
-      path("RESNET", "torch/csrc/deploy/example/generated/resnet"));
+      path("RESNET", "../example/generated/resnet"));
   auto I1 = p1.acquireSession();
 }
 
@@ -297,7 +297,7 @@ TEST(TorchpyTest, FxModule) {
   size_t nthreads = 3;
   torch::deploy::InterpreterManager manager(nthreads);
   torch::deploy::Package p = manager.loadPackage(path(
-      "SIMPLE_LEAF_FX", "torch/csrc/deploy/example/generated/simple_leaf_fx"));
+      "SIMPLE_LEAF_FX", "../example/generated/simple_leaf_fx"));
   auto model = p.loadPickle("model", "model.pkl");
 
   std::vector<at::Tensor> outputs;
@@ -310,7 +310,7 @@ TEST(TorchpyTest, FxModule) {
   // reference model
   auto ref_model = torch::jit::load(path(
       "SIMPLE_LEAF_JIT",
-      "torch/csrc/deploy/example/generated/simple_leaf_jit"));
+      "../example/generated/simple_leaf_jit"));
 
   auto ref_output = ref_model.forward({input.alias()}).toTensor();
 
@@ -354,7 +354,7 @@ TEST(TorchpyTest, SharedLibraryLoad) {
 
     const char* test_lib_path = getenv("LIBTEST_DEPLOY_LIB");
     if (!test_lib_path) {
-      I.global("sys", "path").attr("append")({"torch/csrc/deploy"});
+      I.global("sys", "path").attr("append")({"../"});
       I.global("test_deploy_python", "setup")({getenv("PATH")});
     } else {
       // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
@@ -415,7 +415,7 @@ TEST(TorchpyTest, SharedLibraryLoad) {
 TEST(TorchpyTest, UsesDistributed) {
   const auto model_filename = path(
       "USES_DISTRIBUTED",
-      "torch/csrc/deploy/example/generated/uses_distributed");
+      "../example/generated/uses_distributed");
   torch::deploy::InterpreterManager m(1);
   torch::deploy::Package p = m.loadPackage(model_filename);
   {
@@ -532,6 +532,12 @@ TEST(TorchpyTest, PrintInstruction) {
 
 int main(int argc, char* argv[]) {
   ::testing::InitGoogleTest(&argc, argv);
+  char tempeh[256];
+  getcwd(tempeh, 256);
+  std::cout << "Current working directory: " << tempeh << std::endl;
   int rc = RUN_ALL_TESTS();
+  char tmp[256];
+  getcwd(tmp, 256);
+  std::cout << "Current working directory: " << tmp << std::endl;
   return rc;
 }

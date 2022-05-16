@@ -3,7 +3,7 @@
 #include <ATen/ATen.h>
 #include <ATen/core/ivalue.h>
 #include <caffe2/serialize/inline_container.h>
-#include <torch/csrc/deploy/interpreter/Optional.hpp>
+#include "Optional.hpp"
 
 /* Torch Deploy intentionally embeds multiple copies of c++ libraries
    providing python bindings necessary for torch::deploy users in the same
