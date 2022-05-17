@@ -1,10 +1,10 @@
 #pragma once
 
 #include <elf.h>
+#include <vector>
 #include "Exception.h"
 #include "interpreter/Optional.hpp"
 #include "mem_file.h"
-#include <vector>
 
 namespace torch {
 namespace deploy {

@@ -1,5 +1,5 @@
-#include "Exception.h"
 #include "deploy.h"
+#include "Exception.h"
 #include "elf_file.h"
 #include "interpreter/Optional.hpp"
 

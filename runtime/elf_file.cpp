@@ -1,6 +1,6 @@
+#include "elf_file.h"
 #include <c10/util/irange.h>
 #include "Exception.h"
-#include "elf_file.h"
 #include "interpreter/Optional.hpp"
 
 namespace torch {

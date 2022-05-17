@@ -1,6 +1,8 @@
 # used by the benchmarking program to wrap cpu models for GPU use
-import torch
 from copy import deepcopy
+
+import torch
+
 
 def to_device(i, d):
     if isinstance(i, torch.Tensor):
@@ -8,7 +10,8 @@ def to_device(i, d):
     elif isinstance(i, (tuple, list)):
         return tuple(to_device(e, d) for e in i)
     else:
-        raise RuntimeError('inputs are weird')
+        raise RuntimeError("inputs are weird")
+
 
 class GPUWrapper(torch.nn.Module):
     def __init__(self, root):
@@ -17,7 +20,7 @@ class GPUWrapper(torch.nn.Module):
         self.streams = {}
         for i in range(torch.cuda.device_count()):
             m = deepcopy(root) if i != 0 else root
-            d = f'cuda:{i}'
+            d = f"cuda:{i}"
             m.to(device=d)
             self.models.append((m, d))
 
@@ -40,11 +43,12 @@ class GPUWrapper(torch.nn.Module):
         s = self.streams[tid]
         with torch.cuda.stream(s):
             iput = to_device(args, d)
-            r = to_device(m(*iput), 'cpu')
+            r = to_device(m(*iput), "cpu")
             return r
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
+
     def check_close(a, b):
         if isinstance(a, (list, tuple)):
             for ae, be in zip(a, b):
@@ -54,11 +58,13 @@ if __name__ == '__main__':
             assert torch.allclose(a, b)
 
     import sys
+
     from torch.package import PackageImporter
+
     i = PackageImporter(sys.argv[1])
     torch.version.interp = 0
-    model = i.loadPickle('model', 'model.pkl')
-    eg = i.loadPickle('model', 'example.pkl')
+    model = i.loadPickle("model", "model.pkl")
+    eg = i.loadPickle("model", "example.pkl")
     r = model(*eg)
 
     gpu_model = GPUWrapper(model)

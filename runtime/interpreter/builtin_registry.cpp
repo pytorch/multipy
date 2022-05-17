@@ -1,8 +1,8 @@
+#include "builtin_registry.h"
 #include <Python.h>
 #include <c10/util/Exception.h>
 #include <fmt/format.h>
 #include "../Exception.h"
-#include "builtin_registry.h"
 
 namespace torch {
 namespace deploy {
@@ -201,8 +201,8 @@ void BuiltinRegistry::sanityCheck() {
 #endif
 }
 
-std::vector<std::pair<const char*, void*>> BuiltinRegistry::
-    getAllBuiltinModules() {
+std::vector<std::pair<const char*, void*>>
+BuiltinRegistry::getAllBuiltinModules() {
   std::vector<std::pair<const char*, void*>> allBuiltinModules;
   for (const auto& itemptr : items()) {
     allBuiltinModules.insert(

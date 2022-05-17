@@ -1,11 +1,11 @@
 #include <gtest/gtest.h>
-#include "deploy.h"
 #include <torch/cuda.h>
 #include <torch/script.h>
 #include <torch/torch.h>
 #include <future>
 #include <iostream>
 #include <string>
+#include "deploy.h"
 
 int main(int argc, char* argv[]) {
   ::testing::InitGoogleTest(&argc, argv);

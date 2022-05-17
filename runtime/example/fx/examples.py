@@ -1,11 +1,14 @@
 import torch.fx
+
 try:
     from .some_dependency import a_non_torch_leaf
 except ImportError:
     from some_dependency import a_non_torch_leaf
 
 
-torch.fx.wrap('a_non_torch_leaf')
+torch.fx.wrap("a_non_torch_leaf")
+
+
 class SimpleWithLeaf(torch.nn.Module):
     def __init__(self, N, M):
         super().__init__()
