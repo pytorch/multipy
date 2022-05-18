@@ -1,0 +1,9 @@
+[submodule "runtime/third-party/fmt"]
+	path = runtime/third-party/fmt
+	url = https://github.com/fmtlib/fmt.git
+[submodule "runtime/third-party/pybind11"]
+	path = runtime/third-party/pybind11
+	url = https://github.com/pybind/pybind11.git
+[submodule "runtime/third-party/pytorch"]
+	path = runtime/third-party/pytorch
+	url = https://github.com/pytorch/pytorch.git
