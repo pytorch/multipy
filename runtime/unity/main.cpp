@@ -1,6 +1,6 @@
+#include <memory>
 #include "deploy.h"
 #include "unity/xar_environment.h"
-#include <memory>
 
 namespace torch {
 namespace deploy {

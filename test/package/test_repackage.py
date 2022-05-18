@@ -2,17 +2,9 @@
 
 from io import BytesIO
 
-from package import (
-    PackageExporter,
-    PackageImporter,
-    sys_importer,
-)
-from package.package_exporter_no_torch import (
-    PackageExporter as PackageExporterNoTorch,
-)
-from package.package_importer_no_torch import (
-    PackageImporter as PackageImporterNoTorch,
-)
+from package import PackageExporter, PackageImporter, sys_importer
+from package.package_exporter_no_torch import PackageExporter as PackageExporterNoTorch
+from package.package_importer_no_torch import PackageImporter as PackageImporterNoTorch
 from torch.testing._internal.common_utils import run_tests
 
 try:

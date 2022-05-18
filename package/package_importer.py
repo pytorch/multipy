@@ -1,15 +1,17 @@
 import io
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Union, BinaryIO, Callable, Dict
+from typing import Any, BinaryIO, Callable, Dict, Union
 
 import torch
 from torch.serialization import _get_restore_location
 
 from ._directory_reader_torchscript import TorchScriptDirectoryReader
 from ._zip_file_torchscript import TorchScriptPackageZipFileReader
-from .package_importer_no_torch import _maybe_decode_ascii
-from .package_importer_no_torch import PackageImporter as DefaultPackageImporter
+from .package_importer_no_torch import (
+    _maybe_decode_ascii,
+    PackageImporter as DefaultPackageImporter,
+)
 
 
 class PackageImporter(DefaultPackageImporter):

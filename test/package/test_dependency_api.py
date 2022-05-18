@@ -13,12 +13,8 @@ from package import (
     PackageImporter,
     PackagingError,
 )
-from package.package_exporter_no_torch import (
-    PackageExporter as PackageExporterNoTorch,
-)
-from package.package_importer_no_torch import (
-    PackageImporter as PackageImporterNoTorch,
-)
+from package.package_exporter_no_torch import PackageExporter as PackageExporterNoTorch
+from package.package_importer_no_torch import PackageImporter as PackageImporterNoTorch
 from torch.testing._internal.common_utils import IS_WINDOWS, run_tests
 
 try:

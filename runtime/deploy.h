@@ -1,9 +1,6 @@
 #pragma once
 #include <c10/util/irange.h>
 #include <torch/csrc/api/include/torch/imethod.h>
-#include "interpreter/Optional.hpp"
-#include "interpreter/interpreter_impl.h"
-#include "noop_environment.h"
 #include <torch/csrc/jit/serialization/import.h>
 #include <cassert>
 #include <fstream>
@@ -11,6 +8,9 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include "interpreter/Optional.hpp"
+#include "interpreter/interpreter_impl.h"
+#include "noop_environment.h"
 
 namespace torch {
 namespace deploy {
@@ -25,7 +25,7 @@ struct TORCH_API InterpreterSession {
       : impl_(impl), manager_(manager) {}
 
   // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
-  Obj self; // when retreived from a PythonMovable this will be set.
+  Obj self; // when retrieved from a PythonMovable this will be set.
   InterpreterSession(InterpreterSession&&) noexcept = default;
   // NOLINTNEXTLINE(bugprone-exception-escape)
   ~InterpreterSession();

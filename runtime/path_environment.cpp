@@ -1,5 +1,5 @@
-#include "deploy.h"
 #include "path_environment.h"
+#include "deploy.h"
 
 namespace torch {
 namespace deploy {

@@ -1,5 +1,6 @@
-from typing import List, Any
 import pickle
+from typing import Any, List
+
 import torch
 
 
@@ -41,8 +42,10 @@ class TestTRTModule(torch.nn.Module):
 
         return tuple(outputs)
 
+
 def make_trt_module():
     import tensorrt as trt
+
     logger = trt.Logger(trt.Logger.WARNING)
     builder = trt.Builder(logger)
     network = builder.create_network()

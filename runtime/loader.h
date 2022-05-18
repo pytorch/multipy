@@ -1,8 +1,8 @@
 #pragma once
 #include <dlfcn.h>
 #include <elf.h>
-#include "interpreter/Optional.hpp"
 #include <memory>
+#include "interpreter/Optional.hpp"
 
 namespace torch {
 namespace deploy {
@@ -37,10 +37,8 @@ struct SystemLibrary : public SymbolProvider {
 };
 
 struct CustomLibrary : public SymbolProvider {
-  static std::shared_ptr<CustomLibrary> create(
-      const char* filename,
-      int argc = 0,
-      const char** argv = nullptr);
+  static std::shared_ptr<CustomLibrary>
+  create(const char* filename, int argc = 0, const char** argv = nullptr);
   virtual void add_search_library(std::shared_ptr<SymbolProvider> lib) = 0;
   virtual void load() = 0;
 };

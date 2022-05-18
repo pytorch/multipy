@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 
+
 class SimpleModel(nn.Module):
     def __init__(self):
         super(SimpleModel, self).__init__()

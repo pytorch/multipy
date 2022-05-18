@@ -4,9 +4,9 @@
 
 #include <c10/util/irange.h>
 #include <libgen.h>
-#include "deploy.h"
 #include <torch/script.h>
 #include <torch/torch.h>
+#include "deploy.h"
 
 #include <future>
 #include <iostream>
@@ -44,8 +44,8 @@ const char* path(const char* envname, const char* path) {
 
 TEST(TorchpyTest, LoadLibrary) {
   torch::deploy::InterpreterManager m(1);
-  torch::deploy::Package p = m.loadPackage(
-      path("LOAD_LIBRARY", "../example/generated/load_library"));
+  torch::deploy::Package p =
+      m.loadPackage(path("LOAD_LIBRARY", "../example/generated/load_library"));
   auto model = p.loadPickle("fn", "fn.pkl");
   model({});
 }
@@ -224,8 +224,8 @@ TEST(TorchpyTest, AcquireMultipleSessionsInDifferentPackages) {
   torch::deploy::Package p = m.loadPackage(path("SIMPLE", simple));
   auto I = p.acquireSession();
 
-  torch::deploy::Package p1 = m.loadPackage(
-      path("RESNET", "../example/generated/resnet"));
+  torch::deploy::Package p1 =
+      m.loadPackage(path("RESNET", "../example/generated/resnet"));
   auto I1 = p1.acquireSession();
 }
 
@@ -296,8 +296,8 @@ TEST(TorchpyTest, RegisterModule) {
 TEST(TorchpyTest, FxModule) {
   size_t nthreads = 3;
   torch::deploy::InterpreterManager manager(nthreads);
-  torch::deploy::Package p = manager.loadPackage(path(
-      "SIMPLE_LEAF_FX", "../example/generated/simple_leaf_fx"));
+  torch::deploy::Package p = manager.loadPackage(
+      path("SIMPLE_LEAF_FX", "../example/generated/simple_leaf_fx"));
   auto model = p.loadPickle("model", "model.pkl");
 
   std::vector<at::Tensor> outputs;
@@ -308,9 +308,8 @@ TEST(TorchpyTest, FxModule) {
   }
 
   // reference model
-  auto ref_model = torch::jit::load(path(
-      "SIMPLE_LEAF_JIT",
-      "../example/generated/simple_leaf_jit"));
+  auto ref_model = torch::jit::load(
+      path("SIMPLE_LEAF_JIT", "../example/generated/simple_leaf_jit"));
 
   auto ref_output = ref_model.forward({input.alias()}).toTensor();
 
@@ -413,9 +412,8 @@ TEST(TorchpyTest, SharedLibraryLoad) {
 #endif
 
 TEST(TorchpyTest, UsesDistributed) {
-  const auto model_filename = path(
-      "USES_DISTRIBUTED",
-      "../example/generated/uses_distributed");
+  const auto model_filename =
+      path("USES_DISTRIBUTED", "../example/generated/uses_distributed");
   torch::deploy::InterpreterManager m(1);
   torch::deploy::Package p = m.loadPackage(model_filename);
   {
