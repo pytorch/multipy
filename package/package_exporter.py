@@ -1,17 +1,12 @@
 from pathlib import Path
-from typing import (
-    cast,
-    BinaryIO,
-    Sequence,
-    Union,
-)
+from typing import BinaryIO, cast, Sequence, Union
 
 import torch
 from torch.serialization import location_tag, normalize_storage_type
 from torch.types import Storage
 
 from ._zip_file_torchscript import TorchScriptPackageZipFileWriter
-from .importer import sys_importer, Importer
+from .importer import Importer, sys_importer
 from .package_exporter_no_torch import PackageExporter as DefaultPackageExporter
 
 # TODO: fix pytorch master to use PackagingError from the base class then delete below line

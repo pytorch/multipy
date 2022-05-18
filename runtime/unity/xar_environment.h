@@ -1,8 +1,8 @@
 #pragma once
 
+#include <string>
 #include "deploy.h"
 #include "environment.h"
-#include <string>
 
 namespace torch {
 namespace deploy {

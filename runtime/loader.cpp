@@ -237,10 +237,8 @@ struct EH_Frame_HDR {
 // with the module_id and offset.
 extern "C" void* __tls_get_addr(void*);
 
-extern "C" int __cxa_thread_atexit_impl(
-    void (*dtor)(void*),
-    void* obj,
-    void* dso_symbol);
+extern "C" int
+__cxa_thread_atexit_impl(void (*dtor)(void*), void* obj, void* dso_symbol);
 
 struct CustomLibraryImpl;
 
@@ -1236,10 +1234,8 @@ struct __attribute__((visibility("hidden"))) CustomLibraryImpl
   std::vector<std::function<void(void)>> fixup_prot_;
 };
 
-std::shared_ptr<CustomLibrary> CustomLibrary::create(
-    const char* filename,
-    int argc,
-    const char** argv) {
+std::shared_ptr<CustomLibrary>
+CustomLibrary::create(const char* filename, int argc, const char** argv) {
   return std::make_shared<CustomLibraryImpl>(filename, argc, argv);
 }
 

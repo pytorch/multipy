@@ -5,13 +5,27 @@ import argparse
 from pathlib import Path
 
 import torch
-from torch.package import PackageExporter
 from torch.fx import symbolic_trace
+from torch.package import PackageExporter
 
 try:
-    from .examples import Simple, resnet18, MultiReturn, multi_return_metadata, load_library, BatchedModel
+    from .examples import (
+        BatchedModel,
+        load_library,
+        multi_return_metadata,
+        MultiReturn,
+        resnet18,
+        Simple,
+    )
 except ImportError:
-    from examples import Simple, resnet18, MultiReturn, multi_return_metadata, load_library, BatchedModel
+    from examples import (
+        BatchedModel,
+        load_library,
+        multi_return_metadata,
+        MultiReturn,
+        resnet18,
+        Simple,
+    )
 
 try:
     from .fx.examples import SimpleWithLeaf
@@ -23,16 +37,18 @@ try:
 except ImportError:
     from tensorrt_example import make_trt_module
 
+
 def generate_fx_example():
-    name = 'simple_leaf'
+    name = "simple_leaf"
     model = SimpleWithLeaf(5, 10)
-    graph_module : torch.fx.GraphModule = symbolic_trace(model)
+    graph_module: torch.fx.GraphModule = symbolic_trace(model)
     with PackageExporter(str(p / (name + "_fx"))) as e:
         e.intern("**")
         e.save_pickle("model", "model.pkl", graph_module)
 
     model_jit = torch.jit.script(model)
     model_jit.save(str(p / (name + "_jit")))
+
 
 def save(name, model, model_jit=None, eg=None, featurestore_meta=None):
     with PackageExporter(str(p / name)) as e:
@@ -72,7 +88,13 @@ if __name__ == "__main__":
     save("simple", simple, torch.jit.script(simple), (torch.rand(10, 20),))
 
     multi_return = MultiReturn()
-    save("multi_return", multi_return, torch.jit.script(multi_return), (torch.rand(10, 20),), multi_return_metadata)
+    save(
+        "multi_return",
+        multi_return,
+        torch.jit.script(multi_return),
+        (torch.rand(10, 20),),
+        multi_return_metadata,
+    )
 
     # used for torch deploy/package tests in predictor
     batched_model = BatchedModel()
@@ -86,7 +108,10 @@ if __name__ == "__main__":
     generate_fx_example()
 
     with PackageExporter(p / "uses_distributed") as e:
-        e.save_source_string("uses_distributed", "import torch.distributed; assert torch.distributed.is_available()")
+        e.save_source_string(
+            "uses_distributed",
+            "import torch.distributed; assert torch.distributed.is_available()",
+        )
 
     with PackageExporter(str(p / "make_trt_module")) as e:
         e.extern("tensorrt")

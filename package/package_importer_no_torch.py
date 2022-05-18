@@ -6,7 +6,7 @@ import linecache
 import os.path
 import types
 from pathlib import Path
-from typing import cast, Any, BinaryIO, Callable, Dict, List, Optional, Union, Type
+from typing import Any, BinaryIO, Callable, cast, Dict, List, Optional, Type, Union
 from weakref import WeakValueDictionary
 
 from ._directory_reader import DirectoryReader
@@ -17,10 +17,10 @@ from ._importlib import (
     _resolve_name,
     _sanity_check,
 )
-from ._mangling import PackageMangler, demangle
+from ._mangling import demangle, PackageMangler
 from ._package_unpickler import PackageUnpickler
-from ._zip_file import PackageZipFileReader, DefaultPackageZipFileReader
-from .file_structure_representation import Directory, _create_directory_from_file_list
+from ._zip_file import DefaultPackageZipFileReader, PackageZipFileReader
+from .file_structure_representation import _create_directory_from_file_list, Directory
 from .glob_group import GlobPattern
 from .importer import Importer
 

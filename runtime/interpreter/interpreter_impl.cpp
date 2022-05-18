@@ -9,8 +9,8 @@
 #include <pybind11/functional.h>
 #include <torch/csrc/DynamicTypes.h>
 #include <torch/csrc/autograd/generated/variable_factories.h>
-#include "../Exception.h"
 #include <torch/csrc/jit/python/pybind_utils.h>
+#include "../Exception.h"
 
 #include <cassert>
 #include <cstdio>
@@ -372,10 +372,8 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
     return wrap(unwrap(obj).attr(attr));
   }
 
-  static py::object call(
-      py::handle object,
-      py::handle args,
-      py::handle kwargs = nullptr) {
+  static py::object
+  call(py::handle object, py::handle args, py::handle kwargs = nullptr) {
     PyObject* result = PyObject_Call(object.ptr(), args.ptr(), kwargs.ptr());
     if (!result) {
       throw py::error_already_set();
@@ -400,8 +398,8 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
   std::vector<py::object> objects_;
 };
 
-torch::deploy::InterpreterSessionImpl* ConcreteInterpreterImpl::
-    acquireSession() {
+torch::deploy::InterpreterSessionImpl*
+ConcreteInterpreterImpl::acquireSession() {
   return new ConcreteInterpreterSessionImpl(this);
 }
 

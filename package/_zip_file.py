@@ -3,7 +3,7 @@ import zipfile
 from abc import ABC, abstractmethod
 from io import BytesIO
 from pathlib import Path
-from typing import List, Union, BinaryIO, Optional
+from typing import BinaryIO, List, Optional, Union
 
 from ._directory_reader import DirectoryReader
 
