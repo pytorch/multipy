@@ -54,7 +54,7 @@
 #include <sys/user.h>
 
 #include <c10/util/irange.h>
-#include "interpreter/Optional.hpp"
+#include <multipy/runtime/interpreter/Optional.hpp>
 
 #include <fmt/format.h>
 #include "loader.h"

@@ -51,4 +51,8 @@ cd build
 # replace {PYTORCH_ROOT} with your path to pytorch/torch
 cmake -DCMAKE_VERBOSE_MAKEFILE:BOOL=OFF -DCMAKE_PREFIX_PATH="{PYTORCH_ROOT}/lib/;../third-party/pybind11/build;../third-party/fmt/build" ..
 cmake --build . --config Release
+
+# test runtime
+cd <parent directory of multipy>
+./multipy/runtime/build/test_deploy
 ```

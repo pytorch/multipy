@@ -4,6 +4,7 @@ SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" PARENT_SCOPE)
 set(PYTORCH_ROOT "${DEPLOY_DIR}/third-party/pytorch")
 include_directories(BEFORE "${PYTORCH_ROOT}/torch/include")
 include_directories(BEFORE "${PYTORCH_ROOT}/torch/include/torch/csrc/api/include/")
+include_directories(BEFORE "${MULTIPY_DIR}")
 SET(MULTIPY_UTILS "${CMAKE_CURRENT_SOURCE_DIR}/../../utils")
 
 # Build cpython

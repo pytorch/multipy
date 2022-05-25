@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.19)
 project(MultipyRuntime)
 set(DEPLOY_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+set(MULTIPY_DIR "${DEPLOY_DIR}/../..")
 set(PYTORCH_ROOT "${DEPLOY_DIR}/third-party/pytorch")
 
 add_subdirectory(interpreter)
@@ -8,6 +9,7 @@ add_subdirectory(third-party/fmt)
 add_subdirectory(third-party/pybind11)
 include_directories(BEFORE "${PYTORCH_ROOT}/torch/include")
 include_directories(BEFORE "${PYTORCH_ROOT}/torch/include/torch/csrc/api/include/")
+include_directories(BEFORE "${MULTIPY_DIR}")
 
 include(${DEPLOY_DIR}/utils.cmake)
 
