@@ -5,9 +5,9 @@ from io import BytesIO
 from textwrap import dedent
 from unittest import skipIf
 
-from package import PackageExporter, PackageImporter, sys_importer
-from package.package_exporter_no_torch import PackageExporter as PackageExporterNoTorch
-from package.package_importer_no_torch import PackageImporter as PackageImporterNoTorch
+from multipy.package import PackageExporter, PackageImporter, sys_importer
+from multipy.package.package_exporter_no_torch import PackageExporter as PackageExporterNoTorch
+from multipy.package.package_importer_no_torch import PackageImporter as PackageImporterNoTorch
 from torch.testing._internal.common_utils import IS_FBCODE, IS_SANDCASTLE, run_tests
 
 try:

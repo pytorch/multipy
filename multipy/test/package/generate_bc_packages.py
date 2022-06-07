@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import torch
-from package import PackageExporter
+from multipy.package import PackageExporter
 from torch.fx import symbolic_trace
 from torch.testing._internal.common_utils import IS_FBCODE, IS_SANDCASTLE
 

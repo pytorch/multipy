@@ -5,7 +5,7 @@ from textwrap import dedent
 from unittest import skipIf
 
 import torch
-from package import PackageExporter, PackageImporter
+from multipy.package import PackageExporter, PackageImporter
 from torch.testing._internal.common_utils import IS_FBCODE, IS_SANDCASTLE, run_tests
 
 try:
@@ -21,7 +21,7 @@ try:
 except ImportError:
     HAS_TORCHVISION = False
 skipIfNoTorchVision = skipIf(not HAS_TORCHVISION, "no torchvision")
-import package
+import multipy.package
 
 
 class TestPackageScript(PackageTestCase):
@@ -765,7 +765,7 @@ class TestPackageScript(PackageTestCase):
         original_tensor = torch.ones(0)
 
         f = BytesIO()
-        with package.PackageExporter(f) as exporter:
+        with multipy.package.PackageExporter(f) as exporter:
             exporter.save_pickle("model", "model.pkl", scripted_m)
             exporter.save_pickle("model", "input.pkl", original_tensor)
 
