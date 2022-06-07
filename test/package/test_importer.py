@@ -3,15 +3,15 @@
 from io import BytesIO
 
 import torch
-from package import (
+from multipy.package import (
     Importer,
     OrderedImporter,
     PackageExporter,
     PackageImporter,
     sys_importer,
 )
-from package.package_exporter_no_torch import PackageExporter as PackageExporterNoTorch
-from package.package_importer_no_torch import PackageImporter as PackageImporterNoTorch
+from multipy.package.package_exporter_no_torch import PackageExporter as PackageExporterNoTorch
+from multipy.package.package_importer_no_torch import PackageImporter as PackageImporterNoTorch
 from torch.testing._internal.common_utils import run_tests
 
 try:
@@ -139,7 +139,7 @@ class TestImporter(PackageTestCase):
         # finds it using special logic to traverse sys.modules and look up
         # `float16` on each module (see pickle.py:whichmodule).
         #
-        # We must ensure that we emulate the same behavior from PackageImporter.
+        # We must ensure that we emulate the same behavior from multipy.packageImporter.
         my_dtype = torch.float16
 
         # Set up a PackageImporter which has a torch.float16 object pickled:

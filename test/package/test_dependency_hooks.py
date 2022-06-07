@@ -2,8 +2,8 @@
 
 from io import BytesIO
 
-from package import PackageExporter
-from package.package_exporter_no_torch import PackageExporter as PackageExporterNoTorch
+from multipy.package import PackageExporter
+from multipy.package.package_exporter_no_torch import PackageExporter as PackageExporterNoTorch
 from torch.testing._internal.common_utils import run_tests
 
 try:

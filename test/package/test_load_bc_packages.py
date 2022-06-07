@@ -3,7 +3,7 @@
 from pathlib import Path
 from unittest import skipIf
 
-from package import PackageImporter
+from multipy.package import PackageImporter
 from torch.testing._internal.common_utils import IS_FBCODE, IS_SANDCASTLE, run_tests
 
 try:

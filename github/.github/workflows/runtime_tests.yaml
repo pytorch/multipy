@@ -1,4 +1,4 @@
-name: Runtime Unittests More
+name: Runtime Unittests
 
 on:
   push:
@@ -65,26 +65,16 @@ jobs:
         run: |
             # A minor hack to get the CI working as conda doesn't have torch,
             # fortunately we can remove this once we have a dynamically linked torch
-            echo "Multipy ls"
-            ls
-            cd runtime
-            echo "Multipy/runtime/ ls"
-            ls
-            cd example
-            echo "Multipy/runtime/example ls"
-            ls
+            cd multipy/runtime/example
             conda create --name example_env python=${{ matrix.python-version }}
             conda run -n example_env python -m pip install torch torchvision torchaudio pathlib
             conda run -n example_env python generate_examples.py
-            cd generated
-            echo "Multipy/runtime/example/generated ls"
-            ls
       - name: Build third-party libraries
         shell: bash -l {0}
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
-              cd runtime/third-party/fmt
+              cd multipy/runtime/third-party/fmt
               mkdir build
               cd build
               conda run -n multipy_runtime_env cmake ..
@@ -97,7 +87,7 @@ jobs:
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
-              cd runtime/third-party/pytorch
+              cd multipy/runtime/third-party/pytorch
               export USE_DEPLOY=1
               conda run -n multipy_runtime_env python setup.py develop
       - name: Build multipy runtime

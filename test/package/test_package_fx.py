@@ -3,7 +3,7 @@
 from io import BytesIO
 
 import torch
-from package import ObjMismatchError, PackageExporter, PackageImporter, sys_importer
+from multipy.package import ObjMismatchError, PackageExporter, PackageImporter, sys_importer
 from torch.fx import Graph, GraphModule, symbolic_trace
 from torch.testing._internal.common_utils import run_tests
 

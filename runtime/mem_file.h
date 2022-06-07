@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <cerrno>
 #include <cstdio>
+#include <string.h>
 #include "Exception.h"
 
 namespace torch {

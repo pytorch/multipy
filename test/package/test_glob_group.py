@@ -2,7 +2,7 @@
 
 from typing import Iterable
 
-from package import GlobGroup
+from multipy.package import GlobGroup
 from torch.testing._internal.common_utils import run_tests
 
 try:

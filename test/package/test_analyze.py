@@ -1,7 +1,7 @@
 # Owner(s): ["oncall: package/deploy"]
 
 import torch
-from package import analyze
+from multipy.package import analyze
 from torch.testing._internal.common_utils import run_tests
 
 try:
