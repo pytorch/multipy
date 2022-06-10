@@ -1,9 +1,8 @@
-name: Runtime Unittests
+name: Multipy nightly release
 
 on:
-  push:
-    branches:
-      - main
+  schedule:
+    - cron: '0 2 * * *' # run at 2 AM UTC
   pull_request:
 
 jobs:
@@ -111,3 +110,10 @@ jobs:
               cd runtime
               cd build
               ./test_deploy
+      - name: Update nightly release
+        uses: eine/tip@master
+        with:
+          tag: nightly
+          rm: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: runtime/build/libtorch_deployinterpreter.so
