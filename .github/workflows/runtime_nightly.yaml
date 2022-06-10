@@ -1,4 +1,4 @@
-name: Multipy nightly release
+name: Multipy runtime nightly release + tests
 
 on:
   schedule:
@@ -100,7 +100,8 @@ jobs:
               pwd
               conda run -n multipy_runtime_env cmake ..
               conda run -n multipy_runtime_env cmake --build . --config Release
-      - name: Run test_deploy
+      - name: test_deploy
+        id: test_deploy
         shell: bash -l {0}
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
@@ -110,6 +111,7 @@ jobs:
               cd build
               ./test_deploy
       - name: Update nightly release
+        if: steps.test_deploy.conclusion == 'success'
         uses: pyTooling/Actions/releaser@main
         with:
           tag: nightly
