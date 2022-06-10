@@ -111,7 +111,7 @@ jobs:
               cd build
               ./test_deploy
       - name: Update nightly release
-        uses: eine/tip@master
+        uses: pyTooling/Actions/releaser@main
         with:
           tag: nightly
           rm: true

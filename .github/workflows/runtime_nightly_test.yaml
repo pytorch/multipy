@@ -16,7 +16,7 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
       - name: Update nightly release
-        uses: eine/tip@master
+        uses: pyTooling/Actions/releaser@main
         with:
           tag: nightly
           rm: true
