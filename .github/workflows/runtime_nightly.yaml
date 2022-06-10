@@ -116,4 +116,5 @@ jobs:
           tag: nightly
           rm: true
           token: ${{ secrets.GITHUB_TOKEN }}
-          files: multipy/runtime/build/interpreter/libtorch_deployinterpreter.so
+          files: |
+            multipy/runtime/build/interpreter/libtorch_deployinterpreter.so

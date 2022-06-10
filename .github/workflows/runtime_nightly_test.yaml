@@ -21,4 +21,5 @@ jobs:
           tag: nightly
           rm: true
           token: ${{ secrets.GITHUB_TOKEN }}
-          files: multipy/runtime/loader.cpp
+          files: |
+            README.md
