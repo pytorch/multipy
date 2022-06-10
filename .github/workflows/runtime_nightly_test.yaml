@@ -1,0 +1,23 @@
+name: Package Unittests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  unittest:
+    strategy:
+      matrix:
+        python-version: [3.7]
+      fail-fast: false
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Update nightly release
+        uses: eine/tip@master
+        with:
+          tag: nightly
+          rm: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: multipy/runtime/loader.cpp
