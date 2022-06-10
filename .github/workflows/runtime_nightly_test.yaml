@@ -7,30 +7,29 @@ on:
   pull_request:
 
 jobs:
-  unittest:
-    strategy:
-      matrix:
-        python-version: [3.7]
-        platform: [ubuntu-18.04]
-      fail-fast: false
-    runs-on: ${{ matrix.platform }}
+  mwe:
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout MultiPy
-        uses: actions/checkout@v2
-        with:
-          submodules: true
-      - name: Setup SSH (Click me for login details)
-        uses: ./.github/actions/setup-ssh
-        with:
-          github-secret: ${{ secrets.GITHUB_TOKEN }}
-      - name: ls
-        run: |
-          ls
-      - name: Update nightly release
-        uses: pyTooling/Actions/releaser@main
-        with:
-          tag: nightly
-          rm: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-          files: |
-            README.md
+    - name: Checkout MultiPy
+      uses: actions/checkout@v2
+      with:
+        submodules: true
+    - name: Setup SSH (Click me for login details)
+      uses: ./.github/actions/setup-ssh
+      with:
+        github-secret: ${{ secrets.GITHUB_TOKEN }}
+
+    # Build your application, tool, artifacts, etc.
+    - name: Build
+      run: |
+        echo "Build some tool and generate some artifacts" > artifact.txt
+
+    # Update tag and pre-release
+    # - Update (force-push) tag to the commit that is used in the workflow.
+    # - Upload artifacts defined by the user.
+    - uses: pyTooling/Actions/releaser@r0
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        files: |
+          artifact.txt
+          README.md
