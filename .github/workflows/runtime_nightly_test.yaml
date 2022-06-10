@@ -1,4 +1,4 @@
-name: Package Unittests
+name: Nightly push test
 
 on:
   push:
