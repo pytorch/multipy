@@ -11,6 +11,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.7]
+        platform: [ubuntu-18.04]
       fail-fast: false
     runs-on: ${{ matrix.platform }}
     steps:
