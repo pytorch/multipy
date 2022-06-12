@@ -26,6 +26,27 @@ In order to run pytorch models, we need to use libtorch which can be setup using
 ### Installing `multipy.package`
 [TODO] Create pypi distribution and link to it
 
+### How to build `multipy::runtime` from source
+
+```bash
+# checkout repo
+git checkout https://github.com/pytorch/multipy.git
+git submodule sync && git submodule update --init --recursive
+
+cd multipy/MultiPy/runtime
+
+# Currently multipy::runtime requires that we build pytorch from source since we need to expose some objects in torch (ie. torch_python, etc.) for multipy::runtime to work.
+cd ../pytorch
+USE_DEPLOY=1 python setup.py develop
+cd ../..
+
+# build runtime
+mkdir build
+cd build
+cmake ..
+cmake --build . --config Release
+```
+
 ### Packaging a model `for multipy::runtime`
 
 ``multipy::runtime`` can load and run Python models that are packaged with
