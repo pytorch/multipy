@@ -89,7 +89,6 @@ jobs:
               export USE_DEPLOY=1
               conda run -n multipy_runtime_env python setup.py develop
       - name: test_deploy
-        id: test_deploy
         shell: bash -l {0}
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
@@ -98,7 +97,6 @@ jobs:
               cd build
               ./test_deploy
       - name: Update nightly release
-        if: steps.test_deploy.conclusion == 'success'
         uses: pyTooling/Actions/releaser@main
         with:
           tag: nightly
