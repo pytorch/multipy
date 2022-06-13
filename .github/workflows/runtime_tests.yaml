@@ -69,19 +69,6 @@ jobs:
             conda create --name example_env python=${{ matrix.python-version }}
             conda run -n example_env python -m pip install torch torchvision torchaudio pathlib
             conda run -n example_env python generate_examples.py
-      - name: Build third-party libraries
-        shell: bash -l {0}
-        env:
-          PYTHON_VERSION: ${{ matrix.python-version }}
-        run: |
-              cd multipy/runtime/third-party/fmt
-              mkdir build
-              cd build
-              conda run -n multipy_runtime_env cmake ..
-              cd ../../pybind11
-              mkdir build
-              cd build
-              conda run -n multipy_runtime_env cmake ..
       - name: Build pytorch
         shell: bash -l {0}
         env:
@@ -95,11 +82,9 @@ jobs:
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
-              cd multipy
-              cd runtime
+              cd multipy/runtime
               mkdir build
               cd build
-              pwd
               conda run -n multipy_runtime_env cmake ..
               conda run -n multipy_runtime_env cmake --build . --config Release
       - name: Run test_deploy

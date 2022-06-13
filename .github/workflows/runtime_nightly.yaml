@@ -88,25 +88,12 @@ jobs:
               cd multipy/runtime/third-party/pytorch
               export USE_DEPLOY=1
               conda run -n multipy_runtime_env python setup.py develop
-      - name: Build multipy runtime
-        shell: bash -l {0}
-        env:
-          PYTHON_VERSION: ${{ matrix.python-version }}
-        run: |
-              cd multipy
-              cd runtime
-              mkdir build
-              cd build
-              pwd
-              conda run -n multipy_runtime_env cmake ..
-              conda run -n multipy_runtime_env cmake --build . --config Release
       - name: test_deploy
         shell: bash -l {0}
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
-              cd multipy
-              cd runtime
+              cd multipy/runtime
               cd build
               ./test_deploy
       - name: Update nightly release
