@@ -3,13 +3,14 @@ name: Multipy runtime nightly release + tests
 on:
   schedule:
     - cron: '0 2 * * *' # run at 2 AM UTC
+  pull_request:
 
 jobs:
   unittest:
     strategy:
       matrix:
         python-version: [3.8]
-        platform: [linux.2xlarge]
+        platform: [ubuntu-18.04]
       fail-fast: false
     runs-on: ${{ matrix.platform }}
     steps:
@@ -67,27 +68,6 @@ jobs:
             conda create --name example_env python=${{ matrix.python-version }}
             conda run -n example_env python -m pip install torch torchvision torchaudio pathlib
             conda run -n example_env python generate_examples.py
-      - name: Build third-party libraries
-        shell: bash -l {0}
-        env:
-          PYTHON_VERSION: ${{ matrix.python-version }}
-        run: |
-              cd multipy/runtime/third-party/fmt
-              mkdir build
-              cd build
-              conda run -n multipy_runtime_env cmake ..
-              cd ../../pybind11
-              mkdir build
-              cd build
-              conda run -n multipy_runtime_env cmake ..
-      - name: Build pytorch
-        shell: bash -l {0}
-        env:
-          PYTHON_VERSION: ${{ matrix.python-version }}
-        run: |
-              cd multipy/runtime/third-party/pytorch
-              export USE_DEPLOY=1
-              conda run -n multipy_runtime_env python setup.py develop
       - name: Build multipy runtime
         shell: bash -l {0}
         env:
