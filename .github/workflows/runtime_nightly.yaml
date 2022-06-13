@@ -91,7 +91,7 @@ jobs:
               cd build
               ./test_deploy
       - name: Update nightly release
-        if: steps.test_deploy.conclusion == 'success'
+        # if: steps.test_deploy.conclusion == 'success'
         uses: pyTooling/Actions/releaser@main
         with:
           tag: nightly
