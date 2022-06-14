@@ -66,7 +66,7 @@ struct RunPython {
     if (cuda) {
       obj = I.global("gpu_wrapper", "GPUWrapper")({obj});
     }
-    return I.createMovable(obj);
+    return manager_.createMovable(obj, &I);
   }
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
   RunPython(

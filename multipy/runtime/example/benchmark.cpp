@@ -66,7 +66,7 @@ struct RunPython {
     if (cuda) {
       obj = I.global("gpu_wrapper", "GPUWrapper")({obj});
     }
-    return I.createMovable(obj);
+    return package.getManager()->createMovable(obj, &I);
   }
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
   RunPython(
@@ -75,7 +75,7 @@ struct RunPython {
       const torch::deploy::Interpreter* interps)
       : obj_(load_and_wrap(package)), eg_(std::move(eg)), interps_(interps) {}
   void operator()(int i) {
-    auto I = obj_.acquireSession();
+    auto I = obj_.acquireSession(obj_.getManager());
     if (cuda) {
       // NOLINTNEXTLINE(cppcoreguidelines-init-variables)
       std::vector<at::IValue> eg2 = {i};

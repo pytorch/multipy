@@ -26,15 +26,14 @@ struct InterpreterManager;
 
 struct TORCH_API InterpreterSession {
   InterpreterSession(
-      InterpreterSessionImpl* impl,
-      InterpreterManager* manager) noexcept
-      : impl_(impl), manager_(manager) {}
+      InterpreterSessionImpl* impl) noexcept
+      : impl_(impl) {}
 
   // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
   Obj self; // when retrieved from a PythonMovable this will be set.
   InterpreterSession(InterpreterSession&&) noexcept = default;
   // NOLINTNEXTLINE(bugprone-exception-escape)
-  ~InterpreterSession();
+  ~InterpreterSession() = default;
   Obj global(const char* module, const char* name) {
     TORCH_DEPLOY_TRY
     return impl_->global(module, name);
@@ -45,7 +44,7 @@ struct TORCH_API InterpreterSession {
     return impl_->fromIValue(std::move(ivalue));
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
-  ReplicatedObj createMovable(Obj obj);
+  PickledObject pickleObj(Obj obj);
   Obj fromMovable(const ReplicatedObj& obj);
 
  private:
@@ -54,7 +53,6 @@ struct TORCH_API InterpreterSession {
   friend struct InterpreterManager;
   friend struct ReplicatedObjImpl;
   std::unique_ptr<InterpreterSessionImpl> impl_;
-  InterpreterManager* manager_; // if created from one
   int64_t notifyIdx_ = -1;
 };
 
@@ -64,22 +62,20 @@ class TORCH_API Interpreter {
   void* handle_;
   std::unique_ptr<InterpreterImpl> pImpl_;
   bool customLoader_ = false;
-  InterpreterManager* manager_; // optional if managed by one
   std::shared_ptr<Environment> env_;
 
  public:
-  Interpreter(InterpreterManager* manager, std::shared_ptr<Environment> env);
+  Interpreter(std::shared_ptr<Environment> env);
   InterpreterSession acquireSession() const {
     TORCH_DEPLOY_TRY
-    return InterpreterSession(pImpl_->acquireSession(), manager_);
+    return std::move(InterpreterSession(pImpl_->acquireSession()));
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
   ~Interpreter();
   Interpreter(Interpreter&& rhs) noexcept
       : libraryName_(std::move(rhs.libraryName_)),
         handle_(rhs.handle_),
-        pImpl_(std::move(rhs.pImpl_)),
-        manager_(rhs.manager_) {
+        pImpl_(std::move(rhs.pImpl_)) {
     rhs.handle_ = nullptr;
   }
 
@@ -145,6 +141,7 @@ struct TORCH_API InterpreterManager {
     resources_.setResourceLimit(N);
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
+  ReplicatedObj createMovable(Obj obj, InterpreterSession* I);
   Package loadPackage(const std::string& uri);
   Package loadPackage(
       std::shared_ptr<caffe2::serialize::ReadAdapterInterface> reader);
@@ -186,22 +183,26 @@ struct TORCH_API ReplicatedObjImpl {
   InterpreterManager* manager_;
 };
 
+
 struct TORCH_API ReplicatedObj {
   ReplicatedObj() : pImpl_(nullptr) {}
   InterpreterSession acquireSession(
-      const Interpreter* onThisInterpreter = nullptr) const;
+      const Interpreter* onThisInterpreter) const;
+  InterpreterSession acquireSession(
+      InterpreterManager* onThisManager) const;
   at::IValue operator()(at::ArrayRef<at::IValue> args) const {
     TORCH_DEPLOY_TRY
-    auto I = acquireSession();
+    auto I = acquireSession(pImpl_->manager_);
     return I.self(args).toIValue();
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
+  InterpreterManager* getManager() const;
 
   [[nodiscard]] at::IValue callKwargs(
       std::vector<at::IValue> args,
       std::unordered_map<std::string, c10::IValue> kwargs) const {
     TORCH_DEPLOY_TRY
-    auto I = acquireSession();
+    auto I = acquireSession(pImpl_->manager_);
     return I.self.callKwargs(std::move(args), std::move(kwargs)).toIValue();
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
@@ -209,14 +210,14 @@ struct TORCH_API ReplicatedObj {
   [[nodiscard]] at::IValue callKwargs(
       std::unordered_map<std::string, c10::IValue> kwargs) const {
     TORCH_DEPLOY_TRY
-    auto I = acquireSession();
+    auto I = acquireSession(pImpl_->manager_);
     return I.self.callKwargs(std::move(kwargs)).toIValue();
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
 
   [[nodiscard]] bool hasattr(const char* name) const {
     TORCH_DEPLOY_TRY
-    auto I = acquireSession();
+    auto I = acquireSession(pImpl_->manager_);
     return I.self.hasattr(name);
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
@@ -252,7 +253,7 @@ class PythonMethodWrapper : public torch::IMethod {
       const IValueMap& kwargs = IValueMap()) const override {
     // TODO(whc) ideally, pickle the method itself as replicatedobj, to skip
     // this lookup each time
-    auto modelSession = model_.acquireSession();
+    auto modelSession = model_.acquireSession(model_.getManager());
     auto method = modelSession.self.attr(methodName_.c_str());
     return method.callKwargs(args, kwargs).toIValue();
   }
@@ -270,7 +271,7 @@ struct TORCH_API Package {
     TORCH_DEPLOY_TRY
     auto I = acquireSession();
     auto loaded = I.self.attr("load_pickle")({module, file});
-    return I.createMovable(loaded);
+    return manager_->createMovable(loaded, &I);
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
 
@@ -282,7 +283,9 @@ struct TORCH_API Package {
     return I;
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
-
+  InterpreterManager* getManager(){
+    return manager_;
+  }
  private:
   Package(
       const std::string& uri,

@@ -1,9 +1,9 @@
 **/__pycache__/**
 **.coverage
 .coverage
-runtime/interpreter/cpython
-runtime/interpreter/cpython/**
+multipy/runtime/interpreter/cpython
+multipy/runtime/interpreter/cpython/**
 **/build/**
 **/CMakeFiles/**
-runtime/interpreter/frozen/**
-runtime/example/generated/
+multipy/runtime/interpreter/frozen/**
+multipy/runtime/example/generated/

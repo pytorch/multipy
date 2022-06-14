@@ -102,7 +102,7 @@ InterpreterManager::InterpreterManager(
     : resources_(nInterp) {
   TORCH_DEPLOY_TRY
   for (const auto i : c10::irange(nInterp)) {
-    instances_.emplace_back(this, env);
+    instances_.emplace_back(env);
     auto I = instances_.back().acquireSession();
     // make torch.version.interp be the interpreter id
     // can be used for balancing work across GPUs
@@ -134,6 +134,20 @@ InterpreterManager::InterpreterManager(
   TORCH_DEPLOY_SAFE_CATCH_RETHROW
 }
 
+ReplicatedObj InterpreterManager::createMovable(Obj obj, InterpreterSession* I) {
+  TORCH_DEPLOY_TRY
+
+  MULTIPY_CHECK(
+      I->impl_->isOwner(obj),
+      "Cannot create movable from an object that lives in different session");
+
+  auto pickled = I->pickleObj(obj);
+  return ReplicatedObj(std::make_shared<ReplicatedObjImpl>(
+      this->nextObjectId_++, std::move(pickled), this));
+  TORCH_DEPLOY_SAFE_CATCH_RETHROW
+}
+
+
 Package InterpreterManager::loadPackage(const std::string& uri) {
   TORCH_DEPLOY_TRY
   return Package(uri, this);
@@ -153,21 +167,39 @@ Obj InterpreterSession::fromMovable(const ReplicatedObj& obj) {
   TORCH_DEPLOY_SAFE_CATCH_RETHROW
 }
 
+PickledObject InterpreterSession::pickleObj(Obj obj) {
+  TORCH_DEPLOY_TRY
+
+  MULTIPY_CHECK(
+      impl_->isOwner(obj),
+      "Cannot create movable from an object that lives in different session");
+
+  auto pickled = impl_->pickle(self, obj);
+  return pickled;
+  TORCH_DEPLOY_SAFE_CATCH_RETHROW
+}
+
 InterpreterSession ReplicatedObj::acquireSession(
     const Interpreter* onThisInterpreter) const {
   TORCH_DEPLOY_TRY
-  InterpreterSession I = onThisInterpreter ? onThisInterpreter->acquireSession()
-                                           : pImpl_->manager_->acquireOne();
+  InterpreterSession I = onThisInterpreter->acquireSession();
   I.self = I.fromMovable(*this);
   return I;
   TORCH_DEPLOY_SAFE_CATCH_RETHROW
 }
 
-// NOLINTNEXTLINE(bugprone-exception-escape)
-InterpreterSession::~InterpreterSession() {
-  if (manager_ && notifyIdx_ >= 0) {
-    manager_->resources_.free(notifyIdx_);
-  }
+InterpreterSession ReplicatedObj::acquireSession(
+    InterpreterManager* onThisManager) const {
+  TORCH_DEPLOY_TRY
+  auto I = onThisManager->acquireOne();
+
+  I.self = I.fromMovable(*this);
+  return I;
+  TORCH_DEPLOY_SAFE_CATCH_RETHROW
+}
+
+InterpreterManager* ReplicatedObj::getManager() const {
+  return pImpl_->manager_;
 }
 
 void ReplicatedObjImpl::unload(const Interpreter* onThisInterpreter) {
@@ -196,22 +228,6 @@ void ReplicatedObj::unload(const Interpreter* onThisInterpreter) {
   TORCH_DEPLOY_SAFE_CATCH_RETHROW
 }
 
-ReplicatedObj InterpreterSession::createMovable(Obj obj) {
-  TORCH_DEPLOY_TRY
-  MULTIPY_CHECK(
-      manager_,
-      "Can only create a movable object when the session was created from an interpreter that is part of a InterpreterManager");
-
-  MULTIPY_CHECK(
-      impl_->isOwner(obj),
-      "Cannot create movable from an object that lives in different session");
-
-  auto pickled = impl_->pickle(self, obj);
-  return ReplicatedObj(std::make_shared<ReplicatedObjImpl>(
-      manager_->nextObjectId_++, std::move(pickled), manager_));
-  TORCH_DEPLOY_SAFE_CATCH_RETHROW
-}
-
 using dlopen_t = void* (*)(const char*, int);
 
 // ASAN overrides dlopen and errors when it sees the RTLD_DEEPBIND flags because
@@ -235,9 +251,8 @@ static dlopen_t find_real_dlopen() {
 }
 
 Interpreter::Interpreter(
-    InterpreterManager* manager,
     std::shared_ptr<Environment> env)
-    : handle_(nullptr), manager_(manager), env_(env) {
+    : handle_(nullptr), env_(env) {
   // NOLINTNEXTLINE(modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
   char libraryName[] = "/tmp/torch_deployXXXXXX";
   int fd = mkstemp(libraryName);
@@ -347,7 +362,7 @@ void LoadBalancer::free(int where) {
 
 void PythonMethodWrapper::setArgumentNames(
     std::vector<std::string>& argumentNamesOut) const {
-  auto session = model_.acquireSession();
+  auto session = model_.acquireSession(model_.getManager());
   auto method = session.self.attr(methodName_.c_str());
   auto iArgumentNames =
       session.global("GetArgumentNamesModule", "getArgumentNames")({method})
