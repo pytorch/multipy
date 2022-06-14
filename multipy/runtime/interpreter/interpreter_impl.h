@@ -96,7 +96,9 @@ struct InterpreterSessionImpl {
   friend struct Obj;
   friend struct InterpreterSession;
   friend struct ReplicatedObjImpl;
-
+  bool isOwner(Obj obj) const {
+    return this == obj.interaction_;
+  }
   virtual ~InterpreterSessionImpl() = default;
 
  private:
@@ -126,10 +128,6 @@ struct InterpreterSessionImpl {
  protected:
   int64_t ID(Obj obj) const {
     return obj.id_;
-  }
-
-  bool isOwner(Obj obj) const {
-    return this == obj.interaction_;
   }
 };
 

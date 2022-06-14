@@ -93,7 +93,7 @@ TEST(TorchpyTest, Movable) {
     auto I = m.acquireOne();
     auto model =
         I.global("torch.nn", "Module")(std::vector<torch::deploy::Obj>());
-    obj = I.createMovable(model);
+    obj = m.createMovable(model, I);
   }
   obj.acquireSession();
 }
@@ -188,9 +188,9 @@ TEST(TorchpyTest, ErrorsReplicatingObj) {
   auto obj = session1.fromMovable(replicatedObj);
   // should throw an error when trying to access obj from different session
   // NOLINTNEXTLINE(hicpp-avoid-goto,cppcoreguidelines-avoid-goto)
-  EXPECT_THROW(session2.createMovable(obj), std::runtime_error);
+  EXPECT_THROW(manager.createMovable(obj, session2), std::runtime_error);
   try {
-    session2.createMovable(obj);
+    manager.createMovable(obj, session2);
   } catch (std::runtime_error& error) {
     EXPECT_TRUE(
         std::string(error.what())
