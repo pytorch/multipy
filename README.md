@@ -85,29 +85,29 @@ Now, there should be a file named ``my_package.pt`` in your working directory.
 #include <memory>
 
 int main(int argc, const char* argv[]) {
-	if (argc != 2) {
-		std::cerr << "usage: example-app <path-to-exported-script-module>\n";
-		return -1;
-	}
+    if (argc != 2) {
+        std::cerr << "usage: example-app <path-to-exported-script-module>\n";
+        return -1;
+    }
 
-	// Start an interpreter manager governing 4 embedded interpreters.
-	std::shared_ptr<multipy::runtime::Environment> env =
-		std::make_shared<multipy::runtime::PathEnvironment>(
-			std::getenv("PATH_TO_EXTERN_PYTHON_PACKAGES")
-		);
-	multipy::runtime::InterpreterManager manager(4, env);
+    // Start an interpreter manager governing 4 embedded interpreters.
+    std::shared_ptr<multipy::runtime::Environment> env =
+        std::make_shared<multipy::runtime::PathEnvironment>(
+            std::getenv("PATH_TO_EXTERN_PYTHON_PACKAGES")
+        );
+    multipy::runtime::InterpreterManager manager(4, env);
 
-	try {
-		// Load the model from the multipy.package.
-		multipy::runtime::Package package = manager.loadPackage(argv[1]);
-		multipy::runtime::ReplicatedObj model = package.loadPickle("model", "model.pkl");
-	} catch (const c10::Error& e) {
-		std::cerr << "error loading the model\n";
-		std::cerr << e.msg();
-		return -1;
-	}
+    try {
+        // Load the model from the multipy.package.
+        multipy::runtime::Package package = manager.loadPackage(argv[1]);
+        multipy::runtime::ReplicatedObj model = package.loadPickle("model", "model.pkl");
+    } catch (const c10::Error& e) {
+        std::cerr << "error loading the model\n";
+        std::cerr << e.msg();
+        return -1;
+    }
 
-	std::cout << "ok\n";
+    std::cout << "ok\n";
 }
 
 ```
