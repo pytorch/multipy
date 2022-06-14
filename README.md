@@ -1,30 +1,25 @@
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](LICENSE)
 
 
-# MultiPy (prototype)
+# \[experimental\] MultiPy
 
 > :warning: **This is project is still a prototype.** Only Linux x86 is supported, and the API may change without warning.
-
-
-
-**THIS PROJECT IS IN PROTOTYPE MODE! DO NOT EXPECT THE API TO BE STABLE**
-
 
 `MultiPy` (formerly `torch::deploy` and `torch.package`) is a system that allows you to run multi-threaded python code in C++. It offers `multipy.package` (formerly `torch.package`) in order to package code into a mostly hermetic format to deliver to `multipy::runtime` (formerly `torch::deploy`) which is a runtime which takes packaged
 code and runs it using multiple embedded Python interpreters in a C++ process without a shared global interpreter lock (GIL). For more information on how `MultiPy` works
 internally, please see the related [arXiv paper](https://arxiv.org/pdf/2104.00254.pdf).
 
-## Quickstart
-
+## Installation
 ### Installing `multipy::runtime`
-[TODO] Create tarball and instructions on how to install
+`libtorch_interpreter.so`  can be installed from our [nightly release](https://github.com/pytorch/multipy/releases/tag/nightly)
 
-In order to run pytorch models, we need to use libtorch which can be setup using the instructions [here] (https://pytorch.org/cppdocs/installing.html)
+In order to run pytorch models, we need to use libtorch which can be setup using the instructions [here](https://pytorch.org/cppdocs/installing.html)
 
 ### Installing `multipy.package`
-[TODO] Create pypi distribution and link to it
+We will soon create a pypi distribution to `multipy.package`. For now one can use `torch.package` from `pytorch` as the functionality is exactly the same. The documentation for `torch.package` can be found [here](https://pytorch.org/docs/stable/package.html). Installation instructions for pytorch can be found [here](https://pytorch.org/get-started/locally/).
 
 ### How to build `multipy::runtime` from source
+Currently we require that [pytorch be built from source](https://pytorch.org/get-started/locally/#mac-from-source) in order to build `multipy.runtime` from source. Please refer to that documentation for the requirements needed to build `pytorch` when running `USE_DEPLOY=1 python setup.py develop`.
 
 ```bash
 # checkout repo
@@ -43,13 +38,16 @@ mkdir build
 cd build
 cmake ..
 cmake --build . --config Release
+
+## Quickstart
+
 ```
 
 ### Packaging a model `for multipy::runtime`
 
 ``multipy::runtime`` can load and run Python models that are packaged with
 ``multipy.package``. You can learn more about ``multipy.package`` in the
-``multipy.package`` [documentation](https://pytorch.org/docs/stable/package.html#tutorials).
+``multipy.package`` [documentation](https://pytorch.org/docs/stable/package.html#tutorials) (currently the documentation for `multipy.package` is the same as `torch.package` where we just replace `multipy.package` for all instances of `torch.package`).
 
 For now, let's create a simple model that we can load and run in ``multipy::runtime``.
 
@@ -78,39 +76,39 @@ Now, there should be a file named ``my_package.pt`` in your working directory.
 
 ### Loading and running the model in C++
 ```cpp
-    #include <torch/csrc/deploy/deploy.h>
-    #include <torch/csrc/deploy/path_environment.h>
-    #include <torch/script.h>
-    #include <torch/torch.h>
+#include <torch/csrc/deploy/deploy.h>
+#include <torch/csrc/deploy/path_environment.h>
+#include <torch/script.h>
+#include <torch/torch.h>
 
-    #include <iostream>
-    #include <memory>
+#include <iostream>
+#include <memory>
 
-    int main(int argc, const char* argv[]) {
-        if (argc != 2) {
-            std::cerr << "usage: example-app <path-to-exported-script-module>\n";
-            return -1;
-        }
+int main(int argc, const char* argv[]) {
+	if (argc != 2) {
+		std::cerr << "usage: example-app <path-to-exported-script-module>\n";
+		return -1;
+	}
 
-        // Start an interpreter manager governing 4 embedded interpreters.
-        std::shared_ptr<multipy::runtime::Environment> env =
-            std::make_shared<multipy::runtime::PathEnvironment>(
-                std::getenv("PATH_TO_EXTERN_PYTHON_PACKAGES")
-            );
-        multipy::runtime::InterpreterManager manager(4, env);
+	// Start an interpreter manager governing 4 embedded interpreters.
+	std::shared_ptr<multipy::runtime::Environment> env =
+		std::make_shared<multipy::runtime::PathEnvironment>(
+			std::getenv("PATH_TO_EXTERN_PYTHON_PACKAGES")
+		);
+	multipy::runtime::InterpreterManager manager(4, env);
 
-        try {
-            // Load the model from the multipy.package.
-            multipy::runtime::Package package = manager.loadPackage(argv[1]);
-            multipy::runtime::ReplicatedObj model = package.loadPickle("model", "model.pkl");
-        } catch (const c10::Error& e) {
-            std::cerr << "error loading the model\n";
-            std::cerr << e.msg();
-            return -1;
-        }
+	try {
+		// Load the model from the multipy.package.
+		multipy::runtime::Package package = manager.loadPackage(argv[1]);
+		multipy::runtime::ReplicatedObj model = package.loadPickle("model", "model.pkl");
+	} catch (const c10::Error& e) {
+		std::cerr << "error loading the model\n";
+		std::cerr << e.msg();
+		return -1;
+	}
 
-        std::cout << "ok\n";
-    }
+	std::cout << "ok\n";
+}
 
 ```
 
@@ -207,18 +205,6 @@ Now we can run our app:
 ```bash
 ./example-app /path/to/my_package.pt
 ```
-
-## Documentation
-
-[TODO]
-
-## Requirements
-
-[TODO]
-
-## Installation
-
-[TODO]
 
 ## Contributing
 
