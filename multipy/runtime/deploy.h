@@ -31,9 +31,9 @@ struct TORCH_API InterpreterSession {
 
   // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
   Obj self; // when retrieved from a PythonMovable this will be set.
-  // InterpreterSession(InterpreterSession&&) noexcept = default;
+  InterpreterSession(InterpreterSession&&) noexcept = default;
   // NOLINTNEXTLINE(bugprone-exception-escape)
-  ~InterpreterSession();
+  ~InterpreterSession() = default;
   Obj global(const char* module, const char* name) {
     TORCH_DEPLOY_TRY
     return impl_->global(module, name);
@@ -141,7 +141,7 @@ struct TORCH_API InterpreterManager {
     resources_.setResourceLimit(N);
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
-  ReplicatedObj createMovable(Obj obj, InterpreterSession I);
+  ReplicatedObj createMovable(Obj obj, InterpreterSession* I);
   Package loadPackage(const std::string& uri);
   Package loadPackage(
       std::shared_ptr<caffe2::serialize::ReadAdapterInterface> reader);
@@ -189,14 +189,14 @@ struct TORCH_API ReplicatedObj {
   InterpreterSession acquireSession(
       const Interpreter* onThisInterpreter) const;
   InterpreterSession acquireSession(
-      const InterpreterManager* onThisManager) const;
+      InterpreterManager* onThisManager) const;
   at::IValue operator()(at::ArrayRef<at::IValue> args) const {
     TORCH_DEPLOY_TRY
     auto I = acquireSession(pImpl_->manager_);
     return I.self(args).toIValue();
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
-  InterpreterManager* getManager();
+  InterpreterManager* getManager() const;
 
   [[nodiscard]] at::IValue callKwargs(
       std::vector<at::IValue> args,
@@ -271,7 +271,7 @@ struct TORCH_API Package {
     TORCH_DEPLOY_TRY
     auto I = acquireSession();
     auto loaded = I.self.attr("load_pickle")({module, file});
-    return manager_->createMovable(loaded, I);
+    return manager_->createMovable(loaded, &I);
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
 
@@ -283,7 +283,9 @@ struct TORCH_API Package {
     return I;
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
-
+  InterpreterManager* getManager(){
+    return manager_;
+  }
  private:
   Package(
       const std::string& uri,

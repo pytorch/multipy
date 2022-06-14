@@ -134,14 +134,14 @@ InterpreterManager::InterpreterManager(
   TORCH_DEPLOY_SAFE_CATCH_RETHROW
 }
 
-ReplicatedObj InterpreterManager::createMovable(Obj obj, InterpreterSession I) {
+ReplicatedObj InterpreterManager::createMovable(Obj obj, InterpreterSession* I) {
   TORCH_DEPLOY_TRY
 
   MULTIPY_CHECK(
-      I.impl_->isOwner(obj),
+      I->impl_->isOwner(obj),
       "Cannot create movable from an object that lives in different session");
 
-  auto pickled = I.pickleObj(obj);
+  auto pickled = I->pickleObj(obj);
   return ReplicatedObj(std::make_shared<ReplicatedObjImpl>(
       this->nextObjectId_++, std::move(pickled), this));
   TORCH_DEPLOY_SAFE_CATCH_RETHROW
@@ -189,16 +189,16 @@ InterpreterSession ReplicatedObj::acquireSession(
 }
 
 InterpreterSession ReplicatedObj::acquireSession(
-    InterpreterManager onThisManager) const {
+    InterpreterManager* onThisManager) const {
   TORCH_DEPLOY_TRY
-  InterpreterSession I = onThisManager.acquireOne();
+  auto I = onThisManager->acquireOne();
 
   I.self = I.fromMovable(*this);
   return I;
   TORCH_DEPLOY_SAFE_CATCH_RETHROW
 }
 
-InterpreterManager* ReplicatedObj::getManager(){
+InterpreterManager* ReplicatedObj::getManager() const {
   return pImpl_->manager_;
 }
 
@@ -362,7 +362,7 @@ void LoadBalancer::free(int where) {
 
 void PythonMethodWrapper::setArgumentNames(
     std::vector<std::string>& argumentNamesOut) const {
-  auto session = model_.acquireSession(model_->pImpl_->manager_);
+  auto session = model_.acquireSession(model_.getManager());
   auto method = session.self.attr(methodName_.c_str());
   auto iArgumentNames =
       session.global("GetArgumentNamesModule", "getArgumentNames")({method})
