@@ -216,8 +216,8 @@ MultiPy is BSD licensed, as found in the [LICENSE](LICENSE) file.
 
 ## Legal
 
-[Terms of Use] (https://opensource.facebook.com/legal/terms)
-[Privacy Policy] (https://opensource.facebook.com/legal/privacy)
+[Terms of Use](https://opensource.facebook.com/legal/terms)
+[Privacy Policy](https://opensource.facebook.com/legal/privacy)
 
 Copyright (c) Meta Platforms, Inc. and affiliates.
 All rights reserved.
