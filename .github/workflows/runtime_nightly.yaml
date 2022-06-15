@@ -104,4 +104,4 @@ jobs:
           rm: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
-            multipy/runtime/build/include/runtime/*
+            multipy/runtime/build/include/runtime/**

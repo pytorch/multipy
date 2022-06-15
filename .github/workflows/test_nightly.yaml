@@ -31,5 +31,5 @@ jobs:
         tag: nightly
         token: ${{ secrets.GITHUB_TOKEN }}
         files: |
-          folder/*
+          folder/**
           README.md
