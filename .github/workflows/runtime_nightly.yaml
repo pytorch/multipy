@@ -96,7 +96,7 @@ jobs:
               cd multipy/runtime
               cd build
               ./test_deploy
-      - name: create tarball
+      - name: create tarball [click me to get a list of files for the nightly release]
         shell: bash -l {0}
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
