@@ -106,7 +106,7 @@ install(TARGETS test_deploy DESTINATION tests/bin)
 
 install (
     DIRECTORY ${CMAKE_SOURCE_DIR}
-    DESTINATION include
+    DESTINATION multipy_runtime
     FILES_MATCHING
     PATTERN "*.h*"
     PATTERN "utils.cmake"
@@ -118,5 +118,5 @@ install (
     PATTERN "__pycache__" EXCLUDE
     PATTERN "example" EXCLUDE
     )
-install(TARGETS torch_deploy DESTINATION include/runtime/bin)
-install(TARGETS torch_deployinterpreter DESTINATION include/runtime/bin)
+install(TARGETS torch_deploy DESTINATION include/runtime/lib)
+install(TARGETS torch_deployinterpreter DESTINATION include/runtime/lib)
