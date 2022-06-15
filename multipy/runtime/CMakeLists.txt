@@ -52,7 +52,43 @@ add_custom_command(
 add_library(torch_deploy_internal STATIC libtorch_deployinterpreter.o ${DEPLOY_DIR}/deploy.cpp ${DEPLOY_DIR}/loader.cpp ${DEPLOY_DIR}/path_environment.cpp ${DEPLOY_DIR}/elf_file.cpp)
 target_link_libraries(torch_deploy_internal PRIVATE crypt pthread dl util m z ffi lzma readline nsl ncursesw panelw) # for python builtins
 target_link_libraries(torch_deploy_internal PUBLIC  shm torch fmt::fmt-header-only)
-caffe2_interface_library(torch_deploy_internal torch_deploy)
+
+# copied from caffe2_interface_library
+add_library(torch_deploy INTERFACE)
+add_dependencies(torch_deploy torch_deploy_internal)
+# Depending on the nature of the source library as well as the compiler,
+# determine the needed compilation flags.
+get_target_property(__src_target_type torch_deploy_internal TYPE)
+# Depending on the type of the source library, we will set up the
+# link command for the specific SRC library.
+# In the case of static library, we will need to add whole-static flags.
+if(APPLE)
+  target_link_libraries(
+      torch_deploy INTERFACE -Wl,-force_load,\"$<TARGET_FILE:torch_deploy_internal>\")
+elseif(MSVC)
+  # In MSVC, we will add whole archive in default.
+  target_link_libraries(
+      torch_deploy INTERFACE "$<TARGET_FILE:torch_deploy_internal>")
+  target_link_options(
+      torch_deploy INTERFACE "-WHOLEARCHIVE:$<TARGET_FILE:torch_deploy_internal>")
+else()
+  # Assume everything else is like gcc
+  target_link_libraries(torch_deploy INTERFACE
+      "-Wl,--whole-archive,\"$<TARGET_FILE:torch_deploy_internal>\" -Wl,--no-whole-archive")
+endif()
+target_link_libraries(torch_deploy INTERFACE
+  $<TARGET_PROPERTY:torch_deploy_internal,LINK_LIBRARIES>)
+set_target_properties(torch_deploy PROPERTIES
+  INTERFACE_COMPILE_DEFINITIONS
+  $<TARGET_PROPERTY:torch_deploy_internal,INTERFACE_COMPILE_DEFINITIONS>
+  INTERFACE_COMPILE_OPTIONS
+  $<TARGET_PROPERTY:torch_deploy_internal,INTERFACE_COMPILE_OPTIONS>
+  INTERFACE_INCLUDE_DIRECTORIES
+  $<TARGET_PROPERTY:torch_deploy_internal,INTERFACE_INCLUDE_DIRECTORIES>
+  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
+  $<TARGET_PROPERTY:torch_deploy_internal,INTERFACE_SYSTEM_INCLUDE_DIRECTORIES>)
+
+
 
 set(INTERPRETER_TEST_SOURCES
   ${DEPLOY_DIR}/test_deploy.cpp
@@ -97,10 +133,22 @@ target_link_libraries(interactive_embedded_interpreter
   PUBLIC "-Wl,--no-as-needed -rdynamic" torch_deploy c10 torch_cpu
 )
 
-if(INSTALL_TEST)
-  install(TARGETS test_deploy DESTINATION bin)
-#   TODO: enable test_deploy_gpu
-#   install(TARGETS test_deploy_gpu DESTINATION bin)
-endif()
+install(TARGETS test_deploy DESTINATION tests/bin)
+# install(TARGETS test_deploy_gpu DESTINATION tests/bin)
 
-install(TARGETS torch_deploy DESTINATION lib)
+install (
+    DIRECTORY ${CMAKE_SOURCE_DIR}
+    DESTINATION include
+    FILES_MATCHING
+    PATTERN "*.h*"
+    PATTERN "utils.cmake"
+    PATTERN "interpreter/third_party" EXCLUDE
+    PATTERN "interpreter/cpython" EXCLUDE
+    PATTERN "interpreter/frozen" EXCLUDE
+    PATTERN "third-party" EXCLUDE
+    PATTERN "build" EXCLUDE
+    PATTERN "__pycache__" EXCLUDE
+    PATTERN "example" EXCLUDE
+    )
+install(TARGETS torch_deploy_internal DESTINATION include/runtime/bin)
+install(TARGETS torch_deployinterpreter DESTINATION include/runtime/bin)
