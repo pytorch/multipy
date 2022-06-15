@@ -111,4 +111,4 @@ jobs:
           rm: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
-            multipy/runtime/build/include/multipy_runtime.tar.gz
+            multipy/runtime/build/dist/multipy_runtime.tar.gz
