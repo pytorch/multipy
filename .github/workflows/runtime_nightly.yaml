@@ -101,7 +101,7 @@ jobs:
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
-              cd multipy/runtime/build/include
+              cd multipy/runtime/build/dist
               tar -czvf multipy_runtime.tar.gz runtime/
 
       - name: Update nightly release
