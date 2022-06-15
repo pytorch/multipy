@@ -11,7 +11,7 @@ internally, please see the related [arXiv paper](https://arxiv.org/pdf/2104.0025
 
 ## Installation
 ### Installing `multipy::runtime`
-`libtorch_interpreter.so`  can be installed from our [nightly release](https://github.com/pytorch/multipy/releases/tag/nightly)
+`libtorch_interpreter.so`,`libtorch_deploy.a`, `utils.cmake`, and the header files of `multipy::runtime` can be installed from our [nightly release](https://github.com/pytorch/multipy/releases/download/nightly/multipy_runtime.tar.gz)
 
 In order to run pytorch models, we need to use libtorch which can be setup using the instructions [here](https://pytorch.org/cppdocs/installing.html)
 
@@ -132,7 +132,7 @@ with a ``ReplicatedObj`` (for example, by calling ``forward``), it will select
 an free interpreter to execute that interaction.
 
 
-Building and running the application
+Building and running the application when build from source
 
 Locate `libtorch_deployinterpreter.o` on your system. This should have been
 built when PyTorch was built from source. In the same PyTorch directory, locate
@@ -149,7 +149,7 @@ minimal CMakeLists.txt file would look like:
     find_package(fmt REQUIRED)
     find_package(Torch REQUIRED)
 
-    add_library(torch_deploy_internal STATIC
+    add_library(torch_deploy STATIC
         ${DEPLOY_INTERPRETER_PATH}/libtorch_deployinterpreter.o
         ${DEPLOY_DIR}/deploy.cpp
         ${DEPLOY_DIR}/loader.cpp
@@ -157,15 +157,17 @@ minimal CMakeLists.txt file would look like:
         ${DEPLOY_DIR}/elf_file.cpp)
 
     # for python builtins
-    target_link_libraries(torch_deploy_internal PRIVATE
+    target_link_libraries(torch_deploy PRIVATE
         crypt pthread dl util m z ffi lzma readline nsl ncursesw panelw)
-    target_link_libraries(torch_deploy_internal PUBLIC
+    target_link_libraries(torch_deploy PUBLIC
         shm torch fmt::fmt-header-only)
-    caffe2_interface_library(torch_deploy_internal torch_deploy)
+
+    # this file can be found in multipy/runtime/utils.cmake
+    caffe2_interface_library(torch_deploy torch_deploy_interface)
 
     add_executable(example-app example.cpp)
     target_link_libraries(example-app PUBLIC
-        "-Wl,--no-as-needed -rdynamic" dl torch_deploy "${TORCH_LIBRARIES}")
+        "-Wl,--no-as-needed -rdynamic" dl torch_deploy_interface "${TORCH_LIBRARIES}")
 ```
 
 Currently, it is necessary to build ``multipy::runtime`` as a static library.
@@ -192,9 +194,7 @@ We can now run the following commands to build the application from within the
 mkdir build
 cd build
 # Point CMake at the built version of PyTorch we just installed.
-cmake -DCMAKE_PREFIX_PATH="$(python -c 'import torch.utils; print(torch.utils.cmake_prefix_path)')" .. \
-        -DDEPLOY_INTERPRETER_PATH="$DEPLOY_INTERPRETER_PATH" \
-        -DDEPLOY_DIR="$DEPLOY_DIR"
+cmake ..
 cmake --build . --config Release
 ```
 
@@ -216,8 +216,8 @@ MultiPy is BSD licensed, as found in the [LICENSE](LICENSE) file.
 
 ## Legal
 
-[Terms of Use] (https://opensource.facebook.com/legal/terms)
-[Privacy Policy] (https://opensource.facebook.com/legal/privacy)
+[Terms of Use](https://opensource.facebook.com/legal/terms)
+[Privacy Policy](https://opensource.facebook.com/legal/privacy)
 
 Copyright (c) Meta Platforms, Inc. and affiliates.
 All rights reserved.
