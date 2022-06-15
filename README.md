@@ -192,9 +192,7 @@ We can now run the following commands to build the application from within the
 mkdir build
 cd build
 # Point CMake at the built version of PyTorch we just installed.
-cmake -DCMAKE_PREFIX_PATH="$(python -c 'import torch.utils; print(torch.utils.cmake_prefix_path)')" .. \
-        -DDEPLOY_INTERPRETER_PATH="$DEPLOY_INTERPRETER_PATH" \
-        -DDEPLOY_DIR="$DEPLOY_DIR"
+cmake ..
 cmake --build . --config Release
 ```
 
@@ -216,8 +214,8 @@ MultiPy is BSD licensed, as found in the [LICENSE](LICENSE) file.
 
 ## Legal
 
-[Terms of Use] (https://opensource.facebook.com/legal/terms)
-[Privacy Policy] (https://opensource.facebook.com/legal/privacy)
+[Terms of Use](https://opensource.facebook.com/legal/terms)
+[Privacy Policy](https://opensource.facebook.com/legal/privacy)
 
 Copyright (c) Meta Platforms, Inc. and affiliates.
 All rights reserved.

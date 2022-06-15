@@ -27,8 +27,8 @@ jobs:
     # - Update (force-push) tag to the commit that is used in the workflow.
     # - Upload artifacts defined by the user.
     - uses: pyTooling/Actions/releaser@r0
-      tag: nightly
       with:
+        tag: nightly
         token: ${{ secrets.GITHUB_TOKEN }}
         files: |
           folder/*
