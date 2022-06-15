@@ -22,6 +22,7 @@ jobs:
         echo "some more random artifacts" > folder/artifact2.txt
         echo "some more random artifacts" > folder/folder2/artifact1.txt
         echo "some more random artifacts" > folder/folder2/artifact2.txt
+        tar -czvf multipy_runtime.tar.gz folder/
 
     # Update tag and pre-release
     # - Update (force-push) tag to the commit that is used in the workflow.
@@ -31,5 +32,5 @@ jobs:
         tag: nightly
         token: ${{ secrets.GITHUB_TOKEN }}
         files: |
-          folder/**
+          multipy_runtime.tar.gz
           README.md
