@@ -17,13 +17,26 @@ include_directories(BEFORE "${PYTORCH_ROOT}/torch/include/torch/csrc/api/include
 
 include(${DEPLOY_DIR}/utils.cmake)
 
-# ensure that ABI is set correctly to 0
-if(DEFINED GLIBCXX_USE_CXX11_ABI)
-  if(${GLIBCXX_USE_CXX11_ABI} EQUAL 1)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=1")
-    set(TORCH_CXX_FLAGS "-D_GLIBCXX_USE_CXX11_ABI=1")
+# option(ABI_EQUALS_1 "Set ABI value to 1, by default it is set to 0. Pytorch by default builds with ABI set to 1." OFF)
+
+# set ABI by default to 0
+
+if(ABI_EQUALS_1)
+  set(ABI_VALUE 1)
+  message(STATUS "ABI VALUE 1 is - ${ABI_VALUE}")
+else()
+  set(ABI_VALUE 0)
+ message(STATUS "ABI VALUE 0 is - ${ABI_VALUE}")
+endif()
+
+if(DEFINED _GLIBCXX_USE_CXX11_ABI)
+   message(STATUS "ABI VALUE is defined")
+  if(${_GLIBCXX_USE_CXX11_ABI} NOT EQUAL ${ABI_VALUE})
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${ABI_VALUE}")
   endif()
 endif()
+message(STATUS "ABI VALUE is - ${ABI_VALUE}")
+message(STATUS "_GLIBCXX_USE_CXX11_ABI is - ${_GLIBCXX_USE_CXX11_ABI}")
 
 # we do not want to have torch_deployinterpreter linked against libstdc++ or libc because
 # when loading it with RTLD_DEEPBIND it will resolve std::cout/stdout to the copy in libc++/libc instead of the
