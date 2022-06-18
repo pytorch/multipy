@@ -6,6 +6,9 @@ on:
       - main
   pull_request:
 
+  schedule:
+    - cron: '0 2 * * *' # run at 2 AM UTC
+
 jobs:
   unittest:
     strategy:
@@ -88,6 +91,41 @@ jobs:
               conda run -n multipy_runtime_env cmake ..
               conda run -n multipy_runtime_env cmake --build . --config Release
       - name: Run test_deploy
+        shell: bash -l {0}
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: |
+              cd multipy
+              cd runtime
+              cd build
+              ./test_deploy
+      - name: Build pytorch master
+        shell: bash -l {0}
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: |
+              cd multipy/runtime/third-party
+              rm -rf pytorch
+              git clone https://github.com/pytorch/pytorch.git
+              cd pytorch
+              echo "-----------current commit---------------------"
+              git status
+              echo "----------------------------------------------"
+              git submodule sync && git submodule update --init --recursive
+              export USE_DEPLOY=1
+              conda run -n multipy_runtime_env python setup.py develop
+      - name: Build multipy runtime with pytorch master
+        shell: bash -l {0}
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: |
+              cd multipy/runtime
+              rm -rf build
+              mkdir build
+              cd build
+              conda run -n multipy_runtime_env cmake ..
+              conda run -n multipy_runtime_env cmake --build . --config Release
+      - name: Run test_deploy  with pytorch master
         shell: bash -l {0}
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
