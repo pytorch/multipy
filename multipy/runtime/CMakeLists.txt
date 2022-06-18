@@ -52,6 +52,7 @@ add_custom_command(
 add_library(torch_deploy STATIC libtorch_deployinterpreter.o ${DEPLOY_DIR}/deploy.cpp ${DEPLOY_DIR}/loader.cpp ${DEPLOY_DIR}/path_environment.cpp ${DEPLOY_DIR}/elf_file.cpp)
 target_link_libraries(torch_deploy PRIVATE crypt pthread dl util m z ffi lzma readline nsl ncursesw panelw) # for python builtins
 target_link_libraries(torch_deploy PUBLIC  shm torch fmt::fmt-header-only)
+target_include_directories(torch_deploy PRIVATE ${CMAKE_SOURCE_DIR}/../..)
 
 # copied from caffe2_interface_library
 caffe2_interface_library(torch_deploy torch_deploy_interface)
@@ -72,11 +73,13 @@ target_include_directories(test_deploy PRIVATE ${PYTORCH_ROOT}/torch)
 target_link_libraries(test_deploy
   PUBLIC "-Wl,--no-as-needed -rdynamic" gtest dl torch_deploy_interface c10 torch_cpu
 )
+target_include_directories(test_deploy PRIVATE ${CMAKE_SOURCE_DIR}/../..)
 
 # LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
 # add_executable(test_deploy_gpu ${INTERPRETER_TEST_SOURCES_GPU})
 # target_compile_definitions(test_deploy_gpu PUBLIC TEST_CUSTOM_LIBRARY)
 # target_include_directories(test_deploy_gpu PRIVATE ${PYTORCH_ROOT}/torch)
+# target_include_directories(test_deploy_gpu PRIVATE ${CMAKE_SOURCE_DIR}/../..)
 # target_link_libraries(test_deploy_gpu
 #   PUBLIC "-Wl,--no-as-needed -rdynamic" gtest dl torch_deploy_interface c10 torch_cpu
 # )
@@ -85,11 +88,13 @@ LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
 add_library(test_deploy_lib SHARED test_deploy_lib.cpp)
 add_dependencies(test_deploy_lib cpython)
 target_include_directories(test_deploy_lib BEFORE PRIVATE ${PYTHON_INC_DIR})
+target_include_directories(test_deploy_lib PRIVATE ${CMAKE_SOURCE_DIR}/../..)
 target_link_libraries(test_deploy_lib PRIVATE pybind11::pybind11)
 
 LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
 add_executable(deploy_benchmark ${DEPLOY_DIR}/example/benchmark.cpp)
 target_include_directories(deploy_benchmark PRIVATE ${PYTORCH_ROOT}/torch)
+target_include_directories(deploy_benchmark PRIVATE ${CMAKE_SOURCE_DIR}/../..)
 target_link_libraries(deploy_benchmark
   PUBLIC "-Wl,--no-as-needed -rdynamic" torch_deploy_interface c10 torch_cpu
 )
@@ -97,6 +102,7 @@ target_link_libraries(deploy_benchmark
 LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
 add_executable(interactive_embedded_interpreter ${DEPLOY_DIR}/interactive_embedded_interpreter.cpp)
 target_include_directories(interactive_embedded_interpreter PRIVATE ${PYTORCH_ROOT}/torch)
+target_include_directories(interactive_embedded_interpreter PRIVATE ${CMAKE_SOURCE_DIR}/../..)
 target_link_libraries(interactive_embedded_interpreter
   PUBLIC "-Wl,--no-as-needed -rdynamic" torch_deploy_interface c10 torch_cpu
 )
@@ -118,5 +124,21 @@ install (
     PATTERN "__pycache__" EXCLUDE
     PATTERN "example" EXCLUDE
     )
+
+install (
+    DIRECTORY ${CMAKE_SOURCE_DIR}
+    DESTINATION multipy
+    FILES_MATCHING
+    PATTERN "example/generated/*"
+    PATTERN "test_deploy_python.py"
+    PATTERN "interpreter/third_party" EXCLUDE
+    PATTERN "interpreter/cpython" EXCLUDE
+    PATTERN "interpreter/frozen" EXCLUDE
+    PATTERN "third-party" EXCLUDE
+    PATTERN "build" EXCLUDE
+    PATTERN "unity" EXCLUDE
+    PATTERN "__pycache__" EXCLUDE
+    )
+
 install(TARGETS torch_deploy DESTINATION dist/runtime/lib)
 install(TARGETS torch_deployinterpreter DESTINATION dist/runtime/lib)
