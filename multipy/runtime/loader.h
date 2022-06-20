@@ -7,8 +7,8 @@
 #pragma once
 #include <dlfcn.h>
 #include <elf.h>
+#include <multipy/runtime/interpreter/Optional.hpp>
 #include <memory>
-#include "interpreter/Optional.hpp"
 
 namespace torch {
 namespace deploy {

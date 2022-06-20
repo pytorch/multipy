@@ -87,12 +87,11 @@ jobs:
               cd build
               conda run -n multipy_runtime_env cmake ..
               conda run -n multipy_runtime_env cmake --build . --config Release
+              conda run -n multipy_runtime_env cmake --install . --prefix "."
       - name: Run test_deploy
         shell: bash -l {0}
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
-              cd multipy
-              cd runtime
-              cd build
+              cd multipy/runtime/build
               ./test_deploy

@@ -8,7 +8,7 @@
 #include <Python.h>
 #include <c10/util/Exception.h>
 #include <fmt/format.h>
-#include "../Exception.h"
+#include <multipy/runtime/Exception.h>
 
 namespace torch {
 namespace deploy {

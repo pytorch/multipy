@@ -67,19 +67,6 @@ jobs:
             conda create --name example_env python=${{ matrix.python-version }}
             conda run -n example_env python -m pip install torch torchvision torchaudio pathlib
             conda run -n example_env python generate_examples.py
-      - name: Build third-party libraries
-        shell: bash -l {0}
-        env:
-          PYTHON_VERSION: ${{ matrix.python-version }}
-        run: |
-              cd multipy/runtime/third-party/fmt
-              mkdir build
-              cd build
-              conda run -n multipy_runtime_env cmake ..
-              cd ../../pybind11
-              mkdir build
-              cd build
-              conda run -n multipy_runtime_env cmake ..
       - name: Build pytorch
         shell: bash -l {0}
         env:
@@ -88,6 +75,19 @@ jobs:
               cd multipy/runtime/third-party/pytorch
               export USE_DEPLOY=1
               conda run -n multipy_runtime_env python setup.py develop
+      - name: Build multipy runtime
+        shell: bash -l {0}
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: |
+              cd multipy
+              cd runtime
+              mkdir build
+              cd build
+              pwd
+              conda run -n multipy_runtime_env cmake ..
+              conda run -n multipy_runtime_env cmake --build . --config Release
+              conda run -n multipy_runtime_env cmake --install . --prefix "."
       - name: test_deploy
         shell: bash -l {0}
         env:
@@ -96,11 +96,19 @@ jobs:
               cd multipy/runtime
               cd build
               ./test_deploy
+      - name: create tarball [click me to get a list of files for the nightly release]
+        shell: bash -l {0}
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: |
+              cd multipy/runtime/build/dist
+              tar -czvf multipy_runtime.tar.gz runtime/
+
       - name: Update nightly release
         uses: pyTooling/Actions/releaser@main
         with:
-          tag: nightly
+          tag: nightly-runtime
           rm: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
-            multipy/runtime/build/interpreter/libtorch_deployinterpreter.so
+            multipy/runtime/build/dist/multipy_runtime.tar.gz
