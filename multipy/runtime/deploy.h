@@ -6,6 +6,8 @@
 
 #pragma once
 #include <c10/util/irange.h>
+#include <multipy/runtime/interpreter/Optional.hpp>
+#include <multipy/runtime/interpreter/interpreter_impl.h>
 #include <torch/csrc/api/include/torch/imethod.h>
 #include <torch/csrc/jit/serialization/import.h>
 #include <cassert>
@@ -14,8 +16,6 @@
 #include <string>
 #include <thread>
 #include <vector>
-#include "interpreter/Optional.hpp"
-#include "interpreter/interpreter_impl.h"
 #include "noop_environment.h"
 
 namespace torch {

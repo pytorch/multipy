@@ -11,12 +11,12 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
+#include <multipy/runtime/Exception.h>
 #include <pybind11/embed.h>
 #include <pybind11/functional.h>
 #include <torch/csrc/DynamicTypes.h>
 #include <torch/csrc/autograd/generated/variable_factories.h>
 #include <torch/csrc/jit/python/pybind_utils.h>
-#include "../Exception.h"
 
 #include <cassert>
 #include <cstdio>
