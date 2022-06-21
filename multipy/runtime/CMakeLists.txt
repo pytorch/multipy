@@ -23,12 +23,10 @@ option(ABI_EQUALS_1 "Set ABI value to 1, by default it is set to 0. Pytorch by d
 
 if(ABI_EQUALS_1)
   set(ABI_VALUE 1)
-  message(STATUS "ABI VALUE 1 is - ${ABI_VALUE}")
 else()
   set(ABI_VALUE 0)
- message(STATUS "ABI VALUE 0 is - ${ABI_VALUE}")
 endif()
-add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
+add_definitions(-D_GLIBCXX_USE_CXX11_ABI=${ABI_VALUE})
 
 # we do not want to have torch_deployinterpreter linked against libstdc++ or libc because
 # when loading it with RTLD_DEEPBIND it will resolve std::cout/stdout to the copy in libc++/libc instead of the

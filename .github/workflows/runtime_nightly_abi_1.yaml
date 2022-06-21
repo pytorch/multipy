@@ -73,7 +73,9 @@ jobs:
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
-              # by default Pytorch ABI is set to 1
+              export GLIBCXX_USE_CXX11_ABI=1
+              export CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=1"
+              export TORCH_CXX_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=1"
               cd multipy/runtime/third-party/pytorch
               export USE_DEPLOY=1
               conda run -n multipy_runtime_env python setup.py develop
