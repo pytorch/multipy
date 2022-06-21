@@ -1,8 +1,9 @@
-name: Multipy runtime nightly release + tests
+name: Multipy runtime nightly release + tests with ABI 1
 
 on:
   schedule:
     - cron: '0 2 * * *' # run at 2 AM UTC
+  pull_request:
 
 jobs:
   unittest:
