@@ -3,13 +3,14 @@ name: Multipy runtime nightly release + tests with ABI 0
 on:
   schedule:
     - cron: '0 2 * * *' # run at 2 AM UTC
+  pull_request:
 
 jobs:
   unittest:
     strategy:
       matrix:
         python-version: [3.8]
-        platform: [linux.2xlarge]
+        platform: [linux.4xlarge]
       fail-fast: false
     runs-on: ${{ matrix.platform }}
     steps:
