@@ -1,8 +1,6 @@
-name: Multipy tests with ABI 1
+name: Multipy tests unittests (with ABI 1)
 
 on:
-  schedule:
-    - cron: '0 2 * * *' # run at 2 AM UTC
   pull_request:
 
 jobs:
@@ -10,7 +8,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.8]
-        platform: [linux.2xlarge, linux.4xlarge]
+        platform: [linux.2xlarge]
       fail-fast: false
     runs-on: ${{ matrix.platform }}
     steps:
