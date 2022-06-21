@@ -1,8 +1,12 @@
-name: Multipy runtime nightly release + tests
+name: Multipy unit tests
 
 on:
-  schedule:
-    - cron: '0 2 * * *' # run at 2 AM UTC
+  workflow_call:
+    inputs:
+      abi_0:
+        required: false
+        default: true
+        type: boolean
 
 jobs:
   unittest:
@@ -67,7 +71,7 @@ jobs:
             conda create --name example_env python=${{ matrix.python-version }}
             conda run -n example_env python -m pip install torch torchvision torchaudio pathlib
             conda run -n example_env python generate_examples.py
-      - name: Build pytorch with ABI=0
+      - name: Build pytorch
         shell: bash -l {0}
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
@@ -90,7 +94,6 @@ jobs:
               pwd
               conda run -n multipy_runtime_env cmake ..
               conda run -n multipy_runtime_env cmake --build . --config Release
-              conda run -n multipy_runtime_env cmake --install . --prefix "."
       - name: test_deploy
         shell: bash -l {0}
         env:
@@ -98,4 +101,5 @@ jobs:
         run: |
               cd multipy/runtime
               cd build
+              conda run -n multipy_runtime_env cmake --install . --prefix "."
               ./test_deploy
