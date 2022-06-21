@@ -1,4 +1,10 @@
-name: Multipy unit tests
+name: Runtime Unittests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
 
 jobs:
   unittest:
@@ -68,9 +74,6 @@ jobs:
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
-              export GLIBCXX_USE_CXX11_ABI=0
-              export CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
-              export TORCH_CXX_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
               cd multipy/runtime/third-party/pytorch
               export USE_DEPLOY=1
               conda run -n multipy_runtime_env python setup.py develop
@@ -79,19 +82,16 @@ jobs:
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
-              cd multipy
-              cd runtime
+              cd multipy/runtime
               mkdir build
               cd build
-              pwd
-              conda run -n multipy_runtime_env cmake -DABI_EQUALS_1=OFF ..
+              conda run -n multipy_runtime_env cmake ..
               conda run -n multipy_runtime_env cmake --build . --config Release
-      - name: test_deploy
+              conda run -n multipy_runtime_env cmake --install . --prefix "."
+      - name: Run test_deploy
         shell: bash -l {0}
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
-              cd multipy/runtime
-              cd build
-              conda run -n multipy_runtime_env cmake --install . --prefix "."
+              cd multipy/runtime/build
               ./test_deploy
