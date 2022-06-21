@@ -17,7 +17,7 @@ jobs:
     steps:
 
       - name: Build multipy with ABI=1
-        uses: pytorch/multipy/.github/workflows/build_multipy.yml
+        uses: pytorch/multipy/.github/workflows/build_multipy.yml@51df5ec924977c50d2b0218cff845fe9cec93a4e
         with:
           abi_0: false
           python-version: ${{ matrix.python-version }}
