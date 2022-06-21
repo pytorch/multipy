@@ -5,6 +5,11 @@ on:
     branches:
       - main
   pull_request:
+  workflow_call:
+    inputs:
+      abi_0:
+        required: false
+        default: false
 
 jobs:
   unittest:
@@ -15,15 +20,18 @@ jobs:
       fail-fast: false
     runs-on: ${{ matrix.platform }}
     steps:
+
       - name: Update pip
         run: |
           sudo yum update -y
           sudo yum -y install git python3-pip
           sudo pip3 install --upgrade pip
+
       - name: Setup conda
         run: |
           wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
           bash ~/miniconda.sh -b -p $HOME/miniconda
+
       - name: setup Path
         run: |
           echo "/home/ec2-user/miniconda/bin" >> $GITHUB_PATH
@@ -33,10 +41,12 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: true
+
       - name: Setup SSH (Click me for login details)
         uses: ./.github/actions/setup-ssh
         with:
           github-secret: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Install C++ toolchain
         run: |
               sudo yum -y install clang llvm
@@ -47,6 +57,7 @@ jobs:
               sudo yum -y install uuid
               sudo yum -y install openmpi-devel
               sudo yum -y install zlib-devel
+
       - name: create conda env
         run: |
           conda create --name multipy_runtime_env python=${{ matrix.python-version }}
@@ -58,6 +69,7 @@ jobs:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
           conda run -n multipy_runtime_env python -m pip install astunparse numpy ninja pyyaml mkl mkl-include setuptools cmake cffi typing_extensions future six requests dataclasses pytest
+
       - name: gen examples
         shell: bash -l {0}
         env:
@@ -69,29 +81,67 @@ jobs:
             conda create --name example_env python=${{ matrix.python-version }}
             conda run -n example_env python -m pip install torch torchvision torchaudio pathlib
             conda run -n example_env python generate_examples.py
-      - name: Build pytorch
+
+      - name: Build pytorch with ABI=0
+        if: ${{ inputs.abi_0 }}  == true
         shell: bash -l {0}
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
+              export GLIBCXX_USE_CXX11_ABI=0
+              export CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
+              export TORCH_CXX_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
               cd multipy/runtime/third-party/pytorch
               export USE_DEPLOY=1
               conda run -n multipy_runtime_env python setup.py develop
-      - name: Build multipy runtime
+
+      - name: Build pytorch with ABI=1
+        if: ${{ inputs.abi_0 }} == false
+        shell: bash -l {0}
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: |
+              export GLIBCXX_USE_CXX11_ABI=1
+              export CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=1"
+              export TORCH_CXX_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=1"
+              cd multipy/runtime/third-party/pytorch
+              export USE_DEPLOY=1
+              conda run -n multipy_runtime_env python setup.py develop
+
+      - name: Build multipy runtime with ABI=0
+        if: ${{ inputs.abi_0 }} == true
+        shell: bash -l {0}
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: |
+              cd multipy
+              cd runtime
+              mkdir build
+              cd build
+              pwd
+              conda run -n multipy_runtime_env cmake -DABI_EQUALS_0=ON ..
+              conda run -n multipy_runtime_env cmake --build . --config Release
+
+      - name: Build multipy runtime with ABI=1
+        if: ${{ inputs.abi_0 }} == false
+        shell: bash -l {0}
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: |
+              cd multipy
+              cd runtime
+              mkdir build
+              cd build
+              pwd
+              conda run -n multipy_runtime_env cmake -DABI_EQUALS_1=ON ..
+              conda run -n multipy_runtime_env cmake --build . --config Release
+
+      - name: test_deploy
         shell: bash -l {0}
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
               cd multipy/runtime
-              mkdir build
               cd build
-              conda run -n multipy_runtime_env cmake ..
-              conda run -n multipy_runtime_env cmake --build . --config Release
               conda run -n multipy_runtime_env cmake --install . --prefix "."
-      - name: Run test_deploy
-        shell: bash -l {0}
-        env:
-          PYTHON_VERSION: ${{ matrix.python-version }}
-        run: |
-              cd multipy/runtime/build
               ./test_deploy
