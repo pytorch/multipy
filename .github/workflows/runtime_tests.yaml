@@ -1,13 +1,5 @@
 name: Multipy unit tests
 
-on:
-  workflow_call:
-    inputs:
-      abi_0:
-        required: false
-        default: True
-        type: boolean
-
 jobs:
   unittest:
     strategy:
