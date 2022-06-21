@@ -2,6 +2,9 @@ name: multipy.package tests unittests
 
 on:
   pull_request:
+  push:
+  branches:
+    - main
 
 jobs:
   unittest:

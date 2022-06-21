@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.8]
-        platform: [linux.2xlarge, linux.4xlarge]
+        platform: [linux.2xlarge]
         abi: [1]
       fail-fast: false
     runs-on: ${{ matrix.platform }}
