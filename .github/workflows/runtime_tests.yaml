@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.8]
-        platform: [linux.2xlarge]
+        platform: [linux.2xlarge, linux.4xlarge]]
       fail-fast: false
     runs-on: ${{ matrix.platform }}
     steps:
@@ -92,7 +92,7 @@ jobs:
               mkdir build
               cd build
               pwd
-              conda run -n multipy_runtime_env cmake ..
+              conda run -n multipy_runtime_env cmake -DABI_EQUALS_1=OFF ..
               conda run -n multipy_runtime_env cmake --build . --config Release
       - name: test_deploy
         shell: bash -l {0}
