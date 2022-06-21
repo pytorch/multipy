@@ -1,20 +1,16 @@
-name: Package Unittests
+name: Multipy runtime nightly release + tests with ABI 0
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-
   schedule:
     - cron: '0 2 * * *' # run at 2 AM UTC
+  pull_request:
 
 jobs:
   unittest:
     strategy:
       matrix:
         python-version: [3.8]
-        platform: [linux.2xlarge]
+        platform: [linux.2xlarge, linux.4xlarge]]
       fail-fast: false
     runs-on: ${{ matrix.platform }}
     steps:
@@ -93,7 +89,7 @@ jobs:
               mkdir build
               cd build
               pwd
-              conda run -n multipy_runtime_env cmake ..
+              conda run -n multipy_runtime_env cmake -DABI_EQUALS_1=OFF ..
               conda run -n multipy_runtime_env cmake --build . --config Release
       - name: test_deploy
         shell: bash -l {0}
@@ -104,3 +100,19 @@ jobs:
               cd build
               conda run -n multipy_runtime_env cmake --install . --prefix "."
               ./test_deploy
+      - name: create tarball [click me to get a list of files for the nightly release]
+        shell: bash -l {0}
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: |
+              cd multipy/runtime/build/dist
+              tar -czvf multipy_runtime.tar.gz runtime/
+
+      - name: Update nightly release
+        uses: pyTooling/Actions/releaser@main
+        with:
+          tag: nightly-runtime
+          rm: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: |
+            multipy/runtime/build/dist/multipy_runtime.tar.gz
