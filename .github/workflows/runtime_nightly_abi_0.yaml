@@ -91,7 +91,7 @@ jobs:
               pwd
               conda run -n multipy_runtime_env cmake -DABI_EQUALS_1=OFF ..
               conda run -n multipy_runtime_env cmake --build . --config Release
-      - name: test_deploy
+      - name: install files
         shell: bash -l {0}
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
@@ -99,7 +99,6 @@ jobs:
               cd multipy/runtime
               cd build
               conda run -n multipy_runtime_env cmake --install . --prefix "."
-              ./test_deploy
       - name: create tarball [click me to get a list of files for the nightly release]
         shell: bash -l {0}
         env:
