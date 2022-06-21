@@ -1,8 +1,11 @@
-name: Multipy runtime nightly release + tests with ABI 1
+name: Multipy runtime tests
 
 on:
-  schedule:
-    - cron: '0 2 * * *' # run at 2 AM UTC
+
+  pull_request:
+  push:
+    branches:
+      - main
 
 jobs:
   unittest:
@@ -10,6 +13,7 @@ jobs:
       matrix:
         python-version: [3.8]
         platform: [linux.2xlarge]
+        abi: [0,1]
       fail-fast: false
     runs-on: ${{ matrix.platform }}
     steps:
@@ -17,19 +21,18 @@ jobs:
       - name: Build multipy
         uses: pytorch/multipy/.github/workflows/build_multipy.yml@51df5ec924977c50d2b0218cff845fe9cec93a4e
         with:
-          abi_0: false
+          abi_version: ${{ matrix.abi }}
           python-version: ${{ matrix.python-version }}
         secrets:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: test_deploy
+      - name: Run unit tests with ABI=${{ matrix.abi }}
+        if: ${{ matrix.abi }} == 1
         shell: bash -l {0}
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
-              cd multipy/runtime
-              cd build
-              conda run -n multipy_runtime_env cmake --install . --prefix "."
+              cd multipy/runtime/build
               ./test_deploy
 
       - name: create tarball [click me to get a list of files for the nightly release]
@@ -41,9 +44,20 @@ jobs:
               tar -czvf multipy_runtime.tar.gz runtime/
 
       - name: Update nightly release
+        if: ${{ matrix.abi }} == 0
         uses: pyTooling/Actions/releaser@main
         with:
-          tag: nightly-runtime-ABI-is-one
+          tag: nightly-runtime
+          rm: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: |
+            multipy/runtime/build/dist/multipy_runtime.tar.gz
+
+      - name: Update nightly release
+        if: ${{ matrix.abi }} == 1
+        uses: pyTooling/Actions/releaser@main
+        with:
+          tag: nightly-runtime-with-abi-one
           rm: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |

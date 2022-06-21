@@ -1,4 +1,4 @@
-name: Multipy tests unittests (with ABI 1)
+name: multipy.package tests unittests
 
 on:
   pull_request:
