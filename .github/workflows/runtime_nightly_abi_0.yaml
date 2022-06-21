@@ -67,11 +67,14 @@ jobs:
             conda create --name example_env python=${{ matrix.python-version }}
             conda run -n example_env python -m pip install torch torchvision torchaudio pathlib
             conda run -n example_env python generate_examples.py
-      - name: Build pytorch
+      - name: Build pytorch with ABI=0
         shell: bash -l {0}
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
+              export GLIBCXX_USE_CXX11_ABI=0
+              export CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
+              export TORCH_CXX_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
               cd multipy/runtime/third-party/pytorch
               export USE_DEPLOY=1
               conda run -n multipy_runtime_env python setup.py develop
