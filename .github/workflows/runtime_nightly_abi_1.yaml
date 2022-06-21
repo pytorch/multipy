@@ -111,7 +111,7 @@ jobs:
       - name: Update nightly release
         uses: pyTooling/Actions/releaser@main
         with:
-          tag: nightly-runtime-ABI-is-1
+          tag: nightly-runtime-ABI-is-one
           rm: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
