@@ -2,6 +2,9 @@ name: Multipy tests unittests (with ABI 1)
 
 on:
   pull_request:
+  push:
+    branches:
+      - main
 
 jobs:
   unittest:
