@@ -5,7 +5,7 @@ on:
     inputs:
       abi_0:
         required: false
-        default: true
+        default: True
         type: boolean
 
 jobs:
