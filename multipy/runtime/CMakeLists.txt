@@ -17,13 +17,16 @@ include_directories(BEFORE "${PYTORCH_ROOT}/torch/include/torch/csrc/api/include
 
 include(${DEPLOY_DIR}/utils.cmake)
 
-# ensure that ABI is set correctly to 0
-if(DEFINED GLIBCXX_USE_CXX11_ABI)
-  if(${GLIBCXX_USE_CXX11_ABI} EQUAL 1)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=1")
-    set(TORCH_CXX_FLAGS "-D_GLIBCXX_USE_CXX11_ABI=1")
-  endif()
+# set ABI by default to 0
+
+option(ABI_EQUALS_1 "Set ABI value to 1, by default it is set to 0. Pytorch by default builds with ABI set to 1." OFF)
+
+if(ABI_EQUALS_1)
+  set(ABI_VALUE 1)
+else()
+  set(ABI_VALUE 0)
 endif()
+add_definitions(-D_GLIBCXX_USE_CXX11_ABI=${ABI_VALUE})
 
 # we do not want to have torch_deployinterpreter linked against libstdc++ or libc because
 # when loading it with RTLD_DEEPBIND it will resolve std::cout/stdout to the copy in libc++/libc instead of the
@@ -58,7 +61,6 @@ target_include_directories(torch_deploy PRIVATE ${CMAKE_SOURCE_DIR}/../..)
 caffe2_interface_library(torch_deploy torch_deploy_interface)
 
 
-
 set(INTERPRETER_TEST_SOURCES
   ${DEPLOY_DIR}/test_deploy.cpp
 )
@@ -66,23 +68,28 @@ set(INTERPRETER_TEST_SOURCES_GPU
   ${DEPLOY_DIR}/test_deploy_gpu.cpp
 )
 
-LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
-add_executable(test_deploy ${INTERPRETER_TEST_SOURCES})
-target_compile_definitions(test_deploy PUBLIC TEST_CUSTOM_LIBRARY)
-target_include_directories(test_deploy PRIVATE ${PYTORCH_ROOT}/torch)
-target_link_libraries(test_deploy
-  PUBLIC "-Wl,--no-as-needed -rdynamic" gtest dl torch_deploy_interface c10 torch_cpu
-)
-target_include_directories(test_deploy PRIVATE ${CMAKE_SOURCE_DIR}/../..)
+# TODO: Currently tests can only be done when ABI=1 as the testing infrustructure
+# used by ASSERT_TRUE requires ABI=1 in Github actions, we should fix this!
 
-# LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
-# add_executable(test_deploy_gpu ${INTERPRETER_TEST_SOURCES_GPU})
-# target_compile_definitions(test_deploy_gpu PUBLIC TEST_CUSTOM_LIBRARY)
-# target_include_directories(test_deploy_gpu PRIVATE ${PYTORCH_ROOT}/torch)
-# target_include_directories(test_deploy_gpu PRIVATE ${CMAKE_SOURCE_DIR}/../..)
-# target_link_libraries(test_deploy_gpu
+if(ABI_EQUALS_1)
+  LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
+  add_executable(test_deploy ${INTERPRETER_TEST_SOURCES})
+  target_compile_definitions(test_deploy PUBLIC TEST_CUSTOM_LIBRARY)
+  target_include_directories(test_deploy PRIVATE ${PYTORCH_ROOT}/torch)
+  target_link_libraries(test_deploy
+    PUBLIC "-Wl,--no-as-needed -rdynamic" gtest dl torch_deploy_interface c10 torch_cpu
+  )
+  target_include_directories(test_deploy PRIVATE ${CMAKE_SOURCE_DIR}/../..)
+
+#  LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
+#  add_executable(test_deploy_gpu ${INTERPRETER_TEST_SOURCES_GPU})
+#  target_compile_definitions(test_deploy_gpu PUBLIC TEST_CUSTOM_LIBRARY)
+#  target_include_directories(test_deploy_gpu PRIVATE ${PYTORCH_ROOT}/torch)
+#  target_include_directories(test_deploy_gpu PRIVATE ${CMAKE_SOURCE_DIR}/../..)
+#  target_link_libraries(test_deploy_gpu
 #   PUBLIC "-Wl,--no-as-needed -rdynamic" gtest dl torch_deploy_interface c10 torch_cpu
 # )
+endif()
 
 LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
 add_library(test_deploy_lib SHARED test_deploy_lib.cpp)
@@ -107,8 +114,10 @@ target_link_libraries(interactive_embedded_interpreter
   PUBLIC "-Wl,--no-as-needed -rdynamic" torch_deploy_interface c10 torch_cpu
 )
 
-install(TARGETS test_deploy DESTINATION tests/bin)
+if(ABI_EQUALS_1)
+  install(TARGETS test_deploy DESTINATION tests/bin)
 # install(TARGETS test_deploy_gpu DESTINATION tests/bin)
+endif()
 
 install (
     DIRECTORY ${CMAKE_SOURCE_DIR}

@@ -1,10 +1,10 @@
-name: Runtime Unittests
+name: Multipy runtime nightly release
 
 on:
-  push:
+  pull_request:
+   push:
     branches:
       - main
-  pull_request:
 
 jobs:
   unittest:
@@ -12,6 +12,7 @@ jobs:
       matrix:
         python-version: [3.8]
         platform: [linux.2xlarge]
+        abi: [1]
       fail-fast: false
     runs-on: ${{ matrix.platform }}
     steps:
@@ -69,11 +70,14 @@ jobs:
             conda create --name example_env python=${{ matrix.python-version }}
             conda run -n example_env python -m pip install torch torchvision torchaudio pathlib
             conda run -n example_env python generate_examples.py
-      - name: Build pytorch
+      - name: Build pytorch with ABI=${{ matrix.abi }}
         shell: bash -l {0}
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
+              export GLIBCXX_USE_CXX11_ABI=${{ matrix.abi }}
+              export CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=${{ matrix.abi }}"
+              export TORCH_CXX_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=${{ matrix.abi }}"
               cd multipy/runtime/third-party/pytorch
               export USE_DEPLOY=1
               conda run -n multipy_runtime_env python setup.py develop
@@ -85,10 +89,19 @@ jobs:
               cd multipy/runtime
               mkdir build
               cd build
-              conda run -n multipy_runtime_env cmake ..
+              conda run -n multipy_runtime_env cmake -DABI_EQUALS_1=${{ matrix.abi }} ..
               conda run -n multipy_runtime_env cmake --build . --config Release
+
+      - name: Install files
+        shell: bash -l {0}
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: |
+              cd multipy/runtime/build
               conda run -n multipy_runtime_env cmake --install . --prefix "."
-      - name: Run test_deploy
+
+      - name: Run unit tests with ABI=${{ matrix.abi }}
+        if: ${{ matrix.abi }} == 1
         shell: bash -l {0}
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}

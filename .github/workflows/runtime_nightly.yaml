@@ -1,4 +1,4 @@
-name: Multipy runtime nightly release + tests
+name: Multipy runtime nightly release
 
 on:
   schedule:
@@ -10,6 +10,7 @@ jobs:
       matrix:
         python-version: [3.8]
         platform: [linux.2xlarge]
+        abi: [0,1]
       fail-fast: false
     runs-on: ${{ matrix.platform }}
     steps:
@@ -67,11 +68,14 @@ jobs:
             conda create --name example_env python=${{ matrix.python-version }}
             conda run -n example_env python -m pip install torch torchvision torchaudio pathlib
             conda run -n example_env python generate_examples.py
-      - name: Build pytorch
+      - name: Build pytorch with ABI=${{ matrix.abi }}
         shell: bash -l {0}
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
+              export GLIBCXX_USE_CXX11_ABI=${{ matrix.abi }}
+              export CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=${{ matrix.abi }}"
+              export TORCH_CXX_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=${{ matrix.abi }}"
               cd multipy/runtime/third-party/pytorch
               export USE_DEPLOY=1
               conda run -n multipy_runtime_env python setup.py develop
@@ -80,22 +84,19 @@ jobs:
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
-              cd multipy
-              cd runtime
+              cd multipy/runtime
               mkdir build
               cd build
-              pwd
-              conda run -n multipy_runtime_env cmake ..
+              conda run -n multipy_runtime_env cmake -DABI_EQUALS_1=${{ matrix.abi }} ..
               conda run -n multipy_runtime_env cmake --build . --config Release
-              conda run -n multipy_runtime_env cmake --install . --prefix "."
-      - name: test_deploy
+
+      - name: install files
         shell: bash -l {0}
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
-              cd multipy/runtime
-              cd build
-              ./test_deploy
+              cd multipy/runtime/build
+              conda run -n multipy_runtime_env cmake --install . --prefix "."
       - name: create tarball [click me to get a list of files for the nightly release]
         shell: bash -l {0}
         env:
@@ -104,10 +105,30 @@ jobs:
               cd multipy/runtime/build/dist
               tar -czvf multipy_runtime.tar.gz runtime/
 
+      - name: Run unit tests with ABI=${{ matrix.abi }}
+        if: ${{ matrix.abi }} == 1
+        shell: bash -l {0}
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: |
+              cd multipy/runtime/build
+              ./test_deploy
+
       - name: Update nightly release
+        if: ${{ matrix.abi }} == 0
         uses: pyTooling/Actions/releaser@main
         with:
           tag: nightly-runtime
+          rm: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: |
+            multipy/runtime/build/dist/multipy_runtime.tar.gz
+
+      - name: Update nightly release
+        if: ${{ matrix.abi }} == 1
+        uses: pyTooling/Actions/releaser@main
+        with:
+          tag: nightly-runtime-with-abi-one
           rm: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |

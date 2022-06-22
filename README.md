@@ -11,7 +11,7 @@ internally, please see the related [arXiv paper](https://arxiv.org/pdf/2104.0025
 
 ## Installation
 ### Installing `multipy::runtime`
-`libtorch_interpreter.so`,`libtorch_deploy.a`, `utils.cmake`, and the header files of `multipy::runtime` can be installed from our [nightly release](https://github.com/pytorch/multipy/releases/download/nightly/multipy_runtime.tar.gz)
+`libtorch_interpreter.so`,`libtorch_deploy.a`, `utils.cmake`, and the header files of `multipy::runtime` can be installed from our [nightly release](https://github.com/pytorch/multipy/releases/tag/nightly-runtime) (by default the ABI for the nightly release is 0), you can find a version of the release with ABI=1 [here](https://github.com/pytorch/multipy/releases/tag/nightly-runtime-ABI-is-one).
 
 In order to run pytorch models, we need to use libtorch which can be setup using the instructions [here](https://pytorch.org/cppdocs/installing.html)
 
@@ -29,6 +29,13 @@ git submodule sync && git submodule update --init --recursive
 cd multipy/MultiPy/runtime
 
 # Currently multipy::runtime requires that we build pytorch from source since we need to expose some objects in torch (ie. torch_python, etc.) for multipy::runtime to work.
+
+# Furthermore, by defualt pytorch is built with ABI = 1, so we change it to 0. Remove the following three lines if you want ABI=1.
+
+export GLIBCXX_USE_CXX11_ABI=0
+export CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
+export TORCH_CXX_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
+
 cd ../pytorch
 USE_DEPLOY=1 python setup.py develop
 cd ../..
@@ -36,6 +43,7 @@ cd ../..
 # build runtime
 mkdir build
 cd build
+# use cmake -DABI_EQUALS_1=ON .. instead if you want ABI=1
 cmake ..
 cmake --build . --config Release
 
