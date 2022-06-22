@@ -81,7 +81,6 @@ if(ABI_EQUALS_1)
   )
   target_include_directories(test_deploy PRIVATE ${CMAKE_SOURCE_DIR}/../..)
 
-# if(ABI_EQUALS_1)
 #  LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
 #  add_executable(test_deploy_gpu ${INTERPRETER_TEST_SOURCES_GPU})
 #  target_compile_definitions(test_deploy_gpu PUBLIC TEST_CUSTOM_LIBRARY)

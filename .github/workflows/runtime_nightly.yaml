@@ -1,4 +1,4 @@
-name: Multipy runtime nightly release + tests with ABI 0
+name: Multipy runtime nightly release
 
 on:
   schedule:
@@ -84,11 +84,9 @@ jobs:
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
-              cd multipy
-              cd runtime
+              cd multipy/runtime
               mkdir build
               cd build
-              pwd
               conda run -n multipy_runtime_env cmake -DABI_EQUALS_1=${{ matrix.abi }} ..
               conda run -n multipy_runtime_env cmake --build . --config Release
 
@@ -97,8 +95,7 @@ jobs:
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
-              cd multipy/runtime
-              cd build
+              cd multipy/runtime/build
               conda run -n multipy_runtime_env cmake --install . --prefix "."
       - name: create tarball [click me to get a list of files for the nightly release]
         shell: bash -l {0}
