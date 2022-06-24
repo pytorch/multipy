@@ -90,7 +90,13 @@ jobs:
               cd build
               conda run -n multipy_runtime_env cmake -DABI_EQUALS_1=${{ matrix.abi }} ..
               conda run -n multipy_runtime_env cmake --build . --config Release
-
+      - name: inspect binary
+        shell: bash -l {0}
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: |
+              cd multipy/runtime/build
+              nm libtorch_deploy.a
       - name: install files
         shell: bash -l {0}
         env:
