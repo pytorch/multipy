@@ -6,16 +6,6 @@
 
 cmake_minimum_required(VERSION 3.19)
 project(MultipyRuntime)
-set(DEPLOY_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-set(PYTORCH_ROOT "${DEPLOY_DIR}/third-party/pytorch")
-
-add_subdirectory(interpreter)
-add_subdirectory(third-party/fmt)
-add_subdirectory(third-party/pybind11)
-include_directories(BEFORE "${PYTORCH_ROOT}/torch/include")
-include_directories(BEFORE "${PYTORCH_ROOT}/torch/include/torch/csrc/api/include/")
-
-include(${DEPLOY_DIR}/utils.cmake)
 
 # set ABI by default to 0
 
@@ -26,7 +16,23 @@ if(ABI_EQUALS_1)
 else()
   set(ABI_VALUE 0)
 endif()
+
 add_definitions(-D_GLIBCXX_USE_CXX11_ABI=${ABI_VALUE})
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${ABI_VALUE}")
+
+SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" )
+SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" PARENT_SCOPE)
+
+set(DEPLOY_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+set(PYTORCH_ROOT "${DEPLOY_DIR}/third-party/pytorch")
+
+add_subdirectory(interpreter)
+add_subdirectory(third-party/fmt)
+add_subdirectory(third-party/pybind11)
+include_directories(BEFORE "${PYTORCH_ROOT}/torch/include")
+include_directories(BEFORE "${PYTORCH_ROOT}/torch/include/torch/csrc/api/include/")
+
+include(${DEPLOY_DIR}/utils.cmake)
 
 # we do not want to have torch_deployinterpreter linked against libstdc++ or libc because
 # when loading it with RTLD_DEEPBIND it will resolve std::cout/stdout to the copy in libc++/libc instead of the
@@ -71,15 +77,14 @@ set(INTERPRETER_TEST_SOURCES_GPU
 # TODO: Currently tests can only be done when ABI=1 as the testing infrustructure
 # used by ASSERT_TRUE requires ABI=1 in Github actions, we should fix this!
 
-if(ABI_EQUALS_1)
-  LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
-  add_executable(test_deploy ${INTERPRETER_TEST_SOURCES})
-  target_compile_definitions(test_deploy PUBLIC TEST_CUSTOM_LIBRARY)
-  target_include_directories(test_deploy PRIVATE ${PYTORCH_ROOT}/torch)
-  target_link_libraries(test_deploy
-    PUBLIC "-Wl,--no-as-needed -rdynamic" gtest dl torch_deploy_interface c10 torch_cpu
-  )
-  target_include_directories(test_deploy PRIVATE ${CMAKE_SOURCE_DIR}/../..)
+LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
+add_executable(test_deploy ${INTERPRETER_TEST_SOURCES})
+target_compile_definitions(test_deploy PUBLIC TEST_CUSTOM_LIBRARY)
+target_include_directories(test_deploy PRIVATE ${PYTORCH_ROOT}/torch)
+target_link_libraries(test_deploy
+  PUBLIC "-Wl,--no-as-needed -rdynamic" gtest dl torch_deploy_interface c10 torch_cpu
+)
+target_include_directories(test_deploy PRIVATE ${CMAKE_SOURCE_DIR}/../..)
 
 #  LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
 #  add_executable(test_deploy_gpu ${INTERPRETER_TEST_SOURCES_GPU})
@@ -89,7 +94,6 @@ if(ABI_EQUALS_1)
 #  target_link_libraries(test_deploy_gpu
 #   PUBLIC "-Wl,--no-as-needed -rdynamic" gtest dl torch_deploy_interface c10 torch_cpu
 # )
-endif()
 
 LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
 add_library(test_deploy_lib SHARED test_deploy_lib.cpp)
@@ -114,10 +118,10 @@ target_link_libraries(interactive_embedded_interpreter
   PUBLIC "-Wl,--no-as-needed -rdynamic" torch_deploy_interface c10 torch_cpu
 )
 
-if(ABI_EQUALS_1)
-  install(TARGETS test_deploy DESTINATION tests/bin)
+install(TARGETS test_deploy DESTINATION tests/bin)
 # install(TARGETS test_deploy_gpu DESTINATION tests/bin)
-endif()
+
+install(TARGETS test_deploy DESTINATION tests/bin)
 
 install (
     DIRECTORY ${CMAKE_SOURCE_DIR}

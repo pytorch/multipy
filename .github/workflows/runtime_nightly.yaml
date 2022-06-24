@@ -99,7 +99,6 @@ jobs:
               conda run -n multipy_runtime_env cmake --install . --prefix "."
 
       - name: Run unit tests with ABI=${{ matrix.abi }}
-        if: ${{ matrix.abi }} == 1
         shell: bash -l {0}
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
