@@ -121,7 +121,7 @@ endif()
 
 install (
     DIRECTORY ${CMAKE_SOURCE_DIR}
-    DESTINATION dist
+    DESTINATION dist/multipy
     FILES_MATCHING
     PATTERN "*.h*"
     PATTERN "utils.cmake"
@@ -149,5 +149,5 @@ install (
     PATTERN "__pycache__" EXCLUDE
     )
 
-install(TARGETS torch_deploy DESTINATION dist/runtime/lib)
-install(TARGETS torch_deployinterpreter DESTINATION dist/runtime/lib)
+install(TARGETS torch_deploy DESTINATION dist/multipy/runtime/lib)
+install(TARGETS torch_deployinterpreter DESTINATION dist/multipy/runtime/lib)

@@ -97,13 +97,6 @@ jobs:
         run: |
               cd multipy/runtime/build
               conda run -n multipy_runtime_env cmake --install . --prefix "."
-      - name: create tarball [click me to get a list of files for the nightly release]
-        shell: bash -l {0}
-        env:
-          PYTHON_VERSION: ${{ matrix.python-version }}
-        run: |
-              cd multipy/runtime/build/dist
-              tar -czvf multipy_runtime.tar.gz runtime/
 
       - name: Run unit tests with ABI=${{ matrix.abi }}
         if: ${{ matrix.abi }} == 1
@@ -113,6 +106,14 @@ jobs:
         run: |
               cd multipy/runtime/build
               ./test_deploy
+
+      - name: create tarball [click me to get a list of files for the nightly release]
+        shell: bash -l {0}
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: |
+              cd multipy/runtime/build/dist
+              tar -czvf multipy_runtime.tar.gz multipy/
 
       - name: Update nightly release
         if: ${{ matrix.abi }} == 0
