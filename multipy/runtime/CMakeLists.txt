@@ -134,5 +134,20 @@ install (
     PATTERN "example" EXCLUDE
     )
 
+install (
+    DIRECTORY ${CMAKE_SOURCE_DIR}
+    DESTINATION multipy
+    FILES_MATCHING
+    PATTERN "example/generated/*"
+    PATTERN "test_deploy_python.py"
+    PATTERN "interpreter/third_party" EXCLUDE
+    PATTERN "interpreter/cpython" EXCLUDE
+    PATTERN "interpreter/frozen" EXCLUDE
+    PATTERN "third-party" EXCLUDE
+    PATTERN "build" EXCLUDE
+    PATTERN "unity" EXCLUDE
+    PATTERN "__pycache__" EXCLUDE
+    )
+
 install(TARGETS torch_deploy DESTINATION dist/multipy/runtime/lib)
 install(TARGETS torch_deployinterpreter DESTINATION dist/multipy/runtime/lib)
