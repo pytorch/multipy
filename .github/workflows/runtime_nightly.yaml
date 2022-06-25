@@ -115,20 +115,10 @@ jobs:
               tar -czvf multipy_runtime.tar.gz multipy/
 
       - name: Update nightly release
-        if: ${{ matrix.abi }} == 0
-        uses: pyTooling/Actions/releaser@main
-        with:
-          tag: nightly-runtime
-          rm: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-          files: |
-            multipy/runtime/build/dist/multipy_runtime.tar.gz
-
-      - name: Update nightly release
         if: ${{ matrix.abi }} == 1
         uses: pyTooling/Actions/releaser@main
         with:
-          tag: nightly-runtime-with-abi-one
+          tag: nightly-runtime-abi-${{ matrix.abi }}
           rm: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
