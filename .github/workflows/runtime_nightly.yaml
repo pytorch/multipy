@@ -81,14 +81,6 @@ jobs:
               export USE_DEPLOY=1
               conda run -n multipy_runtime_env python setup.py develop
 
-      - name: inspect binary
-        shell: bash -l {0}
-        env:
-          PYTHON_VERSION: ${{ matrix.python-version }}
-        run: |
-              cd multipy/runtime/build
-              nm libtorch_deploy.a
-
       - name: install files
         shell: bash -l {0}
         env:
@@ -96,6 +88,14 @@ jobs:
         run: |
               cd multipy/runtime/build
               conda run -n multipy_runtime_env cmake --install . --prefix "."
+
+      - name: inspect binary
+        shell: bash -l {0}
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: |
+              cd multipy/runtime/build/dist/multipy/lib
+              nm libtorch_deploy.a
 
       - name: Run unit tests with ABI=${{ matrix.abi }}
         shell: bash -l {0}
