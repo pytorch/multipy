@@ -11,7 +11,7 @@ internally, please see the related [arXiv paper](https://arxiv.org/pdf/2104.0025
 
 ## Installation
 ### Installing `multipy::runtime`
-`libtorch_interpreter.so`,`libtorch_deploy.a`, `utils.cmake`, and the header files of `multipy::runtime` can be installed from our [nightly release](https://github.com/pytorch/multipy/releases/tag/nightly-runtime) (by default the ABI for the nightly release is 0), you can find a version of the release with ABI=1 [here](https://github.com/pytorch/multipy/releases/tag/nightly-runtime-ABI-is-one).
+`libtorch_interpreter.so`,`libtorch_deploy.a`, `utils.cmake`, and the header files of `multipy::runtime` can be installed from our [nightly release](https://github.com/pytorch/multipy/releases/tag/nightly-runtime-abi-0) (by default the ABI for the nightly release is 0), you can find a version of the release with ABI=1 [here](https://github.com/pytorch/multipy/releases/tag/nightly-runtime-abi-1).
 
 In order to run pytorch models, we need to use libtorch which can be setup using the instructions [here](https://pytorch.org/cppdocs/installing.html)
 
