@@ -5,7 +5,6 @@
 // LICENSE file in the root directory of this source tree.
 
 #pragma once
-#include <fmt/format.h>
 #include <fstream>
 #include <string>
 #include "Exception.h"
@@ -62,7 +61,7 @@ class Environment {
     setupZippedPythonModules(pythonAppDir);
   }
   virtual ~Environment() {
-    auto rmCmd = fmt::format("rm -rf {}", extraPythonLibrariesDir_);
+    auto rmCmd = "rm -rf " + extraPythonLibrariesDir_;
     system(rmCmd.c_str());
   }
   virtual void configureInterpreter(Interpreter* interp) = 0;
