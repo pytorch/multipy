@@ -4,10 +4,10 @@
 // This source code is licensed under the BSD-style license found in the
 // LICENSE file in the root directory of this source tree.
 
-#include "deploy.h"
+#include <multipy/runtime/Exception.h>
+#include <multipy/runtime/deploy.h>
+#include <multipy/runtime/elf_file.h>
 #include <multipy/runtime/interpreter/Optional.hpp>
-#include "Exception.h"
-#include "elf_file.h"
 
 #include <torch/cuda.h>
 

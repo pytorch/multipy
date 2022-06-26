@@ -5,8 +5,8 @@
 // LICENSE file in the root directory of this source tree.
 
 #include <gtest/gtest.h>
+#include <multipy/runtime/deploy.h>
 #include <torch/torch.h>
-#include "deploy.h"
 
 int main(int argc, char* argv[]) {
   ::testing::InitGoogleTest(&argc, argv);

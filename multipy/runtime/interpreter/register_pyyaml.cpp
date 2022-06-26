@@ -5,7 +5,7 @@
 // LICENSE file in the root directory of this source tree.
 
 #include <Python.h>
-#include "builtin_registry.h"
+#include <multipy/runtime/interpreter/builtin_registry.h>
 
 extern "C" struct _frozen _PyImport_FrozenModules_pyyaml[];
 

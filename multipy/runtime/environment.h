@@ -5,10 +5,10 @@
 // LICENSE file in the root directory of this source tree.
 
 #pragma once
+#include <multipy/runtime/Exception.h>
+#include <multipy/runtime/elf_file.h>
 #include <fstream>
 #include <string>
-#include "Exception.h"
-#include "elf_file.h"
 
 namespace torch {
 namespace deploy {

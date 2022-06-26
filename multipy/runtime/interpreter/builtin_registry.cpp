@@ -4,11 +4,11 @@
 // This source code is licensed under the BSD-style license found in the
 // LICENSE file in the root directory of this source tree.
 
-#include "builtin_registry.h"
 #include <Python.h>
 #include <c10/util/Exception.h>
 #include <fmt/format.h>
 #include <multipy/runtime/Exception.h>
+#include <multipy/runtime/interpreter/builtin_registry.h>
 
 namespace torch {
 namespace deploy {

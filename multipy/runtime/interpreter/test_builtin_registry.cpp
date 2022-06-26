@@ -6,7 +6,7 @@
 
 #include <Python.h>
 #include <gtest/gtest.h>
-#include "builtin_registry.h"
+#include <multipy/runtime/interpreter/builtin_registry.h>
 
 namespace torch {
 namespace deploy {

@@ -10,9 +10,9 @@
 
 #include <c10/util/irange.h>
 #include <libgen.h>
+#include <multipy/runtime/deploy.h>
 #include <torch/script.h>
 #include <torch/torch.h>
-#include "deploy.h"
 
 #include <future>
 #include <iostream>

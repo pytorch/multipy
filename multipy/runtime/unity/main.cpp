@@ -4,9 +4,9 @@
 // This source code is licensed under the BSD-style license found in the
 // LICENSE file in the root directory of this source tree.
 
+#include <multipy/runtime/deploy.h>
+#include <multipy/runtime/unity/xar_environment.h>
 #include <memory>
-#include "deploy.h"
-#include "unity/xar_environment.h"
 
 namespace torch {
 namespace deploy {
