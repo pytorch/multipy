@@ -81,6 +81,17 @@ jobs:
               export USE_DEPLOY=1
               conda run -n multipy_runtime_env python setup.py develop
 
+      - name: Build multipy runtime with ABI=${{ matrix.abi }}
+        shell: bash -l {0}
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: |
+              cd multipy/runtime
+              mkdir build
+              cd build
+              conda run -n multipy_runtime_env cmake -DABI_EQUALS_1=${{ matrix.abi }} ..
+              conda run -n multipy_runtime_env cmake --build . --config Release
+
       - name: install files
         shell: bash -l {0}
         env:
