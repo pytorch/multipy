@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "environment.h"
+#include <multipy/runtime/environment.h>
 
 namespace torch {
 namespace deploy {

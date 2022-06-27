@@ -4,7 +4,7 @@
 // This source code is licensed under the BSD-style license found in the
 // LICENSE file in the root directory of this source tree.
 
-#include "interpreter_impl.h"
+#include <multipy/runtime/interpreter/interpreter_impl.h>
 
 #include <dlfcn.h>
 
@@ -25,7 +25,7 @@
 #include <thread>
 
 #include <fmt/format.h>
-#include "builtin_registry.h"
+#include <multipy/runtime/interpreter/builtin_registry.h>
 
 namespace py = pybind11;
 using namespace py::literals;

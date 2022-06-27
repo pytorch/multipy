@@ -7,13 +7,13 @@
 #pragma once
 
 #include <fcntl.h>
+#include <multipy/runtime/Exception.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <cerrno>
 #include <cstdio>
-#include "Exception.h"
 
 namespace torch {
 namespace deploy {

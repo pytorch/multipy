@@ -9,8 +9,8 @@
  * state of the embedding interpreter interactively.
  */
 #include <c10/util/Flags.h>
-#include "deploy.h"
-#include "path_environment.h"
+#include <multipy/runtime/deploy.h>
+#include <multipy/runtime/path_environment.h>
 
 C10_DEFINE_string(
     python_path,

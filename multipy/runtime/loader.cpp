@@ -63,8 +63,8 @@
 #include <multipy/runtime/interpreter/Optional.hpp>
 
 #include <fmt/format.h>
-#include "loader.h"
-#include "mem_file.h"
+#include <multipy/runtime/loader.h>
+#include <multipy/runtime/mem_file.h>
 
 namespace torch {
 namespace deploy {

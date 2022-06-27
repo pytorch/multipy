@@ -6,8 +6,8 @@
 
 #include <fmt/format.h>
 #include <gtest/gtest.h>
-#include "unity/tests/test_unity.h"
-#include "unity/xar_environment.h"
+#include <multipy/runtime/unity/tests/test_unity.h>
+#include <multipy/runtime/unity/xar_environment.h>
 
 namespace torch {
 namespace deploy {
