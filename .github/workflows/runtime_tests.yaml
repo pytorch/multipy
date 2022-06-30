@@ -1,4 +1,4 @@
-name: Multipy runtime nightly release
+name: Multipy runtime tests
 
 on:
   pull_request:
