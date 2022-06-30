@@ -12,7 +12,7 @@ jobs:
       matrix:
         python-version: [3.7, 3.8, 3.9]
         platform: [linux.2xlarge]
-        abi: [1]
+        abi: [0,1]
       fail-fast: false
     runs-on: ${{ matrix.platform }}
     steps:
