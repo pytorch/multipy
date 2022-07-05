@@ -10,15 +10,22 @@ code and runs it using multiple embedded Python interpreters in a C++ process wi
 internally, please see the related [arXiv paper](https://arxiv.org/pdf/2104.00254.pdf).
 
 ## Installation
-### Installing `multipy::runtime`
-`libtorch_interpreter.so`,`libtorch_deploy.a`, `utils.cmake`, and the header files of `multipy::runtime` can be installed from our [nightly release](https://github.com/pytorch/multipy/releases/tag/nightly-runtime-abi-0) (by default the ABI for the nightly release is 0), you can find a version of the release with ABI=1 [here](https://github.com/pytorch/multipy/releases/tag/nightly-runtime-abi-1).
 
-In order to run pytorch models, we need to use libtorch which can be setup using the instructions [here](https://pytorch.org/cppdocs/installing.html)
+### Installing `multipy::runtime` **(recommended)**
 
-### Installing `multipy.package`
-We will soon create a pypi distribution to `multipy.package`. For now one can use `torch.package` from `pytorch` as the functionality is exactly the same. The documentation for `torch.package` can be found [here](https://pytorch.org/docs/stable/package.html). Installation instructions for pytorch can be found [here](https://pytorch.org/get-started/locally/).
+The C++ binaries (`libtorch_interpreter.so`,`libtorch_deploy.a`, `utils.cmake`), and the header files of `multipy::runtime` can be installed from our [nightly release](https://github.com/pytorch/multipy/releases/tag/nightly-runtime-abi-0). The ABI for the nightly release is 0. You can find a version of the release with ABI=1 [here](https://github.com/pytorch/multipy/releases/tag/nightly-runtime-abi-1).
 
-### How to build `multipy::runtime` from source
+```
+wget https://github.com/pytorch/multipy/releases/download/nightly-runtime-abi-0/multipy_runtime.tar.gz
+tar -xvzf multipy_runtime.tar.gz
+```
+
+In order to run pytorch models, we need to link to libtorch (pytorch's C++ distribution) which is provided when you [pip or conda install pytorch](https://pytorch.org/).
+If you're not sure which ABI value to use, it's important to note that the pytorch C++ binaries, provided when you pip or conda install, are compiled with an ABI value of 0. If you're using libtorch from the pip or conda distribution of pytorch then ensure to use multipy installation with an ABI of 0 (`nightly-runtime-abi-0`).
+
+<br>
+
+### Installing `multipy::runtime` from source
 Currently we require that [pytorch be built from source](https://pytorch.org/get-started/locally/#mac-from-source) in order to build `multipy.runtime` from source. Please refer to that documentation for the requirements needed to build `pytorch` when running `USE_DEPLOY=1 python setup.py develop`.
 
 ```bash
@@ -47,20 +54,19 @@ cd build
 cmake ..
 cmake --build . --config Release
 
-## Quickstart
-
 ```
+
+## Example
 
 ### Packaging a model `for multipy::runtime`
 
 ``multipy::runtime`` can load and run Python models that are packaged with
-``multipy.package``. You can learn more about ``multipy.package`` in the
-``multipy.package`` [documentation](https://pytorch.org/docs/stable/package.html#tutorials) (currently the documentation for `multipy.package` is the same as `torch.package` where we just replace `multipy.package` for all instances of `torch.package`).
+``torch.package``. You can learn more about ``torch.package`` in the ``torch.package`` [documentation](https://pytorch.org/docs/stable/package.html#tutorials).
 
 For now, let's create a simple model that we can load and run in ``multipy::runtime``.
 
 ```python
-from multipy.package import PackageExporter
+from torch.package import PackageExporter
 import torchvision
 
 # Instantiate some model
@@ -72,20 +78,22 @@ with PackageExporter("my_package.pt") as e:
     e.extern("numpy.**")
     e.extern("sys")
     e.extern("PIL.*")
+    e.extern("typing_extensions")
     e.save_pickle("model", "model.pkl", model)
 ```
 
-Note that since "numpy", "sys" and "PIL" were marked as "extern", `multipy.package` will
+Note that since "numpy", "sys", "PIL" were marked as "extern", `torch.package` will
 look for these dependencies on the system that loads this package. They will not be packaged
 with the model.
 
 Now, there should be a file named ``my_package.pt`` in your working directory.
 
+<br>
 
-### Loading and running the model in C++
+### Load the model in C++
 ```cpp
-#include <torch/csrc/deploy/deploy.h>
-#include <torch/csrc/deploy/path_environment.h>
+#include <multipy/runtime/deploy.h>
+#include <multipy/runtime/path_environment.h>
 #include <torch/script.h>
 #include <torch/torch.h>
 
@@ -101,7 +109,7 @@ int main(int argc, const char* argv[]) {
     // Start an interpreter manager governing 4 embedded interpreters.
     std::shared_ptr<multipy::runtime::Environment> env =
         std::make_shared<multipy::runtime::PathEnvironment>(
-            std::getenv("PATH_TO_EXTERN_PYTHON_PACKAGES")
+            std::getenv("PATH_TO_EXTERN_PYTHON_PACKAGES") // Ensure to set this environment variable (e.g. /home/user/anaconda3/envs/multipy-example/lib/python3.8/site-packages)
         );
     multipy::runtime::InterpreterManager manager(4, env);
 
@@ -139,43 +147,38 @@ an object that is replicated across multiple interpreters. When you interact
 with a ``ReplicatedObj`` (for example, by calling ``forward``), it will select
 an free interpreter to execute that interaction.
 
+<br>
 
-Building and running the application when build from source
-
-Locate `libtorch_deployinterpreter.o` on your system. This should have been
-built when PyTorch was built from source. In the same PyTorch directory, locate
-the deploy source files. Set these locations to an environment variable for the build.
-An example of where these can be found on a system is shown below.
+### Build and execute the C++ example
 
 Assuming the above C++ program was stored in a file called, `example-app.cpp`, a
-minimal CMakeLists.txt file would look like:
+minimal `CMakeLists.txt` file would look like:
 
 ```cmake
-    cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
-    project(deploy_tutorial)
+cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
+project(multipy_tutorial)
 
-    find_package(fmt REQUIRED)
-    find_package(Torch REQUIRED)
+find_package(Torch REQUIRED)
 
-    add_library(torch_deploy STATIC
-        ${DEPLOY_INTERPRETER_PATH}/libtorch_deployinterpreter.o
-        ${DEPLOY_DIR}/deploy.cpp
-        ${DEPLOY_DIR}/loader.cpp
-        ${DEPLOY_DIR}/path_environment.cpp
-        ${DEPLOY_DIR}/elf_file.cpp)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=0")
+set(TORCH_CXX_FLAGS "-D_GLIBCXX_USE_CXX11_ABI=0")
 
-    # for python builtins
-    target_link_libraries(torch_deploy PRIVATE
-        crypt pthread dl util m z ffi lzma readline nsl ncursesw panelw)
-    target_link_libraries(torch_deploy PUBLIC
-        shm torch fmt::fmt-header-only)
+# add headers from multipy
+include_directories(${PATH_TO_MULTIPY_DIR})
 
-    # this file can be found in multipy/runtime/utils.cmake
-    caffe2_interface_library(torch_deploy torch_deploy_interface)
+add_library(torch_deploy_internal STATIC IMPORTED)
 
-    add_executable(example-app example.cpp)
-    target_link_libraries(example-app PUBLIC
-        "-Wl,--no-as-needed -rdynamic" dl torch_deploy_interface "${TORCH_LIBRARIES}")
+set_target_properties(multipy_internal
+    PROPERTIES
+    IMPORTED_LOCATION
+    ${PATH_TO_MULTIPY_DIR}/multipy/runtime/lib/libtorch_deploy.a)
+
+caffe2_interface_library(multipy_internal multipy)
+
+add_executable(example-app example-app.cpp)
+target_link_libraries(example-app PUBLIC
+    "-Wl,--no-as-needed -rdynamic"
+    shm crypt pthread dl util m ffi lzma readline nsl ncursesw panelw z multipy "${TORCH_LIBRARIES}")
 ```
 
 Currently, it is necessary to build ``multipy::runtime`` as a static library.
@@ -185,6 +188,15 @@ is used to appropriately set and unset ``--whole-archive`` flag.
 Furthermore, the ``-rdynamic`` flag is needed when linking to the executable
 to ensure that symbols are exported to the dynamic table, making them accessible
 to the deploy interpreters (which are dynamically loaded).
+
+**Updating LIBRARY_PATH and LD_LIBRARY_PATH**
+
+In order to locate dependencies provided by pytorch (e.g. `libshm`), we need to update the `LIBRARY_PATH` and `LD_LIBRARY_PATH` environment variables to include the path to pytorch's C++ libraries. If you installed pytorch using pip or conda, this path is usually in the site-packages. An example of this is provided below.
+
+```bash
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/home/user/anaconda3/envs/multipy-example/lib/python3.8/site-packages/torch/lib"
+export LIBRARY_PATH="$LIBRARY_PATH:/home/user/anaconda3/envs/multipy-example/lib/python3.8/site-packages/torch/lib"
+```
 
 The last step is configuring and building the project. Assuming that our code
 directory is laid out like this:
@@ -199,14 +211,13 @@ We can now run the following commands to build the application from within the
 ``example-app/`` folder:
 
 ```bash
-mkdir build
+cmake -S . -B build/
+    -DCMAKE_PREFIX_PATH="$(python -c 'import torch.utils; print(torch.utils.cmake_prefix_path)')" \
+    -DPATH_TO_MULTIPY_DIR="/home/user/repos/" # whereever the multipy release was unzipped during installation
+
 cd build
-# Point CMake at the built version of PyTorch we just installed.
-cmake ..
-cmake --build . --config Release
+make -j
 ```
-
-
 
 Now we can run our app:
 
