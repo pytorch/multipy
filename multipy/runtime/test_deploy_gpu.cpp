@@ -63,8 +63,7 @@ TEST(TorchDeployGPUTest, SimpleModel) {
 
 TEST(TorchDeployGPUTest, UsesDistributed) {
   const auto model_filename = path(
-      "USES_DISTRIBUTED",
-      "torch/csrc/deploy/example/generated/uses_distributed");
+      "USES_DISTRIBUTED", "multipy/runtime/example/generated/uses_distributed");
   torch::deploy::InterpreterManager m(1);
   torch::deploy::Package p = m.loadPackage(model_filename);
   {
