@@ -10,7 +10,7 @@ jobs:
   unittest:
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: [3.7, 3.8, 3.9]
         platform: [linux.4xlarge.nvidia.gpu]
         abi: [0,1]
       fail-fast: false
