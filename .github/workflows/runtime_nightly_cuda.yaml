@@ -31,6 +31,7 @@ jobs:
 
       - name: setup Path
         run: |
+          echo /usr/local/cuda-11.3/bin >> $GITHUB_PATH
           echo "/home/ec2-user/miniconda/bin" >> $GITHUB_PATH
           echo "CONDA=/home/ec2-user/miniconda" >> $GITHUB_PATH
 
