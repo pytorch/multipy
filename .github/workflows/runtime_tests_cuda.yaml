@@ -52,8 +52,9 @@ jobs:
               sudo yum -y install uuid
               sudo yum -y install openmpi-devel
               sudo yum -y install zlib-devel
-              sudo yum makecache
-              sudo yum -y install ocl-icd
+              wget http://download-ib01.fedoraproject.org/pub/epel/7/x86_64/
+              sudo rpm -Uvh epel-release*rpm
+              sudo yum -y install ocl-icd-devel
               sudo yum -y install opencl-filesystem
 
       - name: Setup Cuda toolkit 11.3
