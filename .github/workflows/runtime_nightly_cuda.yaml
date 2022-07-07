@@ -54,18 +54,6 @@ jobs:
               sudo yum -y install uuid
               sudo yum -y install openmpi-devel
               sudo yum -y install zlib-devel
-              wget http://download-ib01.fedoraproject.org/pub/epel/7/x86_64/
-              sudo rpm -Uvh epel-release*rpm
-              sudo yum -y install ocl-icd-devel
-              sudo yum -y install opencl-filesystem
-
-      - name: Setup Cuda toolkit 11.3
-        run: |
-              wget https://developer.download.nvidia.com/compute/cuda/11.3.0/local_installers/cuda-repo-rhel7-11-3-local-11.3.0_465.19.01-1.x86_64.rpm
-              sudo rpm -i cuda-repo-rhel7-11-3-local-11.3.0_465.19.01-1.x86_64.rpm
-              sudo yum clean all
-              sudo yum -y install nvidia-driver-latest-dkms cuda
-              sudo yum -y install cuda-drivers
 
       - name: create conda env
         run: |
