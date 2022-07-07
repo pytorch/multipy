@@ -1,6 +1,8 @@
-name: Multipy runtime tests
+name: Multipy runtime nightly release with cuda
 
 on:
+  schedule:
+    - cron: '0 2 * * *' # run at 2 AM UTC
   pull_request:
    push:
     branches:
@@ -10,13 +12,12 @@ jobs:
   unittest:
     strategy:
       matrix:
-        python-version: [3.7, 3.8, 3.9]
-        platform: [linux.2xlarge]
+        python-version: [3.8]
+        platform: [linux.4xlarge.nvidia.gpu]
         abi: [0,1]
       fail-fast: false
     runs-on: ${{ matrix.platform }}
     steps:
-
       - name: Update pip
         run: |
           sudo yum update -y
@@ -30,6 +31,7 @@ jobs:
 
       - name: setup Path
         run: |
+          echo /usr/local/cuda-11.3/bin >> $GITHUB_PATH
           echo "/home/ec2-user/miniconda/bin" >> $GITHUB_PATH
           echo "CONDA=/home/ec2-user/miniconda" >> $GITHUB_PATH
 
@@ -88,9 +90,10 @@ jobs:
               export TORCH_CXX_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=${{ matrix.abi }}"
               cd multipy/runtime/third-party/pytorch
               export USE_DEPLOY=1
+              export USE_CUDA=1
               conda run -n multipy_runtime_env python setup.py develop
 
-      - name: Build multipy runtime
+      - name: Build multipy runtime with ABI=${{ matrix.abi }}
         shell: bash -l {0}
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
@@ -101,7 +104,7 @@ jobs:
               conda run -n multipy_runtime_env cmake -DABI_EQUALS_1=${{ matrix.abi }} ..
               conda run -n multipy_runtime_env cmake --build . --config Release
 
-      - name: Install files
+      - name: install files
         shell: bash -l {0}
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
@@ -116,3 +119,28 @@ jobs:
         run: |
               cd multipy/runtime/build
               ./test_deploy
+
+      - name: Run unit tests with ABI=${{ matrix.abi }} with gpu
+        shell: bash -l {0}
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: |
+              cd multipy/runtime/build
+              ./test_deploy_gpu
+
+      - name: create tarball [click me to get a list of files for the nightly release]
+        shell: bash -l {0}
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: |
+              cd multipy/runtime/build/dist
+              tar -czvf multipy_runtime.tar.gz multipy/
+
+      - name: Update nightly release
+        uses: pyTooling/Actions/releaser@main
+        with:
+          tag: nightly-runtime-cuda-abi-${{ matrix.abi }}
+          rm: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: |
+            multipy/runtime/build/dist/multipy_runtime.tar.gz

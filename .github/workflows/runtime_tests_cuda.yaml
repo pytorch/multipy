@@ -1,4 +1,4 @@
-name: Multipy runtime tests
+name: Multipy runtime tests with cuda
 
 on:
   pull_request:
@@ -11,12 +11,11 @@ jobs:
     strategy:
       matrix:
         python-version: [3.7, 3.8, 3.9]
-        platform: [linux.2xlarge]
+        platform: [linux.4xlarge.nvidia.gpu]
         abi: [0,1]
       fail-fast: false
     runs-on: ${{ matrix.platform }}
     steps:
-
       - name: Update pip
         run: |
           sudo yum update -y
@@ -28,8 +27,20 @@ jobs:
           wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
           bash ~/miniconda.sh -b -p $HOME/miniconda
 
+      - name: Install CUDA 11.3
+        shell: bash
+        run: |
+          sudo yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+          sudo yum-config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64/cuda-rhel7.repo
+          sudo yum clean expire-cache
+          sudo yum install -y nvidia-driver-latest-dkms
+          sudo yum install -y cuda-11-3
+          sudo yum install -y cuda-drivers
+          sudo yum install -y libcudnn8-devel
+
       - name: setup Path
         run: |
+          echo /usr/local/cuda-11.3/bin >> $GITHUB_PATH
           echo "/home/ec2-user/miniconda/bin" >> $GITHUB_PATH
           echo "CONDA=/home/ec2-user/miniconda" >> $GITHUB_PATH
 
@@ -88,9 +99,10 @@ jobs:
               export TORCH_CXX_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=${{ matrix.abi }}"
               cd multipy/runtime/third-party/pytorch
               export USE_DEPLOY=1
+              export USE_CUDA=1
               conda run -n multipy_runtime_env python setup.py develop
 
-      - name: Build multipy runtime
+      - name: Build multipy runtime with ABI=${{ matrix.abi }}
         shell: bash -l {0}
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
@@ -101,7 +113,7 @@ jobs:
               conda run -n multipy_runtime_env cmake -DABI_EQUALS_1=${{ matrix.abi }} ..
               conda run -n multipy_runtime_env cmake --build . --config Release
 
-      - name: Install files
+      - name: install files
         shell: bash -l {0}
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
@@ -116,3 +128,11 @@ jobs:
         run: |
               cd multipy/runtime/build
               ./test_deploy
+
+      - name: Run unit tests with ABI=${{ matrix.abi }} with gpu
+        shell: bash -l {0}
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: |
+              cd multipy/runtime/build
+              ./test_deploy_gpu
