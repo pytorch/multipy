@@ -52,6 +52,8 @@ jobs:
               sudo yum -y install uuid
               sudo yum -y install openmpi-devel
               sudo yum -y install zlib-devel
+              sudo yum -y install ocl-icd
+              sudo yum -y install opencl-filesystem
 
       - name: Setup Cuda toolkit 11.3
         run: |
