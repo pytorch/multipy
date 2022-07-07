@@ -54,6 +54,7 @@ jobs:
               sudo yum -y install uuid
               sudo yum -y install openmpi-devel
               sudo yum -y install zlib-devel
+              sudo yum makecache
               sudo yum -y install ocl-icd
               sudo yum -y install opencl-filesystem
 
