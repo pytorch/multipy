@@ -12,7 +12,7 @@ jobs:
       matrix:
         python-version: [3.7, 3.8, 3.9]
         platform: [linux.4xlarge.nvidia.gpu, linux.4xlarge, linux.8xlarge.nvidia.gpu, linux.2xlarge]
-        abi: [0,1]
+         abi: [0,1]
       fail-fast: false
     runs-on: ${{ matrix.platform }}
     steps:
@@ -26,17 +26,6 @@ jobs:
         run: |
           wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
           bash ~/miniconda.sh -b -p $HOME/miniconda
-
-      - name: Install CUDA 11.3
-        shell: bash
-        run: |
-          sudo yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-          sudo yum-config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64/cuda-rhel7.repo
-          sudo yum clean expire-cache
-          sudo yum install -y nvidia-driver-latest-dkms
-          sudo yum install -y cuda-11-3
-          sudo yum install -y cuda-drivers
-          sudo yum install -y libcudnn8-devel
 
       - name: setup Path
         run: |
