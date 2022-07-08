@@ -10,7 +10,7 @@ jobs:
   unittest:
     strategy:
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-version: [3.8]
         platform: [linux.4xlarge.nvidia.gpu]
         abi: [0,1]
       fail-fast: false
@@ -30,9 +30,6 @@ jobs:
       - name: Install CUDA 11.3
         shell: bash
         run: |
-          export GLIBCXX_USE_CXX11_ABI=${{ matrix.abi }}
-          export CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=${{ matrix.abi }}"
-          export TORCH_CXX_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=${{ matrix.abi }}"
           sudo yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
           sudo yum-config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64/cuda-rhel7.repo
           sudo yum clean expire-cache
