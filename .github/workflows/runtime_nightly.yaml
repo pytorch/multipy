@@ -15,6 +15,7 @@ jobs:
         python-version: [3.8]
         platform: [linux.2xlarge]
         abi: [0,1]
+        cuda: [0,1]
       fail-fast: false
     runs-on: ${{ matrix.platform }}
     steps:
@@ -142,7 +143,7 @@ jobs:
       - name: Update nightly release
         uses: pyTooling/Actions/releaser@main
         with:
-          tag: nightly-runtime-abi-${{ matrix.abi }}-cuda-${{ matrix.cuda }}
+          tag: nightly-runtime-abi-${{ matrix.abi }}-cuda-${{matrix.cuda}}
           rm: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
