@@ -126,7 +126,7 @@ jobs:
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
-              if [${{ matrix.cuda }}]
+              if [${{ matrix.cuda }}==1]
               then
               cd multipy/runtime/build
               ./test_deploy_gpu
