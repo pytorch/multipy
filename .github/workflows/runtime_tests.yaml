@@ -118,8 +118,7 @@ jobs:
         run: |
               cd multipy/runtime/build
               ./test_deploy
-
-	    - name: Run unit tests with ABI=${{ matrix.abi }} with gpu
+      - name: Run unit tests with ABI=${{ matrix.abi }} with gpu
         shell: bash -l {0}
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
