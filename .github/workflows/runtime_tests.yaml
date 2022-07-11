@@ -13,6 +13,7 @@ jobs:
         python-version: [3.7, 3.8, 3.9]
         platform: [linux.2xlarge]
         abi: [0,1]
+        cuda: [0,1]
       fail-fast: false
     runs-on: ${{ matrix.platform }}
     steps:
@@ -30,6 +31,7 @@ jobs:
 
       - name: setup Path
         run: |
+          echo /usr/local/cuda-11.3/bin >> $GITHUB_PATH
           echo "/home/ec2-user/miniconda/bin" >> $GITHUB_PATH
           echo "CONDA=/home/ec2-user/miniconda" >> $GITHUB_PATH
 
@@ -78,7 +80,7 @@ jobs:
             conda run -n example_env python -m pip install torch torchvision torchaudio pathlib
             conda run -n example_env python generate_examples.py
 
-      - name: Build pytorch with ABI=${{ matrix.abi }}
+      - name: Build pytorch with ABI=${{ matrix.abi }} and USE_CUDA=${{ matrix.cuda }}
         shell: bash -l {0}
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
@@ -88,6 +90,7 @@ jobs:
               export TORCH_CXX_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=${{ matrix.abi }}"
               cd multipy/runtime/third-party/pytorch
               export USE_DEPLOY=1
+              export USE_CUDA=${{ matrix.cuda }}
               conda run -n multipy_runtime_env python setup.py develop
 
       - name: Build multipy runtime
@@ -109,11 +112,20 @@ jobs:
               cd multipy/runtime/build
               conda run -n multipy_runtime_env cmake --install . --prefix "."
 
-      - name: Run unit tests with ABI=${{ matrix.abi }}
-        if: ${{ matrix.abi }} == 1
+      - name: Run unit tests with ABI=${{ matrix.abi }} with cuda=${{ matrix.cuda }}
         shell: bash -l {0}
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
               cd multipy/runtime/build
               ./test_deploy
+      - name: Run unit tests with ABI=${{ matrix.abi }} with gpu
+        shell: bash -l {0}
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: |
+              if [[ ${{ matrix.cuda }} -eq 1 ]]
+              then
+              cd multipy/runtime/build
+              ./test_deploy_gpu
+              fi

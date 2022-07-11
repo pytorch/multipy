@@ -86,14 +86,12 @@ target_link_libraries(test_deploy
 )
 target_include_directories(test_deploy PRIVATE ${CMAKE_SOURCE_DIR}/../..)
 
-#  LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
-#  add_executable(test_deploy_gpu ${INTERPRETER_TEST_SOURCES_GPU})
-#  target_compile_definitions(test_deploy_gpu PUBLIC TEST_CUSTOM_LIBRARY)
-#  target_include_directories(test_deploy_gpu PRIVATE ${PYTORCH_ROOT}/torch)
-#  target_include_directories(test_deploy_gpu PRIVATE ${CMAKE_SOURCE_DIR}/../..)
-#  target_link_libraries(test_deploy_gpu
-#   PUBLIC "-Wl,--no-as-needed -rdynamic" gtest dl torch_deploy_interface c10 torch_cpu
-# )
+LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
+add_executable(test_deploy_gpu ${INTERPRETER_TEST_SOURCES_GPU})
+target_compile_definitions(test_deploy_gpu PUBLIC TEST_CUSTOM_LIBRARY)
+target_include_directories(test_deploy_gpu PRIVATE ${PYTORCH_ROOT}/torch)
+target_include_directories(test_deploy_gpu PRIVATE ${CMAKE_SOURCE_DIR}/../..)
+target_link_libraries(test_deploy_gpu PUBLIC "-Wl,--no-as-needed -rdynamic" gtest dl torch_deploy_interface c10 torch_cpu)
 
 LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
 add_library(test_deploy_lib SHARED test_deploy_lib.cpp)
@@ -119,7 +117,7 @@ target_link_libraries(interactive_embedded_interpreter
 )
 
 install(TARGETS test_deploy DESTINATION tests/bin)
-# install(TARGETS test_deploy_gpu DESTINATION tests/bin)
+install(TARGETS test_deploy_gpu DESTINATION tests/bin)
 
 install(TARGETS test_deploy DESTINATION tests/bin)
 

@@ -13,7 +13,9 @@ internally, please see the related [arXiv paper](https://arxiv.org/pdf/2104.0025
 
 ### Installing `multipy::runtime` **(recommended)**
 
-The C++ binaries (`libtorch_interpreter.so`,`libtorch_deploy.a`, `utils.cmake`), and the header files of `multipy::runtime` can be installed from our [nightly release](https://github.com/pytorch/multipy/releases/tag/nightly-runtime-abi-0). The ABI for the nightly release is 0. You can find a version of the release with ABI=1 [here](https://github.com/pytorch/multipy/releases/tag/nightly-runtime-abi-1).
+The C++ binaries (`libtorch_interpreter.so`,`libtorch_deploy.a`, `utils.cmake`), and the header files of `multipy::runtime` can be installed from our [nightly release](https://github.com/pytorch/multipy/releases/tag/nightly-runtime-abi-0-cuda-0) (uses the pre-cxx11 ABI). You can find a version of the release with the [cxx11 ABI](https://github.com/pytorch/multipy/releases/tag/nightly-runtime-abi-1-cuda-0.
+
+C++ binaries with cuda (11.3) support can also be found for the [pre-cxx11 ABI](https://github.com/pytorch/multipy/releases/tag/nightly-runtime-cuda-abi-0-cuda-1) and the [cxx11 ABI](https://github.com/pytorch/multipy/releases/tag/nightly-runtime-cuda-abi-1-cuda-1).
 
 ```
 wget https://github.com/pytorch/multipy/releases/download/nightly-runtime-abi-0/multipy_runtime.tar.gz
