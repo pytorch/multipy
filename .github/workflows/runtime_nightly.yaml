@@ -3,7 +3,7 @@ name: Multipy runtime nightly release
 on:
   schedule:
     - cron: '0 2 * * *' # run at 2 AM UTC
-   push:
+  push:
     branches:
       - main
 
