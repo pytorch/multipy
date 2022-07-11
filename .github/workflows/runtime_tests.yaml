@@ -18,6 +18,16 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
 
+      - name: Test if statement
+        shell: bash -l {0}
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: |
+              if [[${{ matrix.cuda }} -eq 1]]
+              then
+              echo "I have cuda"
+              fi
+
       - name: Update pip
         run: |
           sudo yum update -y
@@ -124,7 +134,7 @@ jobs:
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
-              if [${{ matrix.cuda }} -eq 1]
+              if [[${{ matrix.cuda }} -eq 1]]
               then
               cd multipy/runtime/build
               ./test_deploy_gpu
