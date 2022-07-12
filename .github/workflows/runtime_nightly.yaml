@@ -50,6 +50,8 @@ jobs:
         run: |
               if [[ ${{ matrix.abi }} == 0 ]]
               then
+                sudo yum install centos-release-scl
+                sudo yum-config-manager --enable rhel-server-rhscl-7-rpms
                 sudo yum install devtoolset-7
               else
                 sudo yum -y install clang llvm
