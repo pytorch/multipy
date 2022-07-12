@@ -48,7 +48,15 @@ jobs:
 
       - name: Install C++ toolchain
         run: |
-              sudo yum install devtoolset-7
+              if [[ ${{ matrix.abi }} == 0 ]]
+              then
+                sudo yum install devtoolset-7
+              else
+                sudo yum -y install clang llvm
+                export CC=clang
+                export CXX=clang++
+              fi
+
               sudo yum -y install xz-devel bzip2-devel libnsl2-devel readline-devel expat-devel gdbm-devel glibc-devel gmp-devel libffi-devel libGL-devel libX11-devel ncurses-devel openssl-devel sqlite-devel tcl-devel tix-devel tk-devel
               sudo yum -y install lzma
               sudo yum -y install uuid
@@ -58,16 +66,19 @@ jobs:
       - name: Install CUDA 11.3
         shell: bash
         run: |
-              wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
-              sudo mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600
-              # https://forums.developer.nvidia.com/t/notice-cuda-linux-repository-key-rotation/212772
-              wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb
-              sudo dpkg -i cuda-keyring_1.0-1_all.deb
-              # sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/3bf863cc.pub
-              sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/ /"
-              sudo apt-get update
-              sudo apt-get -y install cuda-minimal-build-11-3 cuda-nvrtc-dev-11-3 cuda-nvtx-11-3 cuda-libraries-dev-11-3
-              sudo apt-get -y install libcudnn8-dev
+              if [[ ${{ matrix.abi }} == 0 ]]
+              then
+                wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
+                sudo mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600
+                # https://forums.developer.nvidia.com/t/notice-cuda-linux-repository-key-rotation/212772
+                wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb
+                sudo dpkg -i cuda-keyring_1.0-1_all.deb
+                # sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/3bf863cc.pub
+                sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/ /"
+                sudo apt-get update
+                sudo apt-get -y install cuda-minimal-build-11-3 cuda-nvrtc-dev-11-3 cuda-nvtx-11-3 cuda-libraries-dev-11-3
+                sudo apt-get -y install libcudnn8-dev
+              fi
 
       - name: create conda env
         run: |
