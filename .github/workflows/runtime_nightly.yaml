@@ -50,6 +50,11 @@ jobs:
         run: |
               if [[ ${{ matrix.abi }} == 0 ]]
               then
+                wget http://mirror.centos.org/centos/7/extras/x86_64/Packages/centos-release-scl-2-3.el7.centos.noarch.rpm
+                wget http://mirror.centos.org/centos/7/extras/x86_64/Packages/centos-release-scl-rh-2-3.el7.centos.noarch.rpm
+                rpm -ivh centos-release-scl-rh-2-3.el7.centos.noarch.rpm
+                rpm -ivh centos-release-scl-2-3.el7.centos.noarch.rpm
+                yum repolist
                 sudo yum -y install centos-release-scl
                 sudo yum-config-manager --enable rhel-server-rhscl-7-rpms
                 sudo yum -y install devtoolset-7
