@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.7, 3.8, 3.9]
-        platform: [linux.2xlarge]
+        platform: [linux.2xlarge, linux.4xlarge]
         abi: [0,1]
         cuda: [0,1]
       fail-fast: false
@@ -124,8 +124,5 @@ jobs:
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
-              if [[ ${{ matrix.cuda }} -eq 1 ]]
-              then
               cd multipy/runtime/build
               ./test_deploy_gpu
-              fi

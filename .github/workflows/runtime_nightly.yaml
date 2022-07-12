@@ -57,7 +57,7 @@ jobs:
                 yum repolist
                 sudo yum -y install centos-release-scl
                 sudo yum-config-manager --enable rhel-server-rhscl-7-rpms
-                sudo yum -y install devtoolset-7 --skip-broken
+                sudo yum -y install devtoolset-7
                 scl enable devtoolset-7 bash
               else
                 sudo yum -y install clang llvm
