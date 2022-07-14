@@ -26,14 +26,14 @@ If you're not sure which ABI value to use, it's important to note that the pytor
 <br>
 
 ### Installing `multipy::runtime` from source
-Currently we require that [pytorch be built from source](https://pytorch.org/get-started/locally/#mac-from-source) in order to build `multipy.runtime` from source. Please refer to that documentation for the requirements needed to build `pytorch` when running `USE_DEPLOY=1 python setup.py develop`.
+Currently we require that [pytorch be built from source](https://github.com/pytorch/pytorch#from-source) in order to build `multipy.runtime` from source. Please refer to that documentation for the requirements needed to build `pytorch` when running `USE_DEPLOY=1 python setup.py develop`.
 
 ```bash
 # checkout repo
 git checkout https://github.com/pytorch/multipy.git
 git submodule sync && git submodule update --init --recursive
 
-cd multipy/MultiPy/runtime
+cd multipy/multipy/runtime
 
 # Currently multipy::runtime requires that we build pytorch from source since we need to expose some objects in torch (ie. torch_python, etc.) for multipy::runtime to work.
 
@@ -43,7 +43,7 @@ export GLIBCXX_USE_CXX11_ABI=0
 export CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
 export TORCH_CXX_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
 
-cd ../pytorch
+cd third-party/pytorch
 USE_DEPLOY=1 python setup.py develop
 cd ../..
 
@@ -54,6 +54,17 @@ cd build
 cmake ..
 cmake --build . --config Release
 
+```
+
+### Running unit tests for `multipy::runtime`
+
+We first need to generate the neccessary examples. First make sure your python enviroment has [torch](https://pytorch.org). Afterwards, once `multipy::runtime` is built
+
+```
+cd multipy/multipy/runtime
+python example/generate_examples.py
+cd build
+./test_deploy
 ```
 
 ## Example
