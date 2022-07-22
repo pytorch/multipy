@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 ARG BASE_IMAGE=nvidia/cuda:11.3.1-devel-ubuntu18.04
+=======
+ARG BASE_IMAGE=ubuntu:18.04
+>>>>>>> 6c0a77530adf2ecb0384046394077097d937e939
 ARG PYTHON_VERSION=3.8
 
 FROM ${BASE_IMAGE} as dev-base
@@ -60,6 +64,7 @@ FROM conda as build
 WORKDIR /opt/multipy/multipy/runtime/third-party/pytorch
 COPY --from=conda /opt/conda /opt/conda
 COPY --from=submodule-update /opt/multipy /opt/multipy
+<<<<<<< HEAD
 ENV GLIBCXX_USE_CXX11_ABI=0
 ENV CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
 ENV TORCH_CXX_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
@@ -78,4 +83,3 @@ RUN mkdir multipy/runtime/build && \
     cmake -DABI_EQUALS_1="OFF" .. && \
     cmake --build . --config Release && \
     cmake --install . --prefix "."
-
