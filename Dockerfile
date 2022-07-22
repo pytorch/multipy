@@ -60,8 +60,7 @@ FROM conda as build
 WORKDIR /opt/multipy/multipy/runtime/third-party/pytorch
 COPY --from=conda /opt/conda /opt/conda
 COPY --from=submodule-update /opt/multipy /opt/multipy
-<<<<<<< HEAD
-ENV GLIBCXX_USE_CXX11_ABI=0
+ENV _GLIBCXX_USE_CXX11_ABI=0
 ENV CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
 ENV TORCH_CXX_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
 
