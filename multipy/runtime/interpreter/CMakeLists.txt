@@ -110,6 +110,8 @@ set(INTERPRETER_LIB_SOURCES
   ${INTERPRETER_DIR}/builtin_registry.cpp
   ${INTERPRETER_DIR}/register_frozenpython.cpp
   ${INTERPRETER_DIR}/import_find_sharedfuncptr.cpp
+  ${INTERPRETER_DIR}/plugin_registry.cpp
+  ${INTERPRETER_DIR}/plugin_torch.cpp
   ${FROZEN_FILES}
   ${LINKER_SCRIPT}
 )
