@@ -25,28 +25,36 @@ class Environment {
   // all zipped python libraries will be written
   // under this directory
   std::string extraPythonLibrariesDir_;
-  void setupZippedPythonModules(const std::string& pythonAppDir) {
-#ifdef FBCODE_CAFFE2
+  std::string getZippedArchive(
+      const char* zipped_torch_name,
+      const std::string& pythonAppDir) {
     std::string execPath;
     std::ifstream("/proc/self/cmdline") >> execPath;
     ElfFile elfFile(execPath.c_str());
     // load the zipped torch modules
-    constexpr const char* ZIPPED_TORCH_NAME = ".torch_python_modules";
-    auto zippedTorchSection = elfFile.findSection(ZIPPED_TORCH_NAME);
+    auto zippedTorchSection = elfFile.findSection(zipped_torch_name);
     MULTIPY_CHECK(
         zippedTorchSection.has_value(), "Missing the zipped torch section");
     const char* zippedTorchStart = zippedTorchSection->start;
     auto zippedTorchSize = zippedTorchSection->len;
 
-    std::string zipArchive =
-        std::string(pythonAppDir) + "/torch_python_modules.zip";
+    std::string zipArchive = pythonAppDir;
     auto zippedFile = fopen(zipArchive.c_str(), "wb");
     MULTIPY_CHECK(
         zippedFile != nullptr, "Fail to create file: ", strerror(errno));
     fwrite(zippedTorchStart, 1, zippedTorchSize, zippedFile);
     fclose(zippedFile);
+    return zipArchive;
+  }
+  void setupZippedPythonModules(const std::string& pythonAppDir) {
+#ifdef FBCODE_CAFFE2
+    extraPythonPaths_.push_back(getZippedArchive(
+        ".torch_python_modules",
+        std::string(pythonAppDir) + "/torch_python_modules.zip"));
+    extraPythonPaths_.push_back(getZippedArchive(
+        ".multipy_python_modules",
+        std::string(pythonAppDir) + "/multipy_python_modules.zip"));
 
-    extraPythonPaths_.push_back(zipArchive);
 #endif
     extraPythonLibrariesDir_ = pythonAppDir;
   }

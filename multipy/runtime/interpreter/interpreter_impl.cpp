@@ -49,6 +49,7 @@ import _ssl # must come before _hashlib otherwise ssl's locks will be set to a P
 import sys
 import importlib.abc
 import linecache
+from zipfile import ZipFile
 
 class RegisterModuleImporter(importlib.abc.InspectLoader):
     def __init__(self, find_module_source):
@@ -79,7 +80,11 @@ class RegisterModuleImporter(importlib.abc.InspectLoader):
 # print("executable:", sys.executable)
 # print("path:", sys.path)
 # print("prefix:", sys.prefix)
+
+
 import torch # has to be done serially otherwise things will segfault
+import multipy.utils
+print("line after multipy import")
 try:
   import torch.version # for some reason torch doesn't import this and cuda fails?
 except ModuleNotFoundError:
@@ -203,10 +208,10 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterImpl
 
     // we cache these so we don't have to repeat the conversion of strings into
     // Python and hash table lookups to get to these object
-    saveStorage = global_impl("torch._deploy", "_save_storages");
-    loadStorage = global_impl("torch._deploy", "_load_storages");
-    getPackage = global_impl("torch._deploy", "_get_package");
-    objects = global_impl("torch._deploy", "_deploy_objects");
+    saveStorage = global_impl("multipy.utils._deploy", "_save_storages");
+    loadStorage = global_impl("multipy.utils._deploy", "_load_storages");
+    getPackage = global_impl("multipy.utils._deploy", "_get_package");
+    objects = global_impl("multipy.utils._deploy", "_deploy_objects");
     // Release the GIL that PyInitialize acquires
     PyEval_SaveThread();
   }
