@@ -53,6 +53,12 @@ SET(PYTHON_MODULE_DIR "${SOURCE_DIR}/build/temp.linux-x86_64-{CPYTHON_VERSION}/$
 SET(PYTHON_STDLIB_DIR "${SOURCE_DIR}/Lib")
 SET(PYTHON_STDLIB "${PYTHON_INSTALL_DIR}/lib/libpython_stdlib{CPYTHON_VERSION}.a")
 
+if(${CPYTHON_VERSION} MATCHES "3\.[8-9]")
+  SET(PYTHON_MEM_MODULE "${PYTHON_MODULE_DIR}/_decimal/libmpdec/memory.o")
+elseif(${CPYTHON_VERSION} MATCHES "3\.1[0-1]")
+  SET(PYTHON_MEM_MODULE "${PYTHON_MODULE_DIR}/_decimal/libmpdec/mpalloc.o")
+endif()
+
 # Then we use a hardcoded list of expected module names and include them in our lib
 include("CMakePythonModules.txt")
 ExternalProject_Add_Step(
@@ -60,7 +66,7 @@ ExternalProject_Add_Step(
   archive_stdlib
   DEPENDEES install
   BYPRODUCTS ${PYTHON_STDLIB}
-  COMMAND ar -rc ${PYTHON_STDLIB} ${PYTHON_MODULES}
+  COMMAND ar -rc ${PYTHON_STDLIB} ${PYTHON_MODULES} ${PYTHON_MEM_MODULE}
   VERBATIM
 )
 # Get python typing extension, needed by torch
