@@ -7,7 +7,6 @@
 #pragma once
 #include <multipy/runtime/Exception.h>
 #include <multipy/runtime/elf_file.h>
-#include <fstream>
 #include <string>
 
 namespace torch {
@@ -27,12 +26,9 @@ class Environment {
   std::string extraPythonLibrariesDir_;
   void setupZippedPythonModules(const std::string& pythonAppDir) {
 #ifdef FBCODE_CAFFE2
-    std::string execPath;
-    std::ifstream("/proc/self/cmdline") >> execPath;
-    ElfFile elfFile(execPath.c_str());
     // load the zipped torch modules
     constexpr const char* ZIPPED_TORCH_NAME = ".torch_python_modules";
-    auto zippedTorchSection = elfFile.findSection(ZIPPED_TORCH_NAME);
+    auto zippedTorchSection = searchForSection(ZIPPED_TORCH_NAME);
     MULTIPY_CHECK(
         zippedTorchSection.has_value(), "Missing the zipped torch section");
     const char* zippedTorchStart = zippedTorchSection->start;
