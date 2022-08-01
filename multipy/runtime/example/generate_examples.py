@@ -119,6 +119,12 @@ if __name__ == "__main__":
             "import torch.distributed; assert torch.distributed.is_available()",
         )
 
+    with PackageExporter(p / "uses_cuda") as e:
+        e.save_source_string(
+            "uses_cuda",
+            "import torch; assert torch.cuda.is_available()",
+        )
+
     with PackageExporter(str(p / "make_trt_module")) as e:
         e.extern("tensorrt")
         e.add_dependency("tensorrt")
