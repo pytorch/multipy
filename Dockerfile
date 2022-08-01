@@ -1,5 +1,4 @@
 ARG BASE_IMAGE=nvidia/cuda:11.3.1-devel-ubuntu18.04
-# ARG BASE_IMAGE=pytorch/manylinux-cuda113
 ARG PYTHON_VERSION=3.8
 
 FROM ${BASE_IMAGE} as dev-base
