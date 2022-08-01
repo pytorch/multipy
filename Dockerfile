@@ -74,6 +74,17 @@ RUN --mount=type=cache,target=/opt/ccache \
     USE_DEPLOY=1 \
     python setup.py install
 
+# FROM conda-installs as multipy-build
+WORKDIR /opt/multipy
+
+RUN mkdir multipy/runtime/build && \
+   cd multipy/runtime/build && \
+   cmake -DABI_EQUALS_1="ON" --BUILD_CUDA_TESTS="ON" .. && \
+   cmake --build . --config Release && \
+   cmake --install . --prefix "."
+
+RUN mkdir /opt/dist && cp -r multipy/runtime/build/dist /opt/dist/
+
 FROM build as conda-installs
 ARG PYTHON_VERSION=3.8
 ARG CUDA_VERSION=11.3
@@ -84,16 +95,8 @@ RUN /opt/conda/bin/conda install -c "${INSTALL_CHANNEL}" -c "${CUDA_CHANNEL}" -y
     /opt/conda/bin/conda clean -ya
 RUN /opt/conda/bin/pip install torchelastic
 
-# FROM conda-installs as multipy-build
-WORKDIR /opt/multipy
 
-RUN mkdir multipy/runtime/build && \
-   cd multipy/runtime/build && \
-   cmake -DABI_EQUALS_1="ON" .. && \
-   cmake --build . --config Release && \
-   cmake --install . --prefix "."
 
-RUN mkdir /opt/dist && cp -r multipy/runtime/build/dist /opt/dist/
 FROM ${BASE_IMAGE} as official
 ARG PYTORCH_VERSION 
 LABEL com.nvidia.volumes.needed="nvidia_driver"
@@ -103,6 +106,8 @@ RUN --mount=type=cache,id=apt-final,target=/var/cache/apt \
        libjpeg-dev \
        libpng-dev && \
    rm -rf /var/lib/apt/lists/*
+
+
 
 COPY --from=conda-installs /opt/conda /opt/conda
 COPY --from=build /opt/multipy/multipy/runtime/build/dist /opt/multipy
