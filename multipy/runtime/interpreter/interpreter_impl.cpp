@@ -80,11 +80,10 @@ class RegisterModuleImporter(importlib.abc.InspectLoader):
 # print("executable:", sys.executable)
 # print("path:", sys.path)
 # print("prefix:", sys.prefix)
-
+# print("modules:", sys.modules)
 
 import torch # has to be done serially otherwise things will segfault
 import multipy.utils
-print("line after multipy import")
 try:
   import torch.version # for some reason torch doesn't import this and cuda fails?
 except ModuleNotFoundError:
@@ -212,6 +211,11 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterImpl
     loadStorage = global_impl("multipy.utils._deploy", "_load_storages");
     getPackage = global_impl("multipy.utils._deploy", "_get_package");
     objects = global_impl("multipy.utils._deploy", "_deploy_objects");
+    saveStorage = global_impl("torch._deploy", "_save_storages");
+    loadStorage = global_impl("torch._deploy", "_load_storages");
+    getPackage = global_impl("torch._deploy", "_get_package");
+    objects = global_impl("torch._deploy", "_deploy_objects");
+
     // Release the GIL that PyInitialize acquires
     PyEval_SaveThread();
   }
