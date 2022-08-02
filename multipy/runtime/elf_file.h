@@ -16,14 +16,18 @@ namespace torch {
 namespace deploy {
 
 struct Section {
+  Section() {}
   explicit Section(
-      const char* _name = nullptr,
-      const char* _start = nullptr,
+      std::shared_ptr<MemFile> _memfile,
+      const char* _name,
+      const char* _start,
       size_t _len = 0)
-      : name(_name), start(_start), len(_len) {}
-  const char* name;
-  const char* start;
-  size_t len;
+      : memfile(_memfile), name(_name), start(_start), len(_len) {}
+
+  std::shared_ptr<MemFile> memfile;
+  const char* name{nullptr};
+  const char* start{nullptr};
+  size_t len{0};
 
   operator bool() const {
     return start != nullptr;
@@ -50,8 +54,8 @@ class ElfFile {
       MULTIPY_CHECK(nameOff >= 0 && nameOff < strtabSection_.len);
       name = strtabSection_.start + nameOff;
     }
-    const char* start = memFile_.data() + shOff;
-    return Section{name, start, len};
+    const char* start = memFile_->data() + shOff;
+    return Section{memFile_, name, start, len};
   }
 
   [[nodiscard]] const char* str(size_t off) const {
@@ -59,7 +63,7 @@ class ElfFile {
     return strtabSection_.start + off;
   }
   void checkFormat() const;
-  MemFile memFile_;
+  std::shared_ptr<MemFile> memFile_;
   Elf64_Ehdr* ehdr_;
   Elf64_Shdr* shdrList_;
   size_t numSections_;
@@ -67,6 +71,8 @@ class ElfFile {
   Section strtabSection_;
   std::vector<Section> sections_;
 };
+
+multipy::optional<Section> searchForSection(const char* name);
 
 } // namespace deploy
 } // namespace torch

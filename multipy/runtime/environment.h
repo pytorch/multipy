@@ -7,7 +7,6 @@
 #pragma once
 #include <multipy/runtime/Exception.h>
 #include <multipy/runtime/elf_file.h>
-#include <fstream>
 #include <string>
 
 namespace torch {
