@@ -73,12 +73,10 @@ RUN --mount=type=cache,target=/opt/ccache \
     USE_CUDA="ON" \
     BUILD_SPLIT_CUDA="ON" \
     BUILD_TEST=1 \
-    BUILD_CAFFE2=0 \
     USE_DEPLOY=1 \
     python setup.py install
 
 # Build Multipy
-WORKDIR /opt/multipy
 RUN mkdir multipy/runtime/build && \
    cd multipy/runtime/build && \
    cmake -DABI_EQUALS_1="ON" --BUILD_CUDA_TESTS="ON" .. && \
