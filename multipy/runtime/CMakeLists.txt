@@ -26,6 +26,7 @@ SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" PARENT_SCOPE)
 
 set(DEPLOY_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 set(PYTORCH_ROOT "${DEPLOY_DIR}/third-party/pytorch")
+get_filename_component(MULTIPY_DIR ${CMAKE_CURRENT_SOURCE_DIR} DIRECTORY)
 
 add_subdirectory(interpreter)
 add_subdirectory(third-party/fmt)

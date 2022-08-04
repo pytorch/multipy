@@ -15,6 +15,14 @@ from ._zip_file_torchscript import TorchScriptPackageZipFileWriter
 from .importer import Importer, sys_importer
 from .package_exporter_no_torch import PackageExporter as DefaultPackageExporter
 
+
+# To deal with torch.storage._TypedStorage => torch.storage.TypedStorage renaming
+try:
+    TORCH_STORAGE_CLASS = torch.storage._TypedStorage
+except:
+    TORCH_STORAGE_CLASS = torch.storage.TypedStorage
+
+
 # TODO: fix pytorch master to use PackagingError from the base class then delete below line
 # from .package_exporter_no_torch import PackagingError, EmptyMatchError  # noqa
 
@@ -41,8 +49,9 @@ class PackageExporter(DefaultPackageExporter):
     def persistent_id(self, obj):
         assert isinstance(self.zip_file, TorchScriptPackageZipFileWriter)
         # needed for 'storage' typename which is a way in which torch models are saved
-        if torch.is_storage(obj) or isinstance(obj, torch.storage._TypedStorage):
-            if isinstance(obj, torch.storage._TypedStorage):
+        if torch.is_storage(obj) or isinstance(obj, TORCH_STORAGE_CLASS):
+
+            if isinstance(obj, TORCH_STORAGE_CLASS):
                 # TODO: Once we decide to break serialization FC, we can
                 # remove this case
                 storage = obj._storage

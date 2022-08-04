@@ -3,7 +3,7 @@ ARG PYTHON_VERSION=3.8
 
 FROM ${BASE_IMAGE} as dev-base
 
-
+# Install system dependencies
 RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
         apt update && DEBIAN_FRONTEND=noninteractive apt install -yq --no-install-recommends \
         build-essential \
@@ -41,11 +41,13 @@ RUN mkdir /opt/ccache && ccache --set-config=cache_dir=/opt/ccache
 ENV PATH /opt/conda/bin:$PATH
 RUN cd /usr/src/gtest && cmake CMakeLists.txt && make && cp *.a /usr/lib
 
+# get the repo
 FROM dev-base as submodule-update
 WORKDIR /opt/multipy
 COPY . .
-# RUN git submodule update --init --recursive --jobs 0
+RUN git submodule update --init --recursive --jobs 0
 
+# Install conda + neccessary python dependencies
 FROM dev-base as conda
 ARG PYTHON_VERSION=3.8
 COPY multipy/runtime/third-party/pytorch/requirements.txt .
@@ -59,6 +61,7 @@ RUN curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Mini
     /opt/conda/bin/python -mpip install -r requirements.txt && \
     /opt/conda/bin/conda clean -ya
 
+# Build/Install pytorch with post-cxx11 ABI
 FROM conda as build
 WORKDIR /opt/multipy/multipy/runtime/third-party/pytorch
 COPY --from=conda /opt/conda /opt/conda
@@ -74,9 +77,10 @@ RUN --mount=type=cache,target=/opt/ccache \
     USE_DEPLOY=1 \
     python setup.py install
 
-# FROM conda-installs as multipy-build
 WORKDIR /opt/multipy
 
+# Build Multipy
+WORKDIR /opt/multipy
 RUN mkdir multipy/runtime/build && \
    cd multipy/runtime/build && \
    cmake -DABI_EQUALS_1="ON" --BUILD_CUDA_TESTS="ON" .. && \
@@ -84,6 +88,7 @@ RUN mkdir multipy/runtime/build && \
    cmake --install . --prefix "."
 
 RUN mkdir /opt/dist && cp -r multipy/runtime/build/dist /opt/dist/
+
 
 FROM build as conda-installs
 ARG PYTHON_VERSION=3.8
@@ -94,8 +99,6 @@ ENV CONDA_OVERRIDE_CUDA=${CUDA_VERSION}
 RUN /opt/conda/bin/conda install -c "${INSTALL_CHANNEL}" -c "${CUDA_CHANNEL}" -y python=${PYTHON_VERSION} pytorch torchvision torchtext "cudatoolkit=${CUDA_VERSION}" && \
     /opt/conda/bin/conda clean -ya
 RUN /opt/conda/bin/pip install torchelastic
-
-
 
 FROM ${BASE_IMAGE} as official
 ARG PYTORCH_VERSION 
