@@ -211,11 +211,6 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterImpl
     loadStorage = global_impl("multipy.utils._deploy", "_load_storages");
     getPackage = global_impl("multipy.utils._deploy", "_get_package");
     objects = global_impl("multipy.utils._deploy", "_deploy_objects");
-    saveStorage = global_impl("torch._deploy", "_save_storages");
-    loadStorage = global_impl("torch._deploy", "_load_storages");
-    getPackage = global_impl("torch._deploy", "_get_package");
-    objects = global_impl("torch._deploy", "_deploy_objects");
-
     // Release the GIL that PyInitialize acquires
     PyEval_SaveThread();
   }
