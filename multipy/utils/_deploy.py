@@ -85,7 +85,6 @@ def _load_storages(id, zip_reader, obj_bytes, serialized_storages, serialized_dt
             # stop wrapping with _TypedStorage
             storage = serialized_storages[data[0]]
             dtype = serialized_dtypes[data[0]]
-<<<<<<< HEAD
 
             # For < pytorch 1.13 compatibility. We can likely remove after it's release.
             try:
@@ -94,11 +93,6 @@ def _load_storages(id, zip_reader, obj_bytes, serialized_storages, serialized_dt
                 storage_untyped = storage._untyped
 
             return STORAGE_TYPE(wrap_storage=storage_untyped(), dtype=dtype)
-=======
-            return torch.storage._TypedStorage(
-                wrap_storage=storage._untyped(), dtype=dtype
-            )
->>>>>>> ed23d41 (Use multipy.package in `multipy/runtime` (#82690))
 
         if typename == "reduce_deploy":
             reduce_id, func, args = data
