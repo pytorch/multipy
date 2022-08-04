@@ -14,6 +14,12 @@ from multipy.package._package_pickler import create_pickler
 from multipy.package._package_unpickler import PackageUnpickler
 from torch.serialization import _maybe_decode_ascii
 
+# For < pytorch 1.13 compatibility. We can likely delete this after it's release.
+try:
+    STORAGE_TYPE = torch.storage._TypedStorage
+except:
+    STORAGE_TYPE = torch.storage.TypedStorage
+
 
 def _save_storages(importer, obj):
     serialized_storages = []
@@ -29,8 +35,8 @@ def _save_storages(importer, obj):
         importers = sys_importer
 
     def persistent_id(obj):
-        if torch.is_storage(obj) or isinstance(obj, torch.storage._TypedStorage):
-            if isinstance(obj, torch.storage._TypedStorage):
+        if torch.is_storage(obj) or isinstance(obj, STORAGE_TYPE):
+            if isinstance(obj, STORAGE_TYPE):
                 # TODO: Once we decide to break serialization FC, we can
                 # remove this case
                 storage = obj._storage
@@ -79,9 +85,14 @@ def _load_storages(id, zip_reader, obj_bytes, serialized_storages, serialized_dt
             # stop wrapping with _TypedStorage
             storage = serialized_storages[data[0]]
             dtype = serialized_dtypes[data[0]]
-            return torch.storage._TypedStorage(
-                wrap_storage=storage._untyped(), dtype=dtype
-            )
+
+            # For < pytorch 1.13 compatibility. We can likely remove after it's release.
+            try:
+                storage_untyped = storage.untyped
+            except:
+                storage_untyped = storage._untyped
+
+            return STORAGE_TYPE(wrap_storage=storage_untyped(), dtype=dtype)
 
         if typename == "reduce_deploy":
             reduce_id, func, args = data
