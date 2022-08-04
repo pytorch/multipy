@@ -83,9 +83,15 @@ class PackageImporter(DefaultPackageImporter):
             storage = self.loaded_storages[key]
             # TODO: Once we decide to break serialization FC, we can
             # stop wrapping with TypedStorage
-            return torch.storage._TypedStorage(
-                wrap_storage=storage._untyped(), dtype=dtype
-            )
+            try:
+                return torch.storage._TypedStorage(
+                    wrap_storage=storage._untyped(), dtype=dtype
+                )
+            except:
+                return torch.storage.TypedStorage(
+                    wrap_storage=storage.untyped(), dtype=dtype
+                )
+
         return None
 
     @contextmanager
