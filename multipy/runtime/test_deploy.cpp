@@ -48,6 +48,11 @@ const char* path(const char* envname, const char* path) {
   return e ? e : path;
 }
 
+TEST(TorchpyTest, InitManagerBasic) {
+  torch::deploy::InterpreterManager m(1);
+  ASSERT_EQ(m.countRegisteredModuleSources(), 1);
+}
+
 TEST(TorchpyTest, LoadLibrary) {
   torch::deploy::InterpreterManager m(1);
   torch::deploy::Package p = m.loadPackage(
