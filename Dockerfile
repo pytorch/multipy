@@ -80,7 +80,6 @@ RUN --mount=type=cache,target=/opt/ccache \
 WORKDIR /opt/multipy
 
 # Build Multipy
-WORKDIR /opt/multipy
 RUN mkdir multipy/runtime/build && \
    cd multipy/runtime/build && \
    cmake -DABI_EQUALS_1="ON" --BUILD_CUDA_TESTS="ON" .. && \
@@ -89,7 +88,7 @@ RUN mkdir multipy/runtime/build && \
 
 RUN mkdir /opt/dist && cp -r multipy/runtime/build/dist /opt/dist/
 
-
+# Install the conda versions of everything and subout pytorch with the one we built
 FROM build as conda-installs
 ARG PYTHON_VERSION=3.8
 ARG CUDA_VERSION=11.3
@@ -109,8 +108,6 @@ RUN --mount=type=cache,id=apt-final,target=/var/cache/apt \
        libjpeg-dev \
        libpng-dev && \
    rm -rf /var/lib/apt/lists/*
-
-
 
 COPY --from=conda-installs /opt/conda /opt/conda
 COPY --from=build /opt/multipy/multipy/runtime/build/dist /opt/multipy
