@@ -116,4 +116,3 @@ WORKDIR /workspace
 FROM official as dev
 # Should override the already installed version from the official-image stage
 COPY --from=build /opt/conda /opt/conda
-COPY --from=build /opt/dist /opt/multipy
