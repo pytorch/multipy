@@ -158,6 +158,11 @@ struct TORCH_API InterpreterManager {
     registeredModuleSource_[std::move(name)] = std::move(src);
   }
 
+  // Util function for debugging.
+  size_t countRegisteredModuleSources() {
+    return registeredModuleSource_.size();
+  }
+
   InterpreterManager(const InterpreterManager&) = delete;
   InterpreterManager& operator=(const InterpreterManager&) = delete;
   InterpreterManager& operator=(InterpreterManager&&) = delete;
