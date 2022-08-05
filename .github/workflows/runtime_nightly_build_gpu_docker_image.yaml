@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.8]
-        platform: [linux.2xlarge]
+        platform: [linux.4xlarge.nvidia.gpu]
         abi: [1]
       fail-fast: false
     runs-on: ${{ matrix.platform }}
@@ -80,13 +80,12 @@ jobs:
         env:
           PYTHON_VERSION: ${{ matrix.python_version }}
         run: |
-              yum update -y
-              yum install -y amazon-linux-extras
-              systemctl --now enable docker
-              distribution=$(. /etc/os-release;echo $ID$VERSION_ID) \
+              sudo yum update -y
+              sudo yum install -y amazon-linux-extras
+              sudo systemctl --now enable docker
               && curl -s -L https://nvidia.github.io/libnvidia-container/$distribution/libnvidia-container.repo | sudo tee /etc/yum.repos.d/nvidia-container-toolkit.repo
-              yum clean expire-cache
-              systemctl restart docker
+              sudo yum clean expire-cache
+              sudo systemctl restart docker
 
       - name: Build Docker Image
         shell: bash -l {0}
