@@ -75,7 +75,7 @@ jobs:
             conda create --name example_env python=${{ matrix.python-version }}
             conda run -n example_env python -m pip install torch torchvision torchaudio pathlib
             conda run -n example_env python generate_examples.py
-      -name: Install nvidia-docker
+      - name: Install nvidia-docker
         shell: base -l {0}
         env:
           PYTHON_VERSION: ${{ matrix.python_version }}
@@ -88,7 +88,7 @@ jobs:
               yum clean expire-cache
               systemctl restart docker
 
-      -name: Build Docker Image
+      - name: Build Docker Image
         shell: base -l {0}
         env:
           PYTHON_VERSION: ${{ matrix.python_version }}
