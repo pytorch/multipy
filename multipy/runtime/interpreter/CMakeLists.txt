@@ -4,6 +4,11 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
+# We want to include legacy parsermodule for Cpython 3.8 and earlier. The module has been
+# deprecated in 3.9 and the module source removed from 3.10.
+# Macro is referenced in register_frozenpython.
+add_compile_definitions(INCLUDE_LEGACY_PARSER_MODULE)
+
 SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" )
 SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" PARENT_SCOPE)
 
