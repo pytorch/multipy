@@ -92,3 +92,8 @@ REGISTER_TORCH_DEPLOY_BUILTIN(
     _PyImport_FrozenModules FOREACH_LIBRARY(STD_LIBARY_PARMS));
 #endif
 #undef STD_LIBARY_PARMS
+
+#ifdef INCLUDE_LEGACY_PARSER_MODULE
+extern "C" PyObject* PyInit_parser(void);
+REGISTER_TORCH_DEPLOY_BUILTIN(frozenpython, PyInit_parser);
+#endif
