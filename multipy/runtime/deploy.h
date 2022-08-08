@@ -121,6 +121,10 @@ struct TORCH_API InterpreterManager {
       size_t nInterp = 2,
       std::shared_ptr<Environment> env = std::make_shared<NoopEnvironment>());
 
+  void free_willy(int where){
+    resources_.free(where);
+  }
+
   // get a free model, guarenteed that no other user of acquireOne has the same
   // model. It _is_ possible that other users will be using the interpreter.
   InterpreterSession acquireOne() {
@@ -131,6 +135,7 @@ struct TORCH_API InterpreterManager {
     return I;
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
+
 
   // use to make sure something gets run on all interpreters, such as loading or
   // unloading a model eagerly
