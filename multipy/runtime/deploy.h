@@ -17,6 +17,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <functional>
 
 namespace torch {
 namespace deploy {
@@ -47,7 +48,9 @@ struct TORCH_API InterpreterSession {
   }
   ReplicatedObj createMovable(Obj obj);
   Obj fromMovable(const ReplicatedObj& obj);
-
+  bool attachDeconstructorCallback(
+  std::function<void(void)> func
+  );
  private:
   friend struct ReplicatedObj;
   friend struct Package;
@@ -55,7 +58,7 @@ struct TORCH_API InterpreterSession {
   friend struct ReplicatedObjImpl;
   std::unique_ptr<InterpreterSessionImpl> impl_;
   InterpreterManager* manager_; // if created from one
-  int64_t notifyIdx_ = -1;
+  std::function<void(void)> deconstruction_callback_ = NULL;
 };
 
 class TORCH_API Interpreter {
@@ -66,7 +69,6 @@ class TORCH_API Interpreter {
   bool customLoader_ = false;
   InterpreterManager* manager_; // optional if managed by one
   std::shared_ptr<Environment> env_;
-
  public:
   Interpreter(InterpreterManager* manager, std::shared_ptr<Environment> env);
   InterpreterSession acquireSession() const {
@@ -121,17 +123,15 @@ struct TORCH_API InterpreterManager {
       size_t nInterp = 2,
       std::shared_ptr<Environment> env = std::make_shared<NoopEnvironment>());
 
-  void free_willy(int where){
-    resources_.free(where);
-  }
-
   // get a free model, guarenteed that no other user of acquireOne has the same
   // model. It _is_ possible that other users will be using the interpreter.
   InterpreterSession acquireOne() {
     TORCH_DEPLOY_TRY
     int where = resources_.acquire();
     InterpreterSession I = instances_[where].acquireSession();
-    I.notifyIdx_ = where;
+    I.attachDeconstructorCallback([this, where]() -> void{
+      resources_.free(where);
+    });
     return I;
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }

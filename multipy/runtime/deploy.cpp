@@ -8,6 +8,7 @@
 #include <multipy/runtime/deploy.h>
 #include <multipy/runtime/elf_file.h>
 #include <multipy/runtime/interpreter/Optional.hpp>
+#include <functional>
 
 #include <torch/cuda.h>
 
@@ -133,7 +134,6 @@ InterpreterManager::InterpreterManager(
 }
 
 Package InterpreterManager::loadPackage(const std::string& uri) {
-  std::cout << "start load \n" << std::flush;
   TORCH_DEPLOY_TRY
   return Package(uri, this);
   TORCH_DEPLOY_SAFE_CATCH_RETHROW
@@ -141,7 +141,6 @@ Package InterpreterManager::loadPackage(const std::string& uri) {
 
 Package InterpreterManager::loadPackage(
     std::shared_ptr<caffe2::serialize::ReadAdapterInterface> reader) {
-    std::cout << "start load \n" << std::flush;
   TORCH_DEPLOY_TRY
   return Package(reader, this);
   TORCH_DEPLOY_SAFE_CATCH_RETHROW
@@ -163,12 +162,17 @@ InterpreterSession ReplicatedObj::acquireSession(
   TORCH_DEPLOY_SAFE_CATCH_RETHROW
 }
 
+bool InterpreterSession::attachDeconstructorCallback(
+  std::function<void(void)> func
+){
+  deconstruction_callback_ = func;
+  return true;
+}
+
 // NOLINTNEXTLINE(bugprone-exception-escape)
 InterpreterSession::~InterpreterSession() {
-  if (manager_ && notifyIdx_ >= 0) {
-    std::cout << "trying to free willy\n" << std::flush;
-    manager_->free_willy(notifyIdx_);
-    // manager_->resources_.free(notifyIdx_);
+  if (deconstruction_callback_ != NULL){
+    deconstruction_callback_();
   }
 }
 
