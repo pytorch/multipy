@@ -54,6 +54,19 @@ ExternalProject_Get_property(cpython SOURCE_DIR)
 SET(PYTHON_MODULE_DIR "${SOURCE_DIR}/build/temp.linux-x86_64-${CPYTHON_VERSION}/${SOURCE_DIR}/Modules")
 SET(PYTHON_STDLIB_DIR "${SOURCE_DIR}/Lib")
 SET(PYTHON_STDLIB "${PYTHON_INSTALL_DIR}/lib/libpython_stdlib${CPYTHON_VERSION}.a")
+
+if(${CPYTHON_VERSION} MATCHES "3\.(7|8)")
+  SET(PYTHON_MEM_MODULE "${PYTHON_MODULE_DIR}/_decimal/libmpdec/memory.o")
+  SET(LEGACY_PARSER_MODULE "${PYTHON_MODULE_DIR}/parsermodule.o")
+  # We want to include legacy parsermodule for Cpython 3.8 and earlier. The module has been
+  # deprecated in 3.9 and the module source removed from 3.10.
+  # Macro is referenced in register_frozenpython.
+  add_compile_definitions(INCLUDE_LEGACY_PARSER_MODULE)
+elseif(${CPYTHON_VERSION} MATCHES "3\.(9|1[0-9]*)")
+  SET(PYTHON_MEM_MODULE "${PYTHON_MODULE_DIR}/_decimal/libmpdec/mpalloc.o")
+  SET(LEGACY_PARSER_MODULE "")
+endif()
+
 # Then we use a hardcoded list of expected module names and include them in our lib
 include("CMakePythonModules.txt")
 ExternalProject_Add_Step(
@@ -61,7 +74,7 @@ ExternalProject_Add_Step(
   archive_stdlib
   DEPENDEES install
   BYPRODUCTS ${PYTHON_STDLIB}
-  COMMAND ar -rc ${PYTHON_STDLIB} ${PYTHON_MODULES}
+  COMMAND ar -rc ${PYTHON_STDLIB} ${PYTHON_MODULES} ${PYTHON_MEM_MODULE} ${LEGACY_PARSER_MODULE}
   VERBATIM
 )
 
