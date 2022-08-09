@@ -51,6 +51,7 @@ struct TORCH_API InterpreterSession {
   bool attachDeconstructorCallback(
   std::function<void(void)> func
   );
+  PickledObject pickleObj(Obj obj);
  private:
   friend struct ReplicatedObj;
   friend struct Package;
@@ -153,6 +154,7 @@ struct TORCH_API InterpreterManager {
   Package loadPackage(const std::string& uri);
   Package loadPackage(
       std::shared_ptr<caffe2::serialize::ReadAdapterInterface> reader);
+  ReplicatedObj createMovable(Obj obj, InterpreterSession *I);
 
   // convience function for loading some python source code as a module across
   // all interpreters. this can be used for writing tests of deploy that need to
@@ -170,6 +172,7 @@ struct TORCH_API InterpreterManager {
  private:
   friend struct Package;
   friend struct InterpreterSession;
+  friend struct InterpreterSessionImpl;
   size_t nextObjectId_ = 0;
   std::vector<Interpreter> instances_;
   LoadBalancer resources_;
