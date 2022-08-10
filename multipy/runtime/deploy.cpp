@@ -276,6 +276,16 @@ Interpreter::Interpreter(
     InterpreterManager* manager,
     std::shared_ptr<Environment> env)
     : handle_(nullptr), manager_(manager), env_(env) {
+      setUpInterpreter();
+    }
+
+Interpreter::Interpreter(
+    std::shared_ptr<Environment> env)
+    : handle_(nullptr), manager_(nullptr), env_(env) {
+      setUpInterpreter();
+    }
+
+void Interpreter::setUpInterpreter(){
   // NOLINTNEXTLINE(modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
   char libraryName[] = "/tmp/torch_deployXXXXXX";
   int fd = mkstemp(libraryName);
@@ -317,13 +327,13 @@ Interpreter::Interpreter(
     deploySetSelfPtr(handle_);
   }
 
-  auto extra_python_paths = env->getExtraPythonPaths();
+  auto extra_python_paths = env_->getExtraPythonPaths();
   void* newInterpreterImpl = dlsym(handle_, "newInterpreterImpl");
   AT_ASSERT(newInterpreterImpl);
   pImpl_ = std::unique_ptr<InterpreterImpl>(
       ((InterpreterImpl * (*)(const std::vector<std::string>&))
            newInterpreterImpl)(extra_python_paths));
-  env->configureInterpreter(this);
+  env_->configureInterpreter(this);
 }
 
 Interpreter::~Interpreter() {

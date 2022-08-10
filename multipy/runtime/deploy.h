@@ -73,11 +73,18 @@ class TORCH_API Interpreter {
   bool customLoader_ = false;
   InterpreterManager* manager_; // optional if managed by one
   std::shared_ptr<Environment> env_;
+  void setUpInterpreter();
  public:
   Interpreter(InterpreterManager* manager, std::shared_ptr<Environment> env);
+  Interpreter(std::shared_ptr<Environment> env);
   InterpreterSession acquireSession() const {
     TORCH_DEPLOY_TRY
-    return InterpreterSession(pImpl_->acquireSession(), manager_);
+    if(manager_){
+      return InterpreterSession(pImpl_->acquireSession(), manager_);
+    }else{
+      return InterpreterSession(pImpl_->acquireSession());
+    }
+
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
   ~Interpreter();
