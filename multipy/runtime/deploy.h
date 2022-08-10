@@ -30,7 +30,9 @@ struct TORCH_API InterpreterSession {
       InterpreterSessionImpl* impl,
       InterpreterManager* manager) noexcept
       : impl_(impl), manager_(manager) {}
-
+    InterpreterSession(
+      InterpreterSessionImpl* impl) noexcept
+      : impl_(impl), manager_(nullptr) {}
   // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
   Obj self; // when retrieved from a PythonMovable this will be set.
   InterpreterSession(InterpreterSession&&) noexcept = default;
@@ -57,6 +59,7 @@ struct TORCH_API InterpreterSession {
   friend struct Package;
   friend struct InterpreterManager;
   friend struct ReplicatedObjImpl;
+  size_t nextObjectId_ = 0;
   std::unique_ptr<InterpreterSessionImpl> impl_;
   InterpreterManager* manager_; // if created from one
   std::function<void(void)> deconstruction_callback_ = NULL;
@@ -173,7 +176,6 @@ struct TORCH_API InterpreterManager {
   friend struct Package;
   friend struct InterpreterSession;
   friend struct InterpreterSessionImpl;
-  size_t nextObjectId_ = 0;
   std::vector<Interpreter> instances_;
   LoadBalancer resources_;
   std::unordered_map<std::string, std::string> registeredModuleSource_;
@@ -186,6 +188,10 @@ struct TORCH_API ReplicatedObjImpl {
       PickledObject data,
       InterpreterManager* manager)
       : objectId_(object_id), data_(data), manager_(manager) {}
+  ReplicatedObjImpl(
+    size_t object_id,
+    PickledObject data
+  ) : data_(data), manager_(nullptr), objectId_(object_id) {}
   // NOLINTNEXTLINE(bugprone-exception-escape)
   ~ReplicatedObjImpl();
   void unload(const Interpreter* onThisInterpreter);
@@ -235,6 +241,7 @@ struct TORCH_API ReplicatedObj {
   ReplicatedObj(std::shared_ptr<ReplicatedObjImpl> pImpl)
       : pImpl_(std::move(pImpl)) {}
   std::shared_ptr<ReplicatedObjImpl> pImpl_;
+  void attachInterpreterManager(InterpreterManager* manager);
   friend struct Package;
   friend struct InterpreterSession;
   friend struct InterpreterManager;

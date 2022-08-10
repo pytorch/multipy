@@ -188,6 +188,9 @@ InterpreterSession::~InterpreterSession() {
 void ReplicatedObjImpl::unload(const Interpreter* onThisInterpreter) {
   TORCH_DEPLOY_TRY
   if (!onThisInterpreter) {
+    MULTIPY_CHECK(
+      manager_;
+      "ReplicatedObjImpl must be created from an InterpreterManager in order to unload without an interpreter");
     // NOLINTNEXTLINE(clang-analyzer-core.NullDereference)
     for (auto& interp : manager_->allInstances()) {
       unload(&interp);
@@ -213,22 +216,20 @@ void ReplicatedObj::unload(const Interpreter* onThisInterpreter) {
 
 ReplicatedObj InterpreterSession::createMovable(Obj obj) {
   TORCH_DEPLOY_TRY
-  MULTIPY_CHECK(
-      manager_,
-      "Can only create a movable object when the session was created from an interpreter that is part of a InterpreterManager");
 
   MULTIPY_CHECK(
       impl_->isOwner(obj),
       "Cannot create movable from an object that lives in different session");
-  return manager_->createMovable(obj, this);
-  TORCH_DEPLOY_SAFE_CATCH_RETHROW
-}
 
-PickledObject InterpreterSession::pickleObj(Obj obj){
-  MULTIPY_CHECK(
-      I.impl_->isOwner(obj);
-      "Cannot pickle an object that lives in different session");
-  return impl_->pickle(self, obj);
+  if(manager_){
+    return manager_->createMovable(obj, this);
+  }else{
+    auto pickled = impl_->pickle(self, obj);
+    return ReplicatedObj(std::make_shared<ReplicatedObjImpl>(
+      nextObjectId_++, std::move(pickled)));
+  }
+
+  TORCH_DEPLOY_SAFE_CATCH_RETHROW
 }
 
 ReplicatedObj InterpreterManager::createMovable(Obj obj, InterpreterSession* I) {
@@ -238,8 +239,15 @@ ReplicatedObj InterpreterManager::createMovable(Obj obj, InterpreterSession* I) 
       "Cannot create movable from an object that lives in different session");
   PickledObject pickled = I->pickleObj(obj);
   return ReplicatedObj(std::make_shared<ReplicatedObjImpl>(
-    nextObjectId_++, std::move(pickled), this));
+    I->nextObjectId_++, std::move(pickled), this));
   TORCH_DEPLOY_SAFE_CATCH_RETHROW
+}
+
+PickledObject InterpreterSession::pickleObj(Obj obj){
+  MULTIPY_CHECK(
+      I.impl_->isOwner(obj);
+      "Cannot pickle an object that lives in different session");
+  return impl_->pickle(self, obj);
 }
 
 using dlopen_t = void* (*)(const char*, int);

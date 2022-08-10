@@ -93,7 +93,7 @@ TEST(TorchpyTest, Movable) {
     auto I = m.acquireOne();
     auto model =
         I.global("torch.nn", "Module")(std::vector<torch::deploy::Obj>());
-    obj = I.createMovable(model);
+    obj = m.createMovable(model, &I);
   }
   obj.acquireSession();
 }
@@ -341,7 +341,7 @@ def get_tensor():
 
   auto objOnI =
       I.global("test_module", "get_tensor")(at::ArrayRef<at::IValue>{});
-  auto replicated = I.createMovable(objOnI);
+  auto replicated = manager.createMovable(objOnI, &I);
   auto objOnI2 = I2.fromMovable(replicated);
 
   auto tensorOnI = objOnI.toIValue().toTensor();
