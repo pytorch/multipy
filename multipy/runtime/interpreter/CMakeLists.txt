@@ -21,16 +21,16 @@ SET(MULTIPY_UTILS "${CMAKE_CURRENT_SOURCE_DIR}/../../utils")
 SET(CPYTHON_VERSION 3.8 CACHE STRING "Default version of Cpython to bundle.")
 SET(CPYTHON_VERSION_GIT_TAG 3.8.6 CACHE STRING "Git tag for default version of Cpython to bundle.")
 SET(PYTHON_INSTALL_DIR "${INTERPRETER_DIR}/cpython")
-SET(PYTHON_INC_DIR "${PYTHON_INSTALL_DIR}/include/python{CPYTHON_VERSION}")
-SET(PYTHON_INC_DIR "${PYTHON_INSTALL_DIR}/include/python{CPYTHON_VERSION}" PARENT_SCOPE)
-SET(PYTHON_LIB "${PYTHON_INSTALL_DIR}/lib/libpython{CPYTHON_VERSION}.a")
+SET(PYTHON_INC_DIR "${PYTHON_INSTALL_DIR}/include/python${CPYTHON_VERSION}")
+SET(PYTHON_INC_DIR "${PYTHON_INSTALL_DIR}/include/python${CPYTHON_VERSION}" PARENT_SCOPE)
+SET(PYTHON_LIB "${PYTHON_INSTALL_DIR}/lib/libpython${CPYTHON_VERSION}.a")
 SET(PYTHON_BIN "${PYTHON_INSTALL_DIR}/bin/python3")
 include(ExternalProject)
 ExternalProject_Add(
   cpython
   PREFIX cpython
   GIT_REPOSITORY https://github.com/python/cpython.git
-  GIT_TAG v{CPYTHON_VERSION_GIT_TAG}
+  GIT_TAG v${CPYTHON_VERSION_GIT_TAG}
   UPDATE_COMMAND ""
   PATCH_COMMAND git apply ${CMAKE_CURRENT_SOURCE_DIR}/cpython_patch.diff
   BUILD_IN_SOURCE True
@@ -54,9 +54,9 @@ include(GoogleTest)
 # the modules in a strange nested path, and then that path is relative to the
 # Cmake ExternalProject root in the cmake build dir.
 ExternalProject_Get_property(cpython SOURCE_DIR)
-SET(PYTHON_MODULE_DIR "${SOURCE_DIR}/build/temp.linux-x86_64-{CPYTHON_VERSION}/${SOURCE_DIR}/Modules")
+SET(PYTHON_MODULE_DIR "${SOURCE_DIR}/build/temp.linux-x86_64-${CPYTHON_VERSION}/${SOURCE_DIR}/Modules")
 SET(PYTHON_STDLIB_DIR "${SOURCE_DIR}/Lib")
-SET(PYTHON_STDLIB "${PYTHON_INSTALL_DIR}/lib/libpython_stdlib{CPYTHON_VERSION}.a")
+SET(PYTHON_STDLIB "${PYTHON_INSTALL_DIR}/lib/libpython_stdlib${CPYTHON_VERSION}.a")
 
 if(${CPYTHON_VERSION} MATCHES "3\.[8-9]")
   SET(PYTHON_MEM_MODULE "${PYTHON_MODULE_DIR}/_decimal/libmpdec/memory.o")
