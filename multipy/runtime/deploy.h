@@ -30,7 +30,9 @@ struct TORCH_API InterpreterSession {
       InterpreterSessionImpl* impl,
       InterpreterManager* manager) noexcept
       : impl_(impl), manager_(manager) {}
-
+    InterpreterSession(
+      InterpreterSessionImpl* impl) noexcept
+      : impl_(impl), manager_(nullptr) {}
   // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
   Obj self; // when retrieved from a PythonMovable this will be set.
   InterpreterSession(InterpreterSession&&) noexcept = default;
@@ -51,11 +53,16 @@ struct TORCH_API InterpreterSession {
   bool attachDeconstructorCallback(
   std::function<void(void)> func
   );
+  PickledObject pickleObj(Obj obj);
+  bool isOwner(Obj obj){
+    return impl_->isOwner(obj);
+  }
  private:
   friend struct ReplicatedObj;
   friend struct Package;
   friend struct InterpreterManager;
   friend struct ReplicatedObjImpl;
+  size_t nextObjectId_ = 0;
   std::unique_ptr<InterpreterSessionImpl> impl_;
   InterpreterManager* manager_; // if created from one
   std::function<void(void)> deconstruction_callback_ = NULL;
@@ -69,11 +76,18 @@ class TORCH_API Interpreter {
   bool customLoader_ = false;
   InterpreterManager* manager_; // optional if managed by one
   std::shared_ptr<Environment> env_;
+  void setUpInterpreter();
  public:
   Interpreter(InterpreterManager* manager, std::shared_ptr<Environment> env);
+  Interpreter(std::shared_ptr<Environment> env);
   InterpreterSession acquireSession() const {
     TORCH_DEPLOY_TRY
-    return InterpreterSession(pImpl_->acquireSession(), manager_);
+    if(manager_){
+      return InterpreterSession(pImpl_->acquireSession(), manager_);
+    }else{
+      return InterpreterSession(pImpl_->acquireSession());
+    }
+
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
   ~Interpreter();
@@ -153,6 +167,7 @@ struct TORCH_API InterpreterManager {
   Package loadPackage(const std::string& uri);
   Package loadPackage(
       std::shared_ptr<caffe2::serialize::ReadAdapterInterface> reader);
+  ReplicatedObj createMovable(Obj obj, InterpreterSession *I);
 
   // convience function for loading some python source code as a module across
   // all interpreters. this can be used for writing tests of deploy that need to
@@ -170,7 +185,7 @@ struct TORCH_API InterpreterManager {
  private:
   friend struct Package;
   friend struct InterpreterSession;
-  size_t nextObjectId_ = 0;
+  friend struct InterpreterSessionImpl;
   std::vector<Interpreter> instances_;
   LoadBalancer resources_;
   std::unordered_map<std::string, std::string> registeredModuleSource_;
@@ -183,6 +198,10 @@ struct TORCH_API ReplicatedObjImpl {
       PickledObject data,
       InterpreterManager* manager)
       : objectId_(object_id), data_(data), manager_(manager) {}
+  ReplicatedObjImpl(
+    size_t object_id,
+    PickledObject data
+  ) : data_(data), manager_(nullptr), objectId_(object_id) {}
   // NOLINTNEXTLINE(bugprone-exception-escape)
   ~ReplicatedObjImpl();
   void unload(const Interpreter* onThisInterpreter);
@@ -232,6 +251,7 @@ struct TORCH_API ReplicatedObj {
   ReplicatedObj(std::shared_ptr<ReplicatedObjImpl> pImpl)
       : pImpl_(std::move(pImpl)) {}
   std::shared_ptr<ReplicatedObjImpl> pImpl_;
+  void attachInterpreterManager(InterpreterManager* manager);
   friend struct Package;
   friend struct InterpreterSession;
   friend struct InterpreterManager;
@@ -275,7 +295,8 @@ struct TORCH_API Package {
     TORCH_DEPLOY_TRY
     auto I = acquireSession();
     auto loaded = I.self.attr("load_pickle")({module, file});
-    return I.createMovable(loaded);
+    ReplicatedObj ret = createMovable(loaded, &I);
+    return ret;
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
 
@@ -286,6 +307,10 @@ struct TORCH_API Package {
         I.impl_->createOrGetPackageImporterFromContainerFile(containerFile_);
     return I;
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
+  }
+
+  ReplicatedObj createMovable(Obj obj, InterpreterSession *I){
+    return manager_->createMovable(obj, I);
   }
 
  private:
