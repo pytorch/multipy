@@ -58,12 +58,10 @@ static bool writeDeployInterpreter(FILE* dst) {
   const char* payloadStart = nullptr;
   size_t size = 0;
   bool customLoader = false;
-  std::string exePath;
-  std::ifstream("/proc/self/cmdline") >> exePath;
-  ElfFile elfFile(exePath.c_str());
+  // payloadSection needs to be kept to ensure the source file is still mapped.
+  multipy::optional<Section> payloadSection;
   for (const auto& s : pythonInterpreterSection) {
-    multipy::optional<Section> payloadSection =
-        elfFile.findSection(s.sectionName);
+    payloadSection = searchForSection(s.sectionName);
     if (payloadSection != multipy::nullopt) {
       payloadStart = payloadSection->start;
       customLoader = s.customLoader;

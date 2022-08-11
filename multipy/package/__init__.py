@@ -4,7 +4,7 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-from .analyze.is_from_package import is_from_package  # noqae
+from .analyze.is_from_package import is_from_package  # noqa
 from .file_structure_representation import Directory  # noqa
 from .glob_group import GlobGroup  # noqa
 from .importer import (  # noqa
