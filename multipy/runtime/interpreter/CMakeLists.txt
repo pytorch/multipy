@@ -49,7 +49,6 @@ include(GoogleTest)
 # We find the built python modules, this is confusing because python build already outputs
 # the modules in a strange nested path, and then that path is relative to the
 # Cmake ExternalProject root in the cmake build dir.
-## From test devsrvr
 ExternalProject_Get_property(cpython SOURCE_DIR)
 SET(PYTHON_MODULE_DIR "${SOURCE_DIR}/build/temp.linux-x86_64-${CPYTHON_VERSION}/${SOURCE_DIR}/Modules")
 SET(PYTHON_STDLIB_DIR "${SOURCE_DIR}/Lib")
@@ -58,6 +57,10 @@ SET(PYTHON_STDLIB "${PYTHON_INSTALL_DIR}/lib/libpython_stdlib${CPYTHON_VERSION}.
 if(${CPYTHON_VERSION} MATCHES "3\.(7|8)")
   SET(PYTHON_MEM_MODULE "${PYTHON_MODULE_DIR}/_decimal/libmpdec/memory.o")
   SET(LEGACY_PARSER_MODULE "${PYTHON_MODULE_DIR}/parsermodule.o")
+  # We want to include legacy parsermodule for Cpython 3.8 and earlier. The module has been
+  # deprecated in 3.9 and the module source removed from 3.10.
+  # Macro is referenced in register_frozenpython.
+  add_compile_definitions(INCLUDE_LEGACY_PARSER_MODULE)
 elseif(${CPYTHON_VERSION} MATCHES "3\.(9|1[0-9]*)")
   SET(PYTHON_MEM_MODULE "${PYTHON_MODULE_DIR}/_decimal/libmpdec/mpalloc.o")
   SET(LEGACY_PARSER_MODULE "")
