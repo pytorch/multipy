@@ -73,6 +73,17 @@ TEST(TorchDeployGPUTest, UsesDistributed) {
   }
 }
 
+TEST(TorchDeployGPUTest, UsesCuda) {
+  const auto model_filename =
+      path("USES_CUDA", "torch/csrc/deploy/example/generated/uses_cuda");
+  torch::deploy::InterpreterManager m(1);
+  torch::deploy::Package p = m.loadPackage(model_filename);
+  {
+    auto I = p.acquireSession();
+    I.self.attr("import_module")({"uses_cuda"});
+  }
+}
+
 #ifdef FBCODE_CAFFE2
 TEST(TorchDeployGPUTest, TensorRT) {
   if (!torch::cuda::is_available()) {
