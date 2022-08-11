@@ -280,8 +280,8 @@ Interpreter::Interpreter(
   }
 
   auto extra_python_paths = env->getExtraPythonPaths();
-  void* newInterpreterImplSplit = dlsym(handle_, "newInterpreterSplit");
-  AT_ASSERT(newInterpreterSplit);
+  void* newInterpreterImplSplit = dlsym(handle_, "newInterpreterImplSplit");
+  AT_ASSERT(newInterpreterImplSplit);
   pImpl_ = std::unique_ptr<InterpreterImpl>(
       ((InterpreterImpl * (*)(const std::vector<std::string>&))
            newInterpreterImplSplit)(extra_python_paths));
