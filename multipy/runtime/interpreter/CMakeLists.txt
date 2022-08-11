@@ -13,8 +13,6 @@ include_directories(BEFORE "${PYTORCH_ROOT}/torch/include")
 include_directories(BEFORE "${PYTORCH_ROOT}/torch/include/torch/csrc/api/include/")
 SET(MULTIPY_UTILS "${CMAKE_CURRENT_SOURCE_DIR}/../../utils")
 
-
-## Test from other devsvr
 # Build cpython
 SET(CPYTHON_VERSION 3.8 CACHE STRING "Default version of Cpython to bundle.")
 SET(CPYTHON_VERSION_GIT_TAG 3.8.6 CACHE STRING "Git tag for default version of Cpython to bundle.")
@@ -39,28 +37,6 @@ ExternalProject_Add(
   LOG_OUTPUT_ON_FAILURE True
 )
 
-# Build cpython
-# SET(PYTHON_INSTALL_DIR "${INTERPRETER_DIR}/cpython")
-# SET(PYTHON_INC_DIR "${PYTHON_INSTALL_DIR}/include/python3.10")
-# SET(PYTHON_INC_DIR "${PYTHON_INSTALL_DIR}/include/python3.10" PARENT_SCOPE)
-# SET(PYTHON_LIB "${PYTHON_INSTALL_DIR}/lib/libpython3.10.a")
-# SET(PYTHON_BIN "${PYTHON_INSTALL_DIR}/bin/python3")
-# include(ExternalProject)
-# ExternalProject_Add(
-#   cpython
-#   PREFIX cpython
-#   GIT_REPOSITORY https://github.com/python/cpython.git
-#   GIT_TAG v3.10.5
-#   UPDATE_COMMAND ""
-#   PATCH_COMMAND git apply ${CMAKE_CURRENT_SOURCE_DIR}/cpython_patch.diff
-#   BUILD_IN_SOURCE True
-#   CONFIGURE_COMMAND PYTHON_INSTALL_DIR=${PYTHON_INSTALL_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/configure_cpython.sh
-#   BUILD_COMMAND CFLAGS=-fPIC CPPFLAGS=-fPIC make -j8
-#   INSTALL_COMMAND make install
-#   BYPRODUCTS ${PYTHON_MODULES} ${PYTHON_LIB} ${PYTHON_BIN} ${PYTHON_INSTALL_DIR}/lib/libssl.a ${PYTHON_INSTALL_DIR}/lib/libcrypto.a
-#   LOG_OUTPUT_ON_FAILURE True
-# )
-
 # add gtest dependency
 include(FetchContent)
 FetchContent_Declare(
@@ -78,19 +54,6 @@ ExternalProject_Get_property(cpython SOURCE_DIR)
 SET(PYTHON_MODULE_DIR "${SOURCE_DIR}/build/temp.linux-x86_64-${CPYTHON_VERSION}/${SOURCE_DIR}/Modules")
 SET(PYTHON_STDLIB_DIR "${SOURCE_DIR}/Lib")
 SET(PYTHON_STDLIB "${PYTHON_INSTALL_DIR}/lib/libpython_stdlib${CPYTHON_VERSION}.a")
-
-if(${CPYTHON_VERSION} MATCHES "3\.(7|8)")
-  SET(PYTHON_MEM_MODULE "${PYTHON_MODULE_DIR}/_decimal/libmpdec/memory.o")
-  SET(LEGACY_PARSER_MODULE "${PYTHON_MODULE_DIR}/parsermodule.o")
-  # We want to include legacy parsermodule for Cpython 3.8 and earlier. The module has been
-  # deprecated in 3.9 and the module source removed from 3.10.
-  # Macro is referenced in register_frozenpython.
-  add_compile_definitions(INCLUDE_LEGACY_PARSER_MODULE)
-elseif(${CPYTHON_VERSION} MATCHES "3\.(9|1[0-9]*)")
-  SET(PYTHON_MEM_MODULE "${PYTHON_MODULE_DIR}/_decimal/libmpdec/mpalloc.o")
-  SET(LEGACY_PARSER_MODULE "")
-endif()
-
 # Then we use a hardcoded list of expected module names and include them in our lib
 include("CMakePythonModules.txt")
 ExternalProject_Add_Step(
@@ -101,21 +64,6 @@ ExternalProject_Add_Step(
   COMMAND ar -rc ${PYTHON_STDLIB} ${PYTHON_MODULES} ${PYTHON_MEM_MODULE} ${LEGACY_PARSER_MODULE}
   VERBATIM
 )
-
-# ExternalProject_Get_property(cpython SOURCE_DIR)
-# SET(PYTHON_MODULE_DIR "${SOURCE_DIR}/build/temp.linux-x86_64-3.10/${SOURCE_DIR}/Modules")
-# SET(PYTHON_STDLIB_DIR "${SOURCE_DIR}/Lib")
-# SET(PYTHON_STDLIB "${PYTHON_INSTALL_DIR}/lib/libpython_stdlib3.10.a")
-# Then we use a hardcoded list of expected module names and include them in our lib
-# include("CMakePythonModules.txt")
-# ExternalProject_Add_Step(
-#   cpython
-#   archive_stdlib
-#   DEPENDEES install
-#   BYPRODUCTS ${PYTHON_STDLIB}
-#   COMMAND ar -rc ${PYTHON_STDLIB} ${PYTHON_MODULES}
-#   VERBATIM
-# )
 
 # Get python typing extension, needed by torch
 SET(TYPING_PKG "${INTERPRETER_DIR}/third_party/typing_extensions.py")
