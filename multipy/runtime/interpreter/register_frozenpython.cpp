@@ -81,13 +81,14 @@ FOREACH_LIBRARY(DECLARE_LIBRARY_INIT)
 extern "C" struct _frozen _PyImport_FrozenModules[];
 
 #define STD_LIBARY_PARMS(name) , #name, PyInit_##name
-REGISTER_TORCH_DEPLOY_BUILTIN(
-    frozenpython,
-    _PyImport_FrozenModules FOREACH_LIBRARY(STD_LIBARY_PARMS));
-#undef STD_LIBARY_PARMS
-
 #ifdef INCLUDE_LEGACY_PARSER_MODULE
 extern "C" PyObject* PyInit_parser(void);
 REGISTER_TORCH_DEPLOY_BUILTIN(
-    frozenpython, _PyImport_FrozenModules, "parser", PyInit_parser);
+    frozenpython,
+    _PyImport_FrozenModules FOREACH_LIBRARY(STD_LIBARY_PARMS), "parser", PyInit_parser);
+#else
+REGISTER_TORCH_DEPLOY_BUILTIN(
+    frozenpython,
+    _PyImport_FrozenModules FOREACH_LIBRARY(STD_LIBARY_PARMS));
 #endif
+#undef STD_LIBARY_PARMS
