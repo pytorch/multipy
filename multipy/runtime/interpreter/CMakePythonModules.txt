@@ -39,7 +39,6 @@ SET(PYTHON_MODULES
   ${PYTHON_MODULE_DIR}/nismodule.o
   ${PYTHON_MODULE_DIR}/_opcode.o
   ${PYTHON_MODULE_DIR}/ossaudiodev.o
-  ${PYTHON_MODULE_DIR}/parsermodule.o
   ${PYTHON_MODULE_DIR}/_pickle.o
   ${PYTHON_MODULE_DIR}/_posixsubprocess.o
   ${PYTHON_MODULE_DIR}/pyexpat.o ${PYTHON_MODULE_DIR}/expat/xmlparse.o ${PYTHON_MODULE_DIR}/expat/xmlrole.o ${PYTHON_MODULE_DIR}/expat/xmltok.o
