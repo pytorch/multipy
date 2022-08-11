@@ -10,6 +10,7 @@ project(MultipyRuntime)
 # set ABI by default to 0
 
 option(ABI_EQUALS_1 "Set ABI value to 1, by default it is set to 0. Pytorch by default builds with ABI set to 1." OFF)
+option(BUILD_CUDA_TESTS "Set to ON in order to build cuda tests. By default we do not" OFF)
 
 if(ABI_EQUALS_1)
   set(ABI_VALUE 1)
@@ -87,14 +88,16 @@ target_link_libraries(test_deploy
 )
 target_include_directories(test_deploy PRIVATE ${CMAKE_SOURCE_DIR}/../..)
 
-#  LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
-#  add_executable(test_deploy_gpu ${INTERPRETER_TEST_SOURCES_GPU})
-#  target_compile_definitions(test_deploy_gpu PUBLIC TEST_CUSTOM_LIBRARY)
-#  target_include_directories(test_deploy_gpu PRIVATE ${PYTORCH_ROOT}/torch)
-#  target_include_directories(test_deploy_gpu PRIVATE ${CMAKE_SOURCE_DIR}/../..)
-#  target_link_libraries(test_deploy_gpu
-#   PUBLIC "-Wl,--no-as-needed -rdynamic" gtest dl torch_deploy_interface c10 torch_cpu
-# )
+if(BUILD_CUDA_TESTS)
+  LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
+  add_executable(test_deploy_gpu ${INTERPRETER_TEST_SOURCES_GPU})
+  target_compile_definitions(test_deploy_gpu PUBLIC TEST_CUSTOM_LIBRARY)
+  target_include_directories(test_deploy_gpu PRIVATE ${PYTORCH_ROOT}/torch)
+  target_include_directories(test_deploy_gpu PRIVATE ${CMAKE_SOURCE_DIR}/../..)
+  target_link_libraries(test_deploy_gpu
+   PUBLIC "-Wl,--no-as-needed -rdynamic" gtest dl torch_deploy_interface c10 torch_cpu
+ )
+endif()
 
 LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
 add_library(test_deploy_lib SHARED test_deploy_lib.cpp)
@@ -120,7 +123,10 @@ target_link_libraries(interactive_embedded_interpreter
 )
 
 install(TARGETS test_deploy DESTINATION tests/bin)
-# install(TARGETS test_deploy_gpu DESTINATION tests/bin)
+
+if(BUILD_CUDA_TESTS)
+ install(TARGETS test_deploy_gpu DESTINATION tests/bin)
+endif()
 
 install(TARGETS test_deploy DESTINATION tests/bin)
 
