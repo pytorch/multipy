@@ -22,7 +22,7 @@ SET(PYTHON_MODULES
   ${PYTHON_MODULE_DIR}/_cursesmodule.o
   ${PYTHON_MODULE_DIR}/_curses_panel.o
   ${PYTHON_MODULE_DIR}/_datetimemodule.o
-  ${PYTHON_MODULE_DIR}/_decimal/_decimal.o ${PYTHON_MODULE_DIR}/_decimal/libmpdec/basearith.o ${PYTHON_MODULE_DIR}/_decimal/libmpdec/constants.o ${PYTHON_MODULE_DIR}/_decimal/libmpdec/context.o ${PYTHON_MODULE_DIR}/_decimal/libmpdec/convolute.o ${PYTHON_MODULE_DIR}/_decimal/libmpdec/crt.o ${PYTHON_MODULE_DIR}/_decimal/libmpdec/difradix2.o ${PYTHON_MODULE_DIR}/_decimal/libmpdec/fnt.o ${PYTHON_MODULE_DIR}/_decimal/libmpdec/fourstep.o ${PYTHON_MODULE_DIR}/_decimal/libmpdec/io.o ${PYTHON_MODULE_DIR}/_decimal/libmpdec/memory.o ${PYTHON_MODULE_DIR}/_decimal/libmpdec/mpdecimal.o ${PYTHON_MODULE_DIR}/_decimal/libmpdec/numbertheory.o ${PYTHON_MODULE_DIR}/_decimal/libmpdec/sixstep.o ${PYTHON_MODULE_DIR}/_decimal/libmpdec/transpose.o
+  ${PYTHON_MODULE_DIR}/_decimal/_decimal.o ${PYTHON_MODULE_DIR}/_decimal/libmpdec/basearith.o ${PYTHON_MODULE_DIR}/_decimal/libmpdec/constants.o ${PYTHON_MODULE_DIR}/_decimal/libmpdec/context.o ${PYTHON_MODULE_DIR}/_decimal/libmpdec/convolute.o ${PYTHON_MODULE_DIR}/_decimal/libmpdec/crt.o ${PYTHON_MODULE_DIR}/_decimal/libmpdec/difradix2.o ${PYTHON_MODULE_DIR}/_decimal/libmpdec/fnt.o ${PYTHON_MODULE_DIR}/_decimal/libmpdec/fourstep.o ${PYTHON_MODULE_DIR}/_decimal/libmpdec/io.o ${PYTHON_MODULE_DIR}/_decimal/libmpdec/mpdecimal.o ${PYTHON_MODULE_DIR}/_decimal/libmpdec/numbertheory.o ${PYTHON_MODULE_DIR}/_decimal/libmpdec/sixstep.o ${PYTHON_MODULE_DIR}/_decimal/libmpdec/transpose.o
   ${PYTHON_MODULE_DIR}/_elementtree.o
   ${PYTHON_MODULE_DIR}/fcntlmodule.o
   ${PYTHON_MODULE_DIR}/grpmodule.o
@@ -39,7 +39,6 @@ SET(PYTHON_MODULES
   ${PYTHON_MODULE_DIR}/nismodule.o
   ${PYTHON_MODULE_DIR}/_opcode.o
   ${PYTHON_MODULE_DIR}/ossaudiodev.o
-  ${PYTHON_MODULE_DIR}/parsermodule.o
   ${PYTHON_MODULE_DIR}/_pickle.o
   ${PYTHON_MODULE_DIR}/_posixsubprocess.o
   ${PYTHON_MODULE_DIR}/pyexpat.o ${PYTHON_MODULE_DIR}/expat/xmlparse.o ${PYTHON_MODULE_DIR}/expat/xmlrole.o ${PYTHON_MODULE_DIR}/expat/xmltok.o
