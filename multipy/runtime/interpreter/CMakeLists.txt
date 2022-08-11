@@ -106,8 +106,7 @@ add_custom_command(
    OUTPUT ${FROZEN_FILES}
    WORKING_DIRECTORY ${INTERPRETER_DIR}
    COMMAND mkdir -p ${FROZEN_DIR}
-   COMMAND ${PYTHON_BIN} ${MULTIPY_UTILS}/_freeze.py
-   ${MULTIPY_DIR} ${PYTHON_STDLIB_DIR} ${TYPING_PKG} ${PYTORCH_ROOT}/torch --oss --install_dir ${FROZEN_DIR} --verbose
+   COMMAND ${PYTHON_BIN} ${MULTIPY_UTILS}/_freeze.py ${PYTHON_STDLIB_DIR} ${TYPING_PKG} ${PYTORCH_ROOT}/torch --oss --install_dir ${FROZEN_DIR} --verbose
    DEPENDS cpython typing ${PYTORCH_PYTHON_SOURCE_FILES}
    VERBATIM
 )
