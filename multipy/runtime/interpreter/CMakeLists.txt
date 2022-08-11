@@ -56,6 +56,7 @@ SET(PYTHON_STDLIB "${PYTHON_INSTALL_DIR}/lib/libpython_stdlib${CPYTHON_VERSION}.
 if(${CPYTHON_VERSION} MATCHES "3\.(7|8)")
   SET(PYTHON_MEM_MODULE "${PYTHON_MODULE_DIR}/_decimal/libmpdec/memory.o")
   SET(LEGACY_PARSER_MODULE "${PYTHON_MODULE_DIR}/parsermodule.o")
+
   # We want to include legacy parsermodule for Cpython 3.8 and earlier. The module has been
   # deprecated in 3.9 and the module source removed from 3.10.
   # Macro is referenced in register_frozenpython.
