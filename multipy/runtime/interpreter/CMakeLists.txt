@@ -49,7 +49,6 @@ include(GoogleTest)
 # We find the built python modules, this is confusing because python build already outputs
 # the modules in a strange nested path, and then that path is relative to the
 # Cmake ExternalProject root in the cmake build dir.
-## From test devsrvr
 ExternalProject_Get_property(cpython SOURCE_DIR)
 SET(PYTHON_MODULE_DIR "${SOURCE_DIR}/build/temp.linux-x86_64-${CPYTHON_VERSION}/${SOURCE_DIR}/Modules")
 SET(PYTHON_STDLIB_DIR "${SOURCE_DIR}/Lib")
