@@ -4,6 +4,7 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
+
 SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" )
 SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" PARENT_SCOPE)
 
@@ -48,15 +49,18 @@ include(GoogleTest)
 # We find the built python modules, this is confusing because python build already outputs
 # the modules in a strange nested path, and then that path is relative to the
 # Cmake ExternalProject root in the cmake build dir.
+## From test devsrvr
 ExternalProject_Get_property(cpython SOURCE_DIR)
 SET(PYTHON_MODULE_DIR "${SOURCE_DIR}/build/temp.linux-x86_64-${CPYTHON_VERSION}/${SOURCE_DIR}/Modules")
 SET(PYTHON_STDLIB_DIR "${SOURCE_DIR}/Lib")
 SET(PYTHON_STDLIB "${PYTHON_INSTALL_DIR}/lib/libpython_stdlib${CPYTHON_VERSION}.a")
 
-if(${CPYTHON_VERSION} MATCHES "3\.[8-9]")
+if(${CPYTHON_VERSION} MATCHES "3\.(7|8)")
   SET(PYTHON_MEM_MODULE "${PYTHON_MODULE_DIR}/_decimal/libmpdec/memory.o")
-elseif(${CPYTHON_VERSION} MATCHES "3\.1[0-1]")
+  SET(LEGACY_PARSER_MODULE "${PYTHON_MODULE_DIR}/parsermodule.o")
+elseif(${CPYTHON_VERSION} MATCHES "3\.(9|1[0-9]*)")
   SET(PYTHON_MEM_MODULE "${PYTHON_MODULE_DIR}/_decimal/libmpdec/mpalloc.o")
+  SET(LEGACY_PARSER_MODULE "")
 endif()
 
 # Then we use a hardcoded list of expected module names and include them in our lib
@@ -66,9 +70,10 @@ ExternalProject_Add_Step(
   archive_stdlib
   DEPENDEES install
   BYPRODUCTS ${PYTHON_STDLIB}
-  COMMAND ar -rc ${PYTHON_STDLIB} ${PYTHON_MODULES} ${PYTHON_MEM_MODULE}
+  COMMAND ar -rc ${PYTHON_STDLIB} ${PYTHON_MODULES} ${PYTHON_MEM_MODULE} ${LEGACY_PARSER_MODULE}
   VERBATIM
 )
+
 # Get python typing extension, needed by torch
 SET(TYPING_PKG "${INTERPRETER_DIR}/third_party/typing_extensions.py")
 ExternalProject_Add(
