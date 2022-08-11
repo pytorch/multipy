@@ -88,5 +88,6 @@ REGISTER_TORCH_DEPLOY_BUILTIN(
 
 #ifdef INCLUDE_LEGACY_PARSER_MODULE
 extern "C" PyObject* PyInit_parser(void);
-REGISTER_TORCH_DEPLOY_BUILTIN(frozenpython, PyInit_parser);
+REGISTER_TORCH_DEPLOY_BUILTIN(
+    frozenpython, _PyImport_FrozenModules, "parser", PyInit_parser);
 #endif
