@@ -160,9 +160,8 @@ struct InitLockAcquire {
   std::mutex& init_lock_;
 };
 
-struct __attribute__((visibility("hidden"))) ConcreteInterpreterImpl
-    : public torch::deploy::InterpreterImpl {
-  explicit ConcreteInterpreterImpl(
+extern "C" __attribute__((visibility("default")))
+void ConcreteInterpreterImplConstructorCommon(
       const std::vector<std::string>& extra_python_paths) {
     BuiltinRegistry::runPreInitialization();
     PyPreConfig preconfig;
@@ -201,6 +200,24 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterImpl
     }
 #endif
     BuiltinRegistry::runPostInitialization();
+  }
+
+struct __attribute__((visibility("hidden"))) ConcreteInterpreterImpl
+    : public torch::deploy::InterpreterImpl {
+
+  explicit ConcreteInterpreterImpl(
+    py::object saveStorageArg,
+    py::object loadStorageArg,
+    py::object getPackageArg,
+    py::dict objectsArg) : saveStorage(saveStorageArg)
+                         , loadStorage(loadStorageArg)
+                         , getPackage(getPackageArg)
+                         , objects(objectsArg)
+  {}
+
+  explicit ConcreteInterpreterImpl(
+      const std::vector<std::string>& extra_python_paths) {
+    ConcreteInterpreterImplConstructorCommon(extra_python_paths);
 
     int r = PyRun_SimpleString(start);
     TORCH_INTERNAL_ASSERT(r == 0);
@@ -418,4 +435,25 @@ extern "C" __attribute__((visibility("default")))
 torch::deploy::InterpreterImpl*
 newInterpreterImpl(const std::vector<std::string>& extra_python_paths) {
   return new ConcreteInterpreterImpl(extra_python_paths);
+}
+
+extern "C" __attribute__((visibility("default")))
+torch::deploy::InterpreterImpl*
+newInterpreterImplSplit(const std::vector<std::string>& extra_python_paths)
+{
+    ConcreteInterpreterImplConstructorCommon(extra_python_paths);
+
+    int r = PyRun_SimpleString(start);
+    TORCH_INTERNAL_ASSERT(r == 0);
+
+    py::object saveStorage = global_impl("torch._deploy", "_save_storages");
+    py::object loadStorage = global_impl("torch._deploy", "_load_storages");
+    py::object getPackage = global_impl("torch._deploy", "_get_package");
+    py::dict objects = global_impl("torch._deploy", "_deploy_objects");
+
+    PyEval_SaveThread();
+
+    auto concr_intrp = new ConcreteInterpreterImpl(saveStorage, loadStorage, getPackage, objects);
+
+    return concr_intrp;
 }
