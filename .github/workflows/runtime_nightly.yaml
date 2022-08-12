@@ -23,12 +23,12 @@ jobs:
       - name: Setup conda
         run: |
           wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ${RUNNER_TEMP}/miniconda.sh
-          bash ${RUNNER_TEMP}/miniconda.sh -b -p $HOME/miniconda
+          bash ${RUNNER_TEMP}/miniconda.sh -b -p ${RUNNER_TEMP}/miniconda
 
       - name: setup Path
         run: |
-          echo "/home/ec2-user/miniconda/bin" >> $GITHUB_PATH
-          echo "CONDA=/home/ec2-user/miniconda" >> $GITHUB_PATH
+          echo "${RUNNER_TEMP}/miniconda/bin" >> $GITHUB_PATH
+          echo "CONDA=${RUNNER_TEMP}/miniconda" >> $GITHUB_PATH
 
       - name: Checkout MultiPy
         uses: actions/checkout@v2
