@@ -15,18 +15,7 @@ class TorchConverter : public Converter {
   }
 
   ~TorchConverter() override {
-    // GetPythonFramesFunction depends on the current python so we need to tear
-    // it down.
-    // https://www.internalfb.com/code/fbsource/[ead2dd7fd4a6]/fbcode/caffe2/torch/csrc/lazy/python/init.cpp?lines=293
-    ::torch::lazy::GetPythonFramesFunction() = nullptr;
-
-    // Deregister all pytorch operators since they might have been dynamically
-    // loaded so they won't deregister correctly on teardown.
-    /*
-    for (auto op : ::torch::jit::getAllOperators()) {
-      ::torch::jit::deregisterOperator(op->schema());
-    }
-    */
+    deregisterConverter(this);
   }
 
   optional<at::IValue> toTypeInferredIValue(py::handle input) override {
@@ -34,6 +23,15 @@ class TorchConverter : public Converter {
   }
   optional<py::object> toPyObject(at::IValue ivalue) override {
     return ::torch::jit::toPyObject(ivalue);
+  }
+  optional<at::Storage> createStorage(PyObject* obj) override {
+    return ::torch::createStorage(obj);
+  }
+  optional<PyObject*> createPyObject(const at::Storage& storage) override {
+    return ::torch::createPyObject(storage);
+  }
+  optional<THPDtype*> getTHPDtype(at::ScalarType scalarType) override {
+    return ::torch::getTHPDtype(scalarType);
   }
 };
 

@@ -6,11 +6,13 @@
 
 #pragma once
 #include <c10/util/irange.h>
-#include <multipy/runtime/interpreter/Optional.hpp>
+#include <multipy/runtime/embedded_file.h>
 #include <multipy/runtime/interpreter/interpreter_impl.h>
 #include <multipy/runtime/noop_environment.h>
 #include <torch/csrc/api/include/torch/imethod.h>
 #include <torch/csrc/jit/serialization/import.h>
+
+#include <multipy/runtime/interpreter/Optional.hpp>
 #include <cassert>
 #include <fstream>
 #include <iostream>
@@ -60,12 +62,13 @@ struct TORCH_API InterpreterSession {
 
 class TORCH_API Interpreter {
  private:
-  std::string libraryName_;
   void* handle_;
   std::unique_ptr<InterpreterImpl> pImpl_;
-  bool customLoader_ = false;
   InterpreterManager* manager_; // optional if managed by one
   std::shared_ptr<Environment> env_;
+
+  EmbeddedFile interpreterFile_;
+  multipy::optional<EmbeddedFile> torchPluginFile_;
 
  public:
   Interpreter(InterpreterManager* manager, std::shared_ptr<Environment> env);
@@ -76,10 +79,11 @@ class TORCH_API Interpreter {
   }
   ~Interpreter();
   Interpreter(Interpreter&& rhs) noexcept
-      : libraryName_(std::move(rhs.libraryName_)),
-        handle_(rhs.handle_),
+      : handle_(rhs.handle_),
         pImpl_(std::move(rhs.pImpl_)),
-        manager_(rhs.manager_) {
+        manager_(rhs.manager_),
+        interpreterFile_(std::move(rhs.interpreterFile_)),
+        torchPluginFile_(std::move(rhs.torchPluginFile_)) {
     rhs.handle_ = nullptr;
   }
 

@@ -246,24 +246,6 @@ extern "C" void* __tls_get_addr(void*);
 extern "C" int
 __cxa_thread_atexit_impl(void (*dtor)(void*), void* obj, void* dso_symbol);
 
-struct CustomLibraryImpl;
-
-struct TLSMemory {
-  TLSMemory(std::shared_ptr<CustomLibraryImpl> file, size_t size)
-      // NOLINTNEXTLINE
-      : file_(std::move(file)), mem_(malloc(size)) {}
-  std::shared_ptr<CustomLibraryImpl> file_;
-  void* mem_;
-  ~TLSMemory() {
-    // NOLINTNEXTLINE
-    free(mem_);
-  }
-};
-
-static void delete_TLSMemory(void* obj) {
-  delete ((TLSMemory*)obj);
-}
-
 // This object performs TLS emulation for modules not loaded by dlopen.
 // Normally modules have a module_id that is used as a key in libc for the
 // thread local data for that module. However, there is no public API for
@@ -1120,6 +1102,7 @@ struct __attribute__((visibility("hidden"))) CustomLibraryImpl
   }
 
   void finalize() {
+    MULTIPY_INTERNAL_ASSERT(contents_.valid());
     for (size_t i = dyninfo_.n_fini_array_; i > 0; --i) {
       call_function(dyninfo_.fini_array_[i - 1]);
     }
@@ -1167,9 +1150,14 @@ struct __attribute__((visibility("hidden"))) CustomLibraryImpl
     if (eh_frame_registered_) {
       __deregister_frame(eh_frame_);
     }
+#ifdef FBCODE_CAFFE2
+    // When dynamically loading libraries it's not safe to unmap since PyTorch
+    // operators may still be registered.
     if (mapped_library_) {
       munmap(mapped_library_, mapped_size_);
     }
+#endif
+    pthread_key_delete(tls_key_);
   }
   void call_function(linker_dtor_function_t f) {
     if (f == nullptr || (int64_t)f == -1)
@@ -1199,9 +1187,8 @@ struct __attribute__((visibility("hidden"))) CustomLibraryImpl
     // emulate thread local state.
     void* start = pthread_getspecific(tls_key_);
     if (!start) {
-      auto tls_mem = new TLSMemory(shared_from_this(), tls_mem_size_);
-      __cxa_thread_atexit_impl(delete_TLSMemory, tls_mem, &__dso_handle);
-      start = tls_mem->mem_;
+      start = malloc(tls_mem_size_);
+      __cxa_thread_atexit_impl(free, start, &__dso_handle);
       memcpy(start, tls_initalization_image_, tls_file_size_);
       memset(
           (void*)((const char*)start + tls_file_size_),

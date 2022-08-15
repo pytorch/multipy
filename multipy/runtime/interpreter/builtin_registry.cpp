@@ -20,19 +20,11 @@ static const size_t NUM_FROZEN_PY_BUILTIN_MODULES = 6;
 static const size_t NUM_FROZEN_PY_STDLIB_MODULES = 680;
 #endif
 
-extern "C" PyObject* initModule(void);
-
 REGISTER_TORCH_DEPLOY_BUILTIN(cpython_internal, PyImport_FrozenModules);
 
 #ifdef FBCODE_CAFFE2
+extern "C" PyObject* initModule(void);
 REGISTER_TORCH_DEPLOY_BUILTIN(frozentorch, nullptr, "torch._C", initModule);
-#else
-extern "C" struct _frozen _PyImport_FrozenModules_torch[];
-REGISTER_TORCH_DEPLOY_BUILTIN(
-    frozentorch,
-    _PyImport_FrozenModules_torch,
-    "torch._C",
-    initModule);
 #endif
 
 BuiltinRegistryItem::BuiltinRegistryItem(
@@ -63,7 +55,9 @@ BuiltinRegistry* BuiltinRegistry::get() {
 
 void BuiltinRegistry::runPreInitialization() {
   TORCH_INTERNAL_ASSERT(!Py_IsInitialized());
+#ifdef FBCODE_CAFFE2
   sanityCheck();
+#endif
   PyImport_FrozenModules = BuiltinRegistry::getAllFrozenModules();
   TORCH_INTERNAL_ASSERT(PyImport_FrozenModules != nullptr);
 
@@ -81,7 +75,7 @@ from importlib.metadata import DistributionFinder, Distribution
 # are top-level imports.  Since `torch._C` is a submodule of `torch`, the
 # BuiltinImporter skips it.
 class F:
-    MODULES = {<<<DEPLOY_BUILTIN_MODULES_CSV>>>}
+    MODULES = set({<<<DEPLOY_BUILTIN_MODULES_CSV>>>})
 
     def find_spec(self, fullname, path, target=None):
         if fullname in self.MODULES:

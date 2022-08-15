@@ -19,22 +19,26 @@ else()
 endif()
 
 add_definitions(-D_GLIBCXX_USE_CXX11_ABI=${ABI_VALUE})
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${ABI_VALUE}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${ABI_VALUE} -fabi-version=11 -fno-lto")
 
 SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" )
 SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" PARENT_SCOPE)
 
 set(DEPLOY_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-set(PYTORCH_ROOT "${DEPLOY_DIR}/third-party/pytorch")
 get_filename_component(MULTIPY_DIR ${CMAKE_CURRENT_SOURCE_DIR} DIRECTORY)
+
+find_package (Python3 COMPONENTS Interpreter Development)
+set(PYTORCH_ROOT "${Python3_SITELIB}")
 
 add_subdirectory(interpreter)
 add_subdirectory(third-party/fmt)
-add_subdirectory(third-party/pybind11)
 include_directories(BEFORE "${PYTORCH_ROOT}/torch/include")
 include_directories(BEFORE "${PYTORCH_ROOT}/torch/include/torch/csrc/api/include/")
+include_directories(BEFORE "${Python3_INCLUDE_DIRS}")
+
 
 include(${DEPLOY_DIR}/utils.cmake)
+
 
 # we do not want to have torch_deployinterpreter linked against libstdc++ or libc because
 # when loading it with RTLD_DEEPBIND it will resolve std::cout/stdout to the copy in libc++/libc instead of the
@@ -60,7 +64,27 @@ add_custom_command(
   VERBATIM
 )
 
-add_library(torch_deploy STATIC libtorch_deployinterpreter.o ${DEPLOY_DIR}/deploy.cpp ${DEPLOY_DIR}/loader.cpp ${DEPLOY_DIR}/path_environment.cpp ${DEPLOY_DIR}/elf_file.cpp)
+add_custom_command(
+  OUTPUT libmultipy_torch.o
+  # copy the file
+  COMMAND cp $<TARGET_FILE:multipy_torch> libmultipy_torch.so
+  # package the result into an object we can link into the libdeploy binary.
+  COMMAND ld -r -b binary -o libmultipy_torch.o libmultipy_torch.so
+  COMMAND objcopy --rename-section .data=.torch_deploy_payload.multipy_torch,readonly,contents -N _binary_libmultipy_torch_so_start -N _binary_libmultipy_torch_so_end libmultipy_torch.o
+  COMMAND rm libmultipy_torch.so
+  DEPENDS multipy_torch
+  VERBATIM
+)
+
+add_library(torch_deploy STATIC
+  libtorch_deployinterpreter.o
+  libmultipy_torch.o
+  ${DEPLOY_DIR}/deploy.cpp
+  ${DEPLOY_DIR}/loader.cpp
+  ${DEPLOY_DIR}/embedded_file.cpp
+  ${DEPLOY_DIR}/path_environment.cpp
+  ${DEPLOY_DIR}/elf_file.cpp
+)
 target_link_libraries(torch_deploy PRIVATE crypt pthread dl util m z ffi lzma readline nsl ncursesw panelw) # for python builtins
 target_link_libraries(torch_deploy PUBLIC  shm torch fmt::fmt-header-only)
 target_include_directories(torch_deploy PRIVATE ${CMAKE_SOURCE_DIR}/../..)
@@ -101,10 +125,8 @@ endif()
 
 LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
 add_library(test_deploy_lib SHARED test_deploy_lib.cpp)
-add_dependencies(test_deploy_lib cpython)
 target_include_directories(test_deploy_lib BEFORE PRIVATE ${PYTHON_INC_DIR})
 target_include_directories(test_deploy_lib PRIVATE ${CMAKE_SOURCE_DIR}/../..)
-target_link_libraries(test_deploy_lib PRIVATE pybind11::pybind11)
 
 LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
 add_executable(deploy_benchmark ${DEPLOY_DIR}/example/benchmark.cpp)
