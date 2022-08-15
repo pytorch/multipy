@@ -12,9 +12,12 @@
 #include <Python.h>
 
 #include <multipy/runtime/Exception.h>
+#include <multipy/runtime/interpreter/builtin_registry.h>
+#include <multipy/runtime/interpreter/import_find_sharedfuncptr.h>
 #include <multipy/runtime/interpreter/plugin_registry.h>
 #include <pybind11/embed.h>
 #include <pybind11/functional.h>
+#include <pybind11/stl.h>
 #include <torch/csrc/Dtype.h>
 #include <torch/csrc/DynamicTypes.h>
 #include <torch/csrc/autograd/generated/variable_factories.h>
@@ -26,7 +29,6 @@
 #include <thread>
 
 #include <fmt/format.h>
-#include <multipy/runtime/interpreter/builtin_registry.h>
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -50,6 +52,8 @@ import sys
 import importlib.abc
 import linecache
 from zipfile import ZipFile
+
+sys.executable = 'torch_deploy'
 
 class RegisterModuleImporter(importlib.abc.InspectLoader):
     def __init__(self, find_module_source):
@@ -160,10 +164,16 @@ struct InitLockAcquire {
   std::mutex& init_lock_;
 };
 
+bool file_exists(const std::string& path) {
+  struct stat buf;
+  return (stat(path.c_str(), &buf) == 0);
+}
+
 struct __attribute__((visibility("hidden"))) ConcreteInterpreterImpl
     : public torch::deploy::InterpreterImpl {
   explicit ConcreteInterpreterImpl(
-      const std::vector<std::string>& extra_python_paths) {
+      const std::vector<std::string>& extra_python_paths,
+      const std::vector<std::string>& plugin_paths) {
     BuiltinRegistry::runPreInitialization();
     PyPreConfig preconfig;
     PyPreConfig_InitIsolatedConfig(&preconfig);
@@ -171,6 +181,8 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterImpl
     TORCH_INTERNAL_ASSERT(!PyStatus_Exception(status))
 
     PyConfig config;
+
+#ifdef FBCODE_CAFFE2
     PyConfig_InitIsolatedConfig(&config);
 
     // Completely blank out the path configuration. This ensures we have
@@ -190,6 +202,11 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterImpl
     wchar_t* module_search_paths[0] = {};
     status = PyConfig_SetWideStringList(
         &config, &config.module_search_paths, 0, module_search_paths);
+#else
+    // dynamic linking path
+    PyConfig_InitPythonConfig(&config);
+
+#endif
 
     status = Py_InitializeFromConfig(&config);
     PyConfig_Clear(&config);
@@ -200,6 +217,24 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterImpl
       sys_path.attr("insert")(0, entry);
     }
 #endif
+
+    if (plugin_paths.size() > 0) {
+      auto sys_path =
+          global_impl("sys", "path").cast<std::vector<std::string>>();
+      std::string libtorch_python_path;
+      for (auto path : sys_path) {
+        auto file = path + "/torch/lib/libtorch_python.so";
+        if (file_exists(file)) {
+          libtorch_python_path = file;
+          break;
+        }
+      }
+      loadSearchFile(libtorch_python_path.c_str());
+      for (auto path : plugin_paths) {
+        loadSearchFile(path.c_str());
+      }
+    }
+
     BuiltinRegistry::runPostInitialization();
 
     int r = PyRun_SimpleString(start);
@@ -269,6 +304,8 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
       const std::shared_ptr<caffe2::serialize::PyTorchStreamReader>&
           containerFile_) override {
     InitLockAcquire guard(interp_->init_lock_);
+    py::object pet =
+        (py::object)py::module_::import("torch._C").attr("PyTorchFileReader");
     return wrap(interp_->getPackage(containerFile_));
   }
 
@@ -283,8 +320,9 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
 
     std::vector<at::Storage> storages_c;
     std::vector<at::ScalarType> dtypes_c;
+
     for (size_t i = 0, N = storages.size(); i < N; ++i) {
-      storages_c.push_back(torch::createStorage(storages[i].ptr()));
+      storages_c.push_back(multipy::createStorage(storages[i].ptr()));
       dtypes_c.push_back(
           reinterpret_cast<THPDtype*>(dtypes[i].ptr())->scalar_type);
     }
@@ -311,12 +349,12 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
     py::tuple storages(obj.storages_.size());
     for (size_t i = 0, N = obj.storages_.size(); i < N; ++i) {
       py::object new_storage = py::reinterpret_steal<py::object>(
-          torch::createPyObject(obj.storages_[i]));
+          multipy::createPyObject(obj.storages_[i]));
       storages[i] = std::move(new_storage);
     }
     py::tuple dtypes(obj.types_.size());
     for (size_t i = 0, N = obj.types_.size(); i < N; ++i) {
-      auto dtype = (PyObject*)torch::getTHPDtype(obj.types_[i]);
+      auto dtype = (PyObject*)multipy::getTHPDtype(obj.types_[i]);
       Py_INCREF(dtype);
       dtypes[i] = dtype;
     }
@@ -416,6 +454,8 @@ ConcreteInterpreterImpl::acquireSession() {
 
 extern "C" __attribute__((visibility("default")))
 torch::deploy::InterpreterImpl*
-newInterpreterImpl(const std::vector<std::string>& extra_python_paths) {
-  return new ConcreteInterpreterImpl(extra_python_paths);
+newInterpreterImpl(
+    const std::vector<std::string>& extra_python_paths,
+    const std::vector<std::string>& plugin_paths) {
+  return new ConcreteInterpreterImpl(extra_python_paths, plugin_paths);
 }
