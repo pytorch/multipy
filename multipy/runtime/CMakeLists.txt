@@ -10,6 +10,7 @@ project(MultipyRuntime)
 # set ABI by default to 0
 
 option(ABI_EQUALS_1 "Set ABI value to 1, by default it is set to 0. Pytorch by default builds with ABI set to 1." OFF)
+option(BUILD_CUDA_TESTS "Set to ON in order to build cuda tests. By default we do not" OFF)
 
 if(ABI_EQUALS_1)
   set(ABI_VALUE 1)
@@ -18,22 +19,26 @@ else()
 endif()
 
 add_definitions(-D_GLIBCXX_USE_CXX11_ABI=${ABI_VALUE})
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${ABI_VALUE}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${ABI_VALUE} -fabi-version=11 -fno-lto")
 
 SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" )
 SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" PARENT_SCOPE)
 
 set(DEPLOY_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-set(PYTORCH_ROOT "${DEPLOY_DIR}/third-party/pytorch")
 get_filename_component(MULTIPY_DIR ${CMAKE_CURRENT_SOURCE_DIR} DIRECTORY)
+
+find_package (Python3 COMPONENTS Interpreter Development)
+set(PYTORCH_ROOT "${Python3_SITELIB}")
 
 add_subdirectory(interpreter)
 add_subdirectory(third-party/fmt)
-add_subdirectory(third-party/pybind11)
 include_directories(BEFORE "${PYTORCH_ROOT}/torch/include")
 include_directories(BEFORE "${PYTORCH_ROOT}/torch/include/torch/csrc/api/include/")
+include_directories(BEFORE "${Python3_INCLUDE_DIRS}")
+
 
 include(${DEPLOY_DIR}/utils.cmake)
+
 
 # we do not want to have torch_deployinterpreter linked against libstdc++ or libc because
 # when loading it with RTLD_DEEPBIND it will resolve std::cout/stdout to the copy in libc++/libc instead of the
@@ -59,7 +64,27 @@ add_custom_command(
   VERBATIM
 )
 
-add_library(torch_deploy STATIC libtorch_deployinterpreter.o ${DEPLOY_DIR}/deploy.cpp ${DEPLOY_DIR}/loader.cpp ${DEPLOY_DIR}/path_environment.cpp ${DEPLOY_DIR}/elf_file.cpp)
+add_custom_command(
+  OUTPUT libmultipy_torch.o
+  # copy the file
+  COMMAND cp $<TARGET_FILE:multipy_torch> libmultipy_torch.so
+  # package the result into an object we can link into the libdeploy binary.
+  COMMAND ld -r -b binary -o libmultipy_torch.o libmultipy_torch.so
+  COMMAND objcopy --rename-section .data=.torch_deploy_payload.multipy_torch,readonly,contents -N _binary_libmultipy_torch_so_start -N _binary_libmultipy_torch_so_end libmultipy_torch.o
+  COMMAND rm libmultipy_torch.so
+  DEPENDS multipy_torch
+  VERBATIM
+)
+
+add_library(torch_deploy STATIC
+  libtorch_deployinterpreter.o
+  libmultipy_torch.o
+  ${DEPLOY_DIR}/deploy.cpp
+  ${DEPLOY_DIR}/loader.cpp
+  ${DEPLOY_DIR}/embedded_file.cpp
+  ${DEPLOY_DIR}/path_environment.cpp
+  ${DEPLOY_DIR}/elf_file.cpp
+)
 target_link_libraries(torch_deploy PRIVATE crypt pthread dl util m z ffi lzma readline nsl ncursesw panelw) # for python builtins
 target_link_libraries(torch_deploy PUBLIC  shm torch fmt::fmt-header-only)
 target_include_directories(torch_deploy PRIVATE ${CMAKE_SOURCE_DIR}/../..)
@@ -87,21 +112,21 @@ target_link_libraries(test_deploy
 )
 target_include_directories(test_deploy PRIVATE ${CMAKE_SOURCE_DIR}/../..)
 
-#  LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
-#  add_executable(test_deploy_gpu ${INTERPRETER_TEST_SOURCES_GPU})
-#  target_compile_definitions(test_deploy_gpu PUBLIC TEST_CUSTOM_LIBRARY)
-#  target_include_directories(test_deploy_gpu PRIVATE ${PYTORCH_ROOT}/torch)
-#  target_include_directories(test_deploy_gpu PRIVATE ${CMAKE_SOURCE_DIR}/../..)
-#  target_link_libraries(test_deploy_gpu
-#   PUBLIC "-Wl,--no-as-needed -rdynamic" gtest dl torch_deploy_interface c10 torch_cpu
-# )
+if(BUILD_CUDA_TESTS)
+  LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
+  add_executable(test_deploy_gpu ${INTERPRETER_TEST_SOURCES_GPU})
+  target_compile_definitions(test_deploy_gpu PUBLIC TEST_CUSTOM_LIBRARY)
+  target_include_directories(test_deploy_gpu PRIVATE ${PYTORCH_ROOT}/torch)
+  target_include_directories(test_deploy_gpu PRIVATE ${CMAKE_SOURCE_DIR}/../..)
+  target_link_libraries(test_deploy_gpu
+   PUBLIC "-Wl,--no-as-needed -rdynamic" gtest dl torch_deploy_interface c10 torch_cpu
+ )
+endif()
 
 LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
 add_library(test_deploy_lib SHARED test_deploy_lib.cpp)
-add_dependencies(test_deploy_lib cpython)
 target_include_directories(test_deploy_lib BEFORE PRIVATE ${PYTHON_INC_DIR})
 target_include_directories(test_deploy_lib PRIVATE ${CMAKE_SOURCE_DIR}/../..)
-target_link_libraries(test_deploy_lib PRIVATE pybind11::pybind11)
 
 LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
 add_executable(deploy_benchmark ${DEPLOY_DIR}/example/benchmark.cpp)
@@ -120,7 +145,10 @@ target_link_libraries(interactive_embedded_interpreter
 )
 
 install(TARGETS test_deploy DESTINATION tests/bin)
-# install(TARGETS test_deploy_gpu DESTINATION tests/bin)
+
+if(BUILD_CUDA_TESTS)
+ install(TARGETS test_deploy_gpu DESTINATION tests/bin)
+endif()
 
 install(TARGETS test_deploy DESTINATION tests/bin)
 
