@@ -11,11 +11,16 @@ project(MultipyRuntime)
 
 option(ABI_EQUALS_1 "Set ABI value to 1, by default it is set to 0. Pytorch by default builds with ABI set to 1." OFF)
 option(BUILD_CUDA_TESTS "Set to ON in order to build cuda tests. By default we do not" OFF)
+option(DEBUG_ON "Sets to debug mode (for gdb), defaults to OFF" OFF)
 
 if(ABI_EQUALS_1)
   set(ABI_VALUE 1)
 else()
   set(ABI_VALUE 0)
+endif()
+
+if(DEBUG_ON)
+  set(CMAKE_BUILD_TYPE Debug)
 endif()
 
 add_definitions(-D_GLIBCXX_USE_CXX11_ABI=${ABI_VALUE})

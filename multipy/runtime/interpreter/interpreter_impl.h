@@ -46,7 +46,7 @@
         ": Exception Caught inside torch::deploy embedded library: \n" +     \
         err.what());                                                         \
   }                                                                          \
-  catch (...) {                                                              \
+catch (...) {                                                              \
     throw std::runtime_error(                                                \
         std::string(__FILE__) + ":" + std::to_string(__LINE__) +             \
         ": Unknown Exception Caught inside torch::deploy embedded library"); \
