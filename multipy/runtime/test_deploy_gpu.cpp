@@ -74,6 +74,12 @@ TEST(TorchDeployGPUTest, UsesDistributed) {
 }
 
 TEST(TorchDeployGPUTest, UsesCuda) {
+#ifdef FBCODE_CAFFE2
+  if (!torch::cuda::is_available()) {
+    GTEST_SKIP();
+  }
+#endif
+
   const auto model_filename =
       path("USES_CUDA", "torch/csrc/deploy/example/generated/uses_cuda");
   torch::deploy::InterpreterManager m(1);

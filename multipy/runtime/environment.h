@@ -27,11 +27,8 @@ class Environment {
   std::string getZippedArchive(
       const char* zipped_torch_name,
       const std::string& pythonAppDir) {
-    std::string execPath;
-    std::ifstream("/proc/self/cmdline") >> execPath;
-    ElfFile elfFile(execPath.c_str());
     // load the zipped torch modules
-    auto zippedTorchSection = elfFile.findSection(zipped_torch_name);
+    auto zippedTorchSection = searchForSection(zipped_torch_name);
     MULTIPY_CHECK(
         zippedTorchSection.has_value(), "Missing the zipped torch section");
     const char* zippedTorchStart = zippedTorchSection->start;
