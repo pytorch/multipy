@@ -76,14 +76,7 @@ class TORCH_API Interpreter {
   std::unique_ptr<InterpreterImpl> pImpl_;
   InterpreterManager* manager_; // optional if managed by one
   std::shared_ptr<Environment> env_;
-<<<<<<< HEAD
-
-  EmbeddedFile interpreterFile_;
-  multipy::optional<EmbeddedFile> torchPluginFile_;
-
-=======
   void setUpInterpreter();
->>>>>>> 8f8fce1 (callback mechanism for freeing InterpreterSessions resources)
  public:
   Interpreter(InterpreterManager* manager, std::shared_ptr<Environment> env);
   Interpreter(std::shared_ptr<Environment> env);

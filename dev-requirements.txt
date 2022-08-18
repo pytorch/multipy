@@ -1,0 +1,6 @@
+coverage
+codecov
+black==22.3.0
+usort==1.0.2
+flake8==3.9.0
+expecttest

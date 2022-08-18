@@ -178,13 +178,6 @@ void ReplicatedObj::unload(const Interpreter* onThisInterpreter) {
 
 ReplicatedObj InterpreterSession::createMovable(Obj obj) {
   TORCH_DEPLOY_TRY
-<<<<<<< HEAD
-  MULTIPY_CHECK(
-      manager_,
-      "Can only create a movable object when the session was created "
-      "from an interpreter that is part of a InterpreterManager");
-=======
->>>>>>> 8f8fce1 (callback mechanism for freeing InterpreterSessions resources)
 
   MULTIPY_CHECK(
       impl_->isOwner(obj),
@@ -248,7 +241,6 @@ static dlopen_t find_real_dlopen() {
 Interpreter::Interpreter(
     InterpreterManager* manager,
     std::shared_ptr<Environment> env)
-<<<<<<< HEAD
     : handle_(nullptr),
       manager_(manager),
       env_(env),
@@ -256,29 +248,6 @@ Interpreter::Interpreter(
           "interpreter",
           pythonInterpreterSections,
           pythonInterpreterSymbols) {
-=======
-    : handle_(nullptr), manager_(manager), env_(env) {
-      setUpInterpreter();
-    }
-
-Interpreter::Interpreter(
-    std::shared_ptr<Environment> env)
-    : handle_(nullptr), manager_(nullptr), env_(env) {
-      setUpInterpreter();
-    }
-
-void Interpreter::setUpInterpreter(){
-  // NOLINTNEXTLINE(modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
-  char libraryName[] = "/tmp/torch_deployXXXXXX";
-  int fd = mkstemp(libraryName);
-  TORCH_INTERNAL_ASSERT(fd != -1, "failed to create temporary file");
-  libraryName_ = libraryName;
-  FILE* dst = fdopen(fd, "wb");
-
-  customLoader_ = writeDeployInterpreter(dst);
-
-  fclose(dst);
->>>>>>> 8f8fce1 (callback mechanism for freeing InterpreterSessions resources)
   int flags = RTLD_LOCAL | RTLD_LAZY;
   if (interpreterFile_.customLoader) {
     flags |= RTLD_DEEPBIND;

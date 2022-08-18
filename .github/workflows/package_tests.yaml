@@ -31,8 +31,8 @@ jobs:
       - name: Install dependencies
         run: |
           set -eux
-          pip install coverage codecov
-          pip install -r requirements.txt
+          pip install -r dev-requirements.txt
+          python setup.py install
       - name: Run tests
         run: coverage run -m unittest discover --verbose --start-directory multipy/test/package/ --pattern "test_*"
       - name: Coverage
