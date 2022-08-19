@@ -8,7 +8,7 @@ jobs:
   unittest:
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: [3.8, 3.9, 3.10]
         platform: [linux.2xlarge]
         abi: [0,1]
       fail-fast: false
