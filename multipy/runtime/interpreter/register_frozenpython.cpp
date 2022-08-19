@@ -85,7 +85,9 @@ extern "C" struct _frozen _PyImport_FrozenModules[];
 extern "C" PyObject* PyInit_parser(void);
 REGISTER_TORCH_DEPLOY_BUILTIN(
     frozenpython,
-    _PyImport_FrozenModules FOREACH_LIBRARY(STD_LIBARY_PARMS), "parser", PyInit_parser);
+    _PyImport_FrozenModules FOREACH_LIBRARY(STD_LIBARY_PARMS),
+    "parser",
+    PyInit_parser);
 #else
 REGISTER_TORCH_DEPLOY_BUILTIN(
     frozenpython,
