@@ -10,6 +10,7 @@
 #include <multipy/runtime/Exception.h>
 #include <multipy/runtime/interpreter/Optional.hpp>
 #include <multipy/runtime/mem_file.h>
+#include <memory>
 #include <vector>
 
 namespace torch {

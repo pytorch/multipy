@@ -16,7 +16,7 @@ from setuptools import find_packages, setup
 def get_version():
     # get version string from version.py
     # TODO: ideally the version.py should be generated when setup is run
-    version_file = os.path.join(os.path.dirname(__file__), "torchx/version.py")
+    version_file = os.path.join(os.path.dirname(__file__), "multipy/version.py")
     version_regex = r"__version__ = ['\"]([^'\"]*)['\"]"
     with open(version_file, "r") as f:
         version = re.search(version_regex, f.read(), re.M).group(1)
@@ -30,9 +30,9 @@ def get_nightly_version():
 
 if __name__ == "__main__":
     if sys.version_info < (3, 7):
-        sys.exit("python >= 3.7 required for torchx-sdk")
+        sys.exit("python >= 3.7 required for multipy")
 
-    name = "MultiPy"
+    name = "multipy"
     NAME_ARG = "--override-name"
     if NAME_ARG in sys.argv:
         idx = sys.argv.index(NAME_ARG)
@@ -62,17 +62,18 @@ if __name__ == "__main__":
         description="package + torch::deploy",
         long_description=readme,
         long_description_content_type="text/markdown",
-        url="https://github.com/pytorch/torchx",
+        url="https://github.com/pytorch/multipy",
         license="BSD-3",
         keywords=["pytorch", "machine learning"],
         python_requires=">=3.7",
         install_requires=reqs.strip().split("\n"),
         include_package_data=True,
         packages=find_packages(exclude=()),
-        test_suite="torchx.test.suites.unittests",
-        entry_points={
-            "console_scripts": [
-                "torchx=torchx.cli.main:main",
+        extras_require={
+            "dev": dev_reqs,
+            ':python_version < "3.8"': [
+                # latest numpy doesn't support 3.7
+                "numpy<=1.21.6",
             ],
         },
         # PyPI package information.

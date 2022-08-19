@@ -68,9 +68,7 @@ def apply_copywrite(
             print(
                 f"Please check the files, there was an error when trying to open {filename}..."
             )
-        except:
-            print("Unexpected error ocurred while processing files...")
-            sys.exit(1)
+            raise
 
 
 if __name__ == "__main__":

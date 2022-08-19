@@ -11,6 +11,13 @@ internally, please see the related [arXiv paper](https://arxiv.org/pdf/2104.0025
 
 ## Installation
 
+You'll first need to install the `multipy` python module which includes
+`multipy.package`.
+
+```shell
+pip install "git+https://github.com/pytorch/multipy.git"
+```
+
 ### Installing `multipy::runtime` **(recommended)**
 
 The C++ binaries (`libtorch_interpreter.so`,`libtorch_deploy.a`, `utils.cmake`), and the header files of `multipy::runtime` can be installed from our [nightly release](https://github.com/pytorch/multipy/releases/tag/nightly-runtime-abi-0). The ABI for the nightly release is 0. You can find a version of the release with ABI=1 [here](https://github.com/pytorch/multipy/releases/tag/nightly-runtime-abi-1).
@@ -23,10 +30,59 @@ tar -xvzf multipy_runtime.tar.gz
 In order to run PyTorch models, we need to link to libtorch (PyTorch's C++ distribution) which is provided when you [pip or conda install pytorch](https://pytorch.org/).
 If you're not sure which ABI value to use, it's important to note that the pytorch C++ binaries, provided when you pip or conda install, are compiled with an ABI value of 0. If you're using libtorch from the pip or conda distribution of pytorch then ensure to use multipy installation with an ABI of 0 (`nightly-runtime-abi-0`).
 
-<br>
+### Building `multipy::runtime` via Docker
+
+The easiest way to build multipy from source is to build it via docker.
+
+```shell
+git clone https://github.com/pytorch/multipy.git
+cd multipy
+export DOCKER_BUILDKIT=1
+docker build -t multipy .
+```
+
+The built artifacts will be located in `/opt/dist`
+
+To run the tests:
+
+```shell
+docker run --rm multipy multipy/runtime/build/test_deploy
+```
 
 ### Installing `multipy::runtime` from source
-Currently we require that [pytorch be built from source](https://github.com/pytorch/pytorch#from-source) in order to build `multipy.runtime` from source. Please refer to that documentation for the requirements needed to build `pytorch` when running `USE_DEPLOY=1 python setup.py develop`.
+
+Multipy needs a local copy of python with `-fPIC` enabled as well as a recent copy of pytorch.
+
+#### Dependencies: Conda
+
+```shell
+conda install python=3.8
+conda install -c conda-forge libpython-static=3.8 # libpython.a
+
+# cuda
+conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly
+
+# cpu only
+conda install pytorch torchvision torchaudio cpuonly -c pytorch-nightly
+```
+
+#### Dependencies: PyEnv
+
+```shell
+# install libpython.a with -fPIC enabled
+export CFLAGS="-fPIC -g"
+pyenv install --force 3.8.6
+virtualenv -p ~/.pyenv/versions/3.8.6/bin/python3 ~/venvs/multipy
+source ~/venvs/multipy/bin/activate
+
+# cuda
+pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cu113
+
+# cpu only
+pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cpu
+```
+
+#### Building
 
 ```bash
 # checkout repo
@@ -35,25 +91,12 @@ git submodule sync && git submodule update --init --recursive
 
 cd multipy/multipy/runtime
 
-# Currently multipy::runtime requires that we build pytorch from source since we need to expose some objects in torch (ie. torch_python, etc.) for multipy::runtime to work.
-
-# Furthermore, by defualt pytorch is built with ABI = 1, so we change it to 0. Remove the following three lines if you want ABI=1.
-
-export GLIBCXX_USE_CXX11_ABI=0
-export CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
-export TORCH_CXX_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
-
-cd third-party/pytorch
-USE_DEPLOY=1 python setup.py develop
-cd ../..
-
 # build runtime
 mkdir build
 cd build
 # use cmake -DABI_EQUALS_1=ON .. instead if you want ABI=1
 cmake ..
 cmake --build . --config Release
-
 ```
 
 ### Running unit tests for `multipy::runtime`

@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <cerrno>
 #include <cstdio>
+#include <iostream>
 
 namespace torch {
 namespace deploy {
@@ -25,7 +26,8 @@ namespace deploy {
 //
 // 2. Used in unity to load the elf file.
 struct MemFile {
-  explicit MemFile(const char* filename_) : fd_(0), mem_(nullptr), n_bytes_(0) {
+  explicit MemFile(const char* filename_)
+      : fd_(0), mem_(nullptr), n_bytes_(0), name_(filename_) {
     fd_ = open(filename_, O_RDONLY);
     MULTIPY_CHECK(
         fd_ != -1, "failed to open {}: {}" + filename_ + strerror(errno));
@@ -49,6 +51,9 @@ struct MemFile {
   [[nodiscard]] const char* data() const {
     return (const char*)mem_;
   }
+  int valid(int fd) {
+    return fcntl(fd_, F_GETFD) != -1 || errno != EBADF;
+  }
   ~MemFile() {
     if (mem_) {
       munmap((void*)mem_, n_bytes_);
@@ -68,6 +73,7 @@ struct MemFile {
   int fd_;
   void* mem_;
   size_t n_bytes_;
+  std::string name_;
 };
 
 } // namespace deploy
