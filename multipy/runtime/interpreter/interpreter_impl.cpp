@@ -171,7 +171,8 @@ bool file_exists(const std::string& path) {
 
 extern "C" __attribute__((visibility("default")))
 void ConcreteInterpreterImplConstructorCommon(
-      const std::vector<std::string>& extra_python_paths) {
+      const std::vector<std::string>& extra_python_paths,
+      const std::vector<std::string>& plugin_paths) {
     BuiltinRegistry::runPreInitialization();
     PyPreConfig preconfig;
     PyPreConfig_InitIsolatedConfig(&preconfig);
@@ -250,8 +251,9 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterImpl
   {}
 
   explicit ConcreteInterpreterImpl(
-      const std::vector<std::string>& extra_python_paths) {
-    ConcreteInterpreterImplConstructorCommon(extra_python_paths);
+      const std::vector<std::string>& extra_python_paths,
+      const std::vector<std::string>& plugin_paths) {
+    ConcreteInterpreterImplConstructorCommon(extra_python_paths, plugin_paths);
 
     int r = PyRun_SimpleString(start);
     TORCH_INTERNAL_ASSERT(r == 0);
@@ -470,8 +472,10 @@ ConcreteInterpreterImpl::acquireSession() {
 
 extern "C" __attribute__((visibility("default")))
 torch::deploy::InterpreterImpl*
-newInterpreterImpl(const std::vector<std::string>& extra_python_paths) {
-    ConcreteInterpreterImplConstructorCommon(extra_python_paths);
+newInterpreterImpl(
+  const std::vector<std::string>& extra_python_paths,
+  const std::vector<std::string>& plugin_paths) {
+    ConcreteInterpreterImplConstructorCommon(extra_python_paths, plugin_paths);
 
     int r = PyRun_SimpleString(start);
     TORCH_INTERNAL_ASSERT(r == 0);
