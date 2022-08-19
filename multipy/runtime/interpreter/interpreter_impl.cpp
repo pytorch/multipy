@@ -164,6 +164,11 @@ struct InitLockAcquire {
   std::mutex& init_lock_;
 };
 
+bool file_exists(const std::string& path) {
+  struct stat buf;
+  return (stat(path.c_str(), &buf) == 0);
+}
+
 extern "C" __attribute__((visibility("default")))
 void ConcreteInterpreterImplConstructorCommon(
       const std::vector<std::string>& extra_python_paths) {
