@@ -7,16 +7,25 @@
 #include <ATen/Parallel.h>
 #include <gtest/gtest.h>
 #include <cstring>
-
 #include <c10/util/irange.h>
 #include <libgen.h>
 #include <multipy/runtime/deploy.h>
 #include <torch/script.h>
 #include <torch/torch.h>
+#include <multipy/runtime/interpreter/interpreter_impl.h>
+#include <ATen/ATen.h>
+#include <ATen/core/ivalue.h>
 
 #include <future>
 #include <iostream>
 #include <string>
+
+#define PY_SSIZE_T_CLEAN
+#include <Python.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/embed.h>
+#include <pybind11/functional.h>
+#include <pybind11/stl.h>
 
 void compare_torchpy_jit(const char* model_filename, const char* jit_filename) {
   // Test

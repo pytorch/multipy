@@ -144,10 +144,10 @@ InterpreterSession::~InterpreterSession() {
 void ReplicatedObjImpl::unload(const Interpreter* onThisInterpreter) {
   TORCH_DEPLOY_TRY
   if (!onThisInterpreter) {
-    // NOLINTNEXTLINE(clang-analyzer-core.NullDereference)
     MULTIPY_CHECK(
       manager_,
       "ReplicatedObjImpl must be created from an InterpreterManager in order to unload without an interpreter");
+    // NOLINTNEXTLINE(clang-analyzer-core.NullDereference)
     for (auto& interp : manager_->allInstances()) {
       unload(&interp);
     }

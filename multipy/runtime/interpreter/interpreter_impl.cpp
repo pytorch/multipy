@@ -21,6 +21,7 @@
 #include <torch/csrc/Dtype.h>
 #include <torch/csrc/DynamicTypes.h>
 #include <torch/csrc/autograd/generated/variable_factories.h>
+#include <unordered_map>
 
 #include <cassert>
 #include <cstdio>
@@ -294,11 +295,13 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
   ConcreteInterpreterSessionImpl(ConcreteInterpreterImpl* interp)
       : interp_(interp) {}
   Obj global(const char* module, const char* name) override {
-    return wrap(global_impl(module, name));
+    py::object globalObj = global_impl(module, name);
+    return Obj(&globalObj);
   }
 
   Obj fromIValue(IValue value) override {
-    return wrap(multipy::toPyObject(value));
+    py::object pyObj = multipy::toPyObject(value);
+    return Obj(&pyObj);
   }
   Obj createOrGetPackageImporterFromContainerFile(
       const std::shared_ptr<caffe2::serialize::PyTorchStreamReader>&
@@ -306,11 +309,12 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
     InitLockAcquire guard(interp_->init_lock_);
     py::object pet =
         (py::object)py::module_::import("torch._C").attr("PyTorchFileReader");
-    return wrap(interp_->getPackage(containerFile_));
+    py::object pyObj =  interp_->getPackage(containerFile_);
+    return Obj(&pyObj);
   }
 
   PickledObject pickle(Obj container, Obj obj) override {
-    py::tuple result = interp_->saveStorage(unwrap(container), unwrap(obj));
+    py::tuple result = interp_->saveStorage(container.getPyObject(), obj.getPyObject());
     py::bytes bytes = py::cast<py::bytes>(result[0]);
     py::list storages = py::cast<py::list>(result[1]);
     py::list dtypes = py::cast<py::list>(result[2]);
@@ -333,17 +337,15 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
         std::move(container_file)};
   }
   Obj unpickleOrGet(int64_t id, const PickledObject& obj) override {
-    py::dict objects = interp_->objects;
-    py::object id_p = py::cast(id);
-    if (objects.contains(id_p)) {
-      return wrap(objects[id_p]);
+    if (unpickled_objects.find(id) != unpickled_objects.end()){
+      return Obj(unpickled_objects[id]);
     }
 
     InitLockAcquire guard(interp_->init_lock_);
     // re-check if something else loaded this before we acquired the
     // init_lock_
-    if (objects.contains(id_p)) {
-      return wrap(objects[id_p]);
+    if (unpickled_objects.find(id) != unpickled_objects.end()){
+      return Obj(unpickled_objects[id]);
     }
 
     py::tuple storages(obj.storages_.size());
@@ -360,83 +362,44 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
     }
     py::object result = interp_->loadStorage(
         id, obj.containerFile_, py::bytes(obj.data_), storages, dtypes);
-    return wrap(result);
+    unpickled_objects[id] = &result;
+    return Obj(&result);
   }
   void unload(int64_t id) override {
-    py::dict objects = interp_->objects;
-    py::object id_p = py::cast(id);
-    if (objects.contains(id_p)) {
-      objects.attr("__delitem__")(id_p);
-    }
+    Obj obj = unpickled_objects[id];
+    obj.unload();
   }
 
   IValue toIValue(Obj obj) const override {
-    return multipy::toTypeInferredIValue(unwrap(obj));
+    return obj.toIValue();
   }
 
   Obj call(Obj obj, at::ArrayRef<Obj> args) override {
-    py::tuple m_args(args.size());
-    for (size_t i = 0, N = args.size(); i != N; ++i) {
-      m_args[i] = unwrap(args[i]);
-    }
-    return wrap(call(unwrap(obj), m_args));
+    return obj.call(args);
   }
 
   Obj call(Obj obj, at::ArrayRef<IValue> args) override {
-    py::tuple m_args(args.size());
-    for (size_t i = 0, N = args.size(); i != N; ++i) {
-      m_args[i] = multipy::toPyObject(args[i]);
-    }
-    return wrap(call(unwrap(obj), m_args));
+    return obj.call(args);
   }
 
   Obj callKwargs(
       Obj obj,
       std::vector<at::IValue> args,
       std::unordered_map<std::string, c10::IValue> kwargs) override {
-    py::tuple py_args(args.size());
-    for (size_t i = 0, N = args.size(); i != N; ++i) {
-      py_args[i] = multipy::toPyObject(args[i]);
-    }
-
-    py::dict py_kwargs;
-    for (auto kv : kwargs) {
-      py_kwargs[py::cast(std::get<0>(kv))] =
-          multipy::toPyObject(std::get<1>(kv));
-    }
-    return wrap(call(unwrap(obj), py_args, py_kwargs));
+    return obj.callKwargs(args, kwargs);
   }
 
   Obj callKwargs(Obj obj, std::unordered_map<std::string, c10::IValue> kwargs)
       override {
-    std::vector<at::IValue> args;
-    return callKwargs(obj, args, kwargs);
+    return obj.callKwargs(kwargs);
   }
 
   bool hasattr(Obj obj, const char* attr) override {
-    return py::hasattr(unwrap(obj), attr);
+    return obj.hasattr(attr);
   }
 
   Obj attr(Obj obj, const char* attr) override {
-    return wrap(unwrap(obj).attr(attr));
-  }
-
-  static py::object
-  call(py::handle object, py::handle args, py::handle kwargs = nullptr) {
-    PyObject* result = PyObject_Call(object.ptr(), args.ptr(), kwargs.ptr());
-    if (!result) {
-      throw py::error_already_set();
-    }
-    return py::reinterpret_steal<py::object>(result);
-  }
-
-  py::handle unwrap(Obj obj) const {
-    return objects_.at(ID(obj));
-  }
-
-  Obj wrap(py::object obj) {
-    objects_.emplace_back(std::move(obj));
-    return Obj(this, objects_.size() - 1);
+    return obj.attr(attr);
   }
 
   ~ConcreteInterpreterSessionImpl() override {
@@ -451,6 +414,7 @@ torch::deploy::InterpreterSessionImpl*
 ConcreteInterpreterImpl::acquireSession() {
   return new ConcreteInterpreterSessionImpl(this);
 }
+
 
 extern "C" __attribute__((visibility("default")))
 torch::deploy::InterpreterImpl*
