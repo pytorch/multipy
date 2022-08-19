@@ -115,5 +115,6 @@ jobs:
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
+              export PYTHONPATH=$PYTHONPATH:$(pwd)
               cd multipy/runtime/build
               ./test_deploy

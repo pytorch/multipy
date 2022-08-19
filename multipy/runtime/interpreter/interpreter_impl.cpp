@@ -434,26 +434,17 @@ ConcreteInterpreterImpl::acquireSession() {
 extern "C" __attribute__((visibility("default")))
 torch::deploy::InterpreterImpl*
 newInterpreterImpl(const std::vector<std::string>& extra_python_paths) {
-  return new ConcreteInterpreterImpl(extra_python_paths);
-}
-
-extern "C" __attribute__((visibility("default")))
-torch::deploy::InterpreterImpl*
-newInterpreterImplSplit(const std::vector<std::string>& extra_python_paths)
-{
     ConcreteInterpreterImplConstructorCommon(extra_python_paths);
 
     int r = PyRun_SimpleString(start);
     TORCH_INTERNAL_ASSERT(r == 0);
 
-    py::object saveStorage = global_impl("torch._deploy", "_save_storages");
-    py::object loadStorage = global_impl("torch._deploy", "_load_storages");
-    py::object getPackage = global_impl("torch._deploy", "_get_package");
-    py::dict objects = global_impl("torch._deploy", "_deploy_objects");
+    py::object saveStorage = global_impl("multipy.utils._deploy", "_save_storages");
+    py::object loadStorage = global_impl("multipy.utils._deploy", "_load_storages");
+    py::object getPackage = global_impl("multipy.utils._deploy", "_get_package");
+    py::dict objects = global_impl("multipy.utils._deploy", "_deploy_objects");
 
     PyEval_SaveThread();
 
-    auto concr_intrp = new ConcreteInterpreterImpl(saveStorage, loadStorage, getPackage, objects);
-
-    return concr_intrp;
+    return new ConcreteInterpreterImpl(saveStorage, loadStorage, getPackage, objects);
 }
