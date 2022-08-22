@@ -18,11 +18,11 @@ except ImportError:
     # Support the case where we run this file directly.
     from common import PackageTestCase
 
-packaging_directory = f"{Path(__file__).parent}/package_bc"
-
-
 class TestLoadBCPackages(PackageTestCase):
-    """Tests for checking loading has backwards compatiblity"""
+    """Tests for checking loading has backwards compatiblity with multipy.package"""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.packaging_directory = f"{Path(__file__).parent}/package_bc"
 
     @skipIf(
         IS_FBCODE or IS_SANDCASTLE,
@@ -30,7 +30,7 @@ class TestLoadBCPackages(PackageTestCase):
     )
     def test_load_bc_packages_nn_module(self):
         """Tests for backwards compatible nn module"""
-        importer1 = PackageImporter(f"{packaging_directory}/test_nn_module.pt")
+        importer1 = PackageImporter(f"{self.packaging_directory}/test_nn_module.pt")
         loaded1 = importer1.load_pickle("nn_module", "nn_module.pkl")
 
     @skipIf(
@@ -40,7 +40,7 @@ class TestLoadBCPackages(PackageTestCase):
     def test_load_bc_packages_torchscript_module(self):
 
         """Tests for backwards compatible torchscript module"""
-        importer2 = PackageImporter(f"{packaging_directory}/test_torchscript_module.pt")
+        importer2 = PackageImporter(f"{self.packaging_directory}/test_torchscript_module.pt")
         loaded2 = importer2.load_pickle("torchscript_module", "torchscript_module.pkl")
 
     @skipIf(
@@ -49,9 +49,14 @@ class TestLoadBCPackages(PackageTestCase):
     )
     def test_load_bc_packages_fx_module(self):
         """Tests for backwards compatible fx module"""
-        importer3 = PackageImporter(f"{packaging_directory}/test_fx_module.pt")
+        importer3 = PackageImporter(f"{self.packaging_directory}/test_fx_module.pt")
         loaded3 = importer3.load_pickle("fx_module", "fx_module.pkl")
 
+class TestLoadBCTorchPackages(TestLoadBCPackages):
+    """Tests for checking loading has backwards compatiblity with torch.package"""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.packaging_directory= f"{Path(__file__).parent}/package_bc_torch"
 
 if __name__ == "__main__":
     run_tests()
