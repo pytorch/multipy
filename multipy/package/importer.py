@@ -35,7 +35,7 @@ class Importer(ABC):
     By default, you can figure out what module an object belongs by checking
     __module__ and importing the result using __import__ or importlib.import_module.
 
-    torch.package introduces module importers other than the default one.
+    multipy.package introduces module importers other than the default one.
     Each PackageImporter introduces a new namespace. Potentially a single
     name (e.g. 'foo.bar') is present in multiple namespaces.
 
@@ -194,7 +194,7 @@ class OrderedImporter(Importer):
         self._importers: List[Importer] = list(args)
 
     def _is_torchpackage_dummy(self, module):
-        """Returns true iff this module is an empty PackageNode in a torch.package.
+        """Returns true iff this module is an empty PackageNode in a multipy.package.
 
         If you intern `a.b` but never use `a` in your code, then `a` will be an
         empty module with no source. This can break cases where we are trying to
@@ -214,7 +214,10 @@ class OrderedImporter(Importer):
     def import_module(self, module_name: str) -> ModuleType:
         last_err = None
         for importer in self._importers:
-            if not isinstance(importer, Importer):
+            # allow for torch.package bc
+            if not isinstance(importer, Importer) and (
+                not type(importer).__name__ == "torch.Importer"
+            ):
                 raise TypeError(
                     f"{importer} is not a Importer. "
                     "All importers in OrderedImporter must inherit from Importer."
