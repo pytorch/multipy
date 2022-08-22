@@ -18,8 +18,10 @@ except ImportError:
     # Support the case where we run this file directly.
     from common import PackageTestCase
 
+
 class TestLoadBCPackages(PackageTestCase):
     """Tests for checking loading has backwards compatiblity with multipy.package"""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.packaging_directory = f"{Path(__file__).parent}/package_bc"
@@ -40,7 +42,9 @@ class TestLoadBCPackages(PackageTestCase):
     def test_load_bc_packages_torchscript_module(self):
 
         """Tests for backwards compatible torchscript module"""
-        importer2 = PackageImporter(f"{self.packaging_directory}/test_torchscript_module.pt")
+        importer2 = PackageImporter(
+            f"{self.packaging_directory}/test_torchscript_module.pt"
+        )
         loaded2 = importer2.load_pickle("torchscript_module", "torchscript_module.pkl")
 
     @skipIf(
@@ -52,11 +56,14 @@ class TestLoadBCPackages(PackageTestCase):
         importer3 = PackageImporter(f"{self.packaging_directory}/test_fx_module.pt")
         loaded3 = importer3.load_pickle("fx_module", "fx_module.pkl")
 
+
 class TestLoadBCTorchPackages(TestLoadBCPackages):
     """Tests for checking loading has backwards compatiblity with torch.package"""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.packaging_directory= f"{Path(__file__).parent}/package_bc_torch"
+        self.packaging_directory = f"{Path(__file__).parent}/package_bc_torch"
+
 
 if __name__ == "__main__":
     run_tests()
