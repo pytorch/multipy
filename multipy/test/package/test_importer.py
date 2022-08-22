@@ -105,6 +105,25 @@ class TestImporter(PackageTestCase):
             importer.import_module("package_a"),
         )
 
+    def test_torch_package_bc(self):
+        import package_a
+
+        buffer = BytesIO()
+        with torch.package.PackageExporter(buffer) as pe:
+            pe.save_module(package_a.__name__)
+
+        buffer.seek(0)
+        importer = self.PackageImporter(buffer)
+
+        ordered_importer_sys_first = OrderedImporter(sys_importer, importer)
+        self.assertIs(ordered_importer_sys_first.import_module("package_a"), package_a)
+
+        ordered_importer_package_first = OrderedImporter(importer, sys_importer)
+        self.assertIs(
+            ordered_importer_package_first.import_module("package_a"),
+            importer.import_module("package_a"),
+        )
+
     def test_ordered_importer_whichmodule(self):
         """OrderedImporter's implementation of whichmodule should try each
         underlying importer's whichmodule in order.
