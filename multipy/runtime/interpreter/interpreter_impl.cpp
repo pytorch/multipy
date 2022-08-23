@@ -4,13 +4,12 @@
 // This source code is licensed under the BSD-style license found in the
 // LICENSE file in the root directory of this source tree.
 
-#include <multipy/runtime/interpreter/interpreter_impl.h>
-
 #include <dlfcn.h>
+#include <multipy/runtime/interpreter/interpreter_impl.h>
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
-
+#include <fmt/format.h>
 #include <multipy/runtime/Exception.h>
 #include <multipy/runtime/interpreter/builtin_registry.h>
 #include <multipy/runtime/interpreter/import_find_sharedfuncptr.h>
@@ -28,8 +27,6 @@
 #include <map>
 #include <thread>
 
-#include <fmt/format.h>
-
 namespace py = pybind11;
 using namespace py::literals;
 
@@ -46,6 +43,76 @@ using namespace py::literals;
 #define PYOBJ_ASSERT(obj) assert(NULL != obj);
 #endif
 
+/* Torch Deploy intentionally embeds multiple copies of c++ libraries
+   providing python bindings necessary for torch::deploy users in the same
+   process space in order to provide a multi-python environment.  As a result,
+   any exception types defined by these duplicated libraries can't be safely
+   caught or handled outside of the originating dynamic library (.so).
+
+   In practice this means that you must either
+   catch these exceptions inside the torch::deploy API boundary or risk crashing
+   the client application.
+
+   It is safe to throw exception types that are defined once in
+   the context of the client application, such as std::runtime_error,
+   which isn't duplicated in torch::deploy interpreters.
+
+   ==> Use MULTIPY_SAFE_RETHROW around _ALL_ torch::deploy APIs
+
+   For more information, see
+    https://gcc.gnu.org/wiki/Visibility (section on c++ exceptions)
+    or https://stackoverflow.com/a/14364055
+    or
+   https://stackoverflow.com/questions/14268736/symbol-visibility-exceptions-runtime-error
+    note- this may be only a serious problem on versions of gcc prior to 4.0,
+   but still seems worth sealing off.
+
+*/
+#define MULTIPY_SAFE_RETHROW \
+  return MultiPySafeRethrow(__FILE__, __LINE__) + [&]()
+namespace {
+class MultiPySafeRethrow {
+ public:
+  MultiPySafeRethrow(const char* file, int line) : file_(file), line_(line) {}
+
+  // disable move and assignment
+  MultiPySafeRethrow(const MultiPySafeRethrow&) = delete;
+  MultiPySafeRethrow(MultiPySafeRethrow&&) = delete;
+  MultiPySafeRethrow& operator=(const MultiPySafeRethrow&) = delete;
+  MultiPySafeRethrow& operator=(MultiPySafeRethrow&&) = delete;
+
+  template <typename FunctionType>
+  auto operator+(FunctionType&& fn) const {
+    try {
+      return fn();
+    } catch (py::error_already_set& err) {
+      if (err.matches(PyExc_SystemExit)) {
+        auto code = err.value().attr("code").cast<int>();
+        std::exit(code);
+      }
+      throw std::runtime_error(
+          std::string(file_) + ":" + std::to_string(line_) +
+          ": Exception Caught inside torch::deploy embedded library: \n" +
+          err.what());
+    } catch (std::exception& err) {
+      throw std::runtime_error(
+          std::string(file_) + ":" + std::to_string(line_) +
+          ": Exception Caught inside torch::deploy embedded library: \n" +
+          err.what());
+    } catch (...) {
+      throw std::runtime_error(
+          std::string(file_) + ":" + std::to_string(line_) +
+          ": Unknown Exception Caught inside torch::deploy embedded library");
+    }
+  }
+
+ private:
+  const char* file_;
+  const int line_;
+};
+
+} // namespace
+
 const char* start = R"PYTHON(
 import _ssl # must come before _hashlib otherwise ssl's locks will be set to a Python that might no longer exist...
 import sys
@@ -53,7 +120,8 @@ import importlib.abc
 import linecache
 from zipfile import ZipFile
 
-sys.executable = 'torch_deploy'
+# Disable Python library registration since it's not compatible with multipy.
+sys.modules["torch._meta_registrations"] = object
 
 class RegisterModuleImporter(importlib.abc.InspectLoader):
     def __init__(self, find_module_source):
@@ -294,140 +362,165 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
   ConcreteInterpreterSessionImpl(ConcreteInterpreterImpl* interp)
       : interp_(interp) {}
   Obj global(const char* module, const char* name) override {
-    return wrap(global_impl(module, name));
+    MULTIPY_SAFE_RETHROW {
+      return wrap(global_impl(module, name));
+    };
   }
 
   Obj fromIValue(IValue value) override {
-    return wrap(multipy::toPyObject(value));
+    MULTIPY_SAFE_RETHROW {
+      return wrap(multipy::toPyObject(value));
+    };
   }
   Obj createOrGetPackageImporterFromContainerFile(
       const std::shared_ptr<caffe2::serialize::PyTorchStreamReader>&
           containerFile_) override {
-    InitLockAcquire guard(interp_->init_lock_);
-    py::object pet =
-        (py::object)py::module_::import("torch._C").attr("PyTorchFileReader");
-    return wrap(interp_->getPackage(containerFile_));
+    MULTIPY_SAFE_RETHROW {
+      InitLockAcquire guard(interp_->init_lock_);
+      py::object pet =
+          (py::object)py::module_::import("torch._C").attr("PyTorchFileReader");
+      return wrap(interp_->getPackage(containerFile_));
+    };
   }
 
   PickledObject pickle(Obj container, Obj obj) override {
-    py::tuple result = interp_->saveStorage(unwrap(container), unwrap(obj));
-    py::bytes bytes = py::cast<py::bytes>(result[0]);
-    py::list storages = py::cast<py::list>(result[1]);
-    py::list dtypes = py::cast<py::list>(result[2]);
-    auto container_file =
-        py::cast<std::shared_ptr<caffe2::serialize::PyTorchStreamReader>>(
-            result[3]);
+    MULTIPY_SAFE_RETHROW {
+      py::tuple result = interp_->saveStorage(unwrap(container), unwrap(obj));
+      py::bytes bytes = py::cast<py::bytes>(result[0]);
+      py::list storages = py::cast<py::list>(result[1]);
+      py::list dtypes = py::cast<py::list>(result[2]);
+      auto container_file =
+          py::cast<std::shared_ptr<caffe2::serialize::PyTorchStreamReader>>(
+              result[3]);
 
-    std::vector<at::Storage> storages_c;
-    std::vector<at::ScalarType> dtypes_c;
+      std::vector<at::Storage> storages_c;
+      std::vector<at::ScalarType> dtypes_c;
 
-    for (size_t i = 0, N = storages.size(); i < N; ++i) {
-      storages_c.push_back(multipy::createStorage(storages[i].ptr()));
-      dtypes_c.push_back(
-          reinterpret_cast<THPDtype*>(dtypes[i].ptr())->scalar_type);
-    }
-    return PickledObject{
-        bytes,
-        std::move(storages_c),
-        std::move(dtypes_c),
-        std::move(container_file)};
+      for (size_t i = 0, N = storages.size(); i < N; ++i) {
+        storages_c.push_back(multipy::createStorage(storages[i].ptr()));
+        dtypes_c.push_back(
+            reinterpret_cast<THPDtype*>(dtypes[i].ptr())->scalar_type);
+      }
+      return PickledObject{
+          bytes,
+          std::move(storages_c),
+          std::move(dtypes_c),
+          std::move(container_file)};
+    };
   }
   Obj unpickleOrGet(int64_t id, const PickledObject& obj) override {
-    py::dict objects = interp_->objects;
-    py::object id_p = py::cast(id);
-    if (objects.contains(id_p)) {
-      return wrap(objects[id_p]);
-    }
+    MULTIPY_SAFE_RETHROW {
+      py::dict objects = interp_->objects;
+      py::object id_p = py::cast(id);
+      if (objects.contains(id_p)) {
+        return wrap(objects[id_p]);
+      }
 
-    InitLockAcquire guard(interp_->init_lock_);
-    // re-check if something else loaded this before we acquired the
-    // init_lock_
-    if (objects.contains(id_p)) {
-      return wrap(objects[id_p]);
-    }
+      InitLockAcquire guard(interp_->init_lock_);
+      // re-check if something else loaded this before we acquired the
+      // init_lock_
+      if (objects.contains(id_p)) {
+        return wrap(objects[id_p]);
+      }
 
-    py::tuple storages(obj.storages_.size());
-    for (size_t i = 0, N = obj.storages_.size(); i < N; ++i) {
-      py::object new_storage = py::reinterpret_steal<py::object>(
-          multipy::createPyObject(obj.storages_[i]));
-      storages[i] = std::move(new_storage);
-    }
-    py::tuple dtypes(obj.types_.size());
-    for (size_t i = 0, N = obj.types_.size(); i < N; ++i) {
-      auto dtype = (PyObject*)multipy::getTHPDtype(obj.types_[i]);
-      Py_INCREF(dtype);
-      dtypes[i] = dtype;
-    }
-    py::object result = interp_->loadStorage(
-        id, obj.containerFile_, py::bytes(obj.data_), storages, dtypes);
-    return wrap(result);
+      py::tuple storages(obj.storages_.size());
+      for (size_t i = 0, N = obj.storages_.size(); i < N; ++i) {
+        py::object new_storage = py::reinterpret_steal<py::object>(
+            multipy::createPyObject(obj.storages_[i]));
+        storages[i] = std::move(new_storage);
+      }
+      py::tuple dtypes(obj.types_.size());
+      for (size_t i = 0, N = obj.types_.size(); i < N; ++i) {
+        auto dtype = (PyObject*)multipy::getTHPDtype(obj.types_[i]);
+        Py_INCREF(dtype);
+        dtypes[i] = dtype;
+      }
+      py::object result = interp_->loadStorage(
+          id, obj.containerFile_, py::bytes(obj.data_), storages, dtypes);
+      return wrap(result);
+    };
   }
   void unload(int64_t id) override {
-    py::dict objects = interp_->objects;
-    py::object id_p = py::cast(id);
-    if (objects.contains(id_p)) {
-      objects.attr("__delitem__")(id_p);
-    }
+    MULTIPY_SAFE_RETHROW {
+      py::dict objects = interp_->objects;
+      py::object id_p = py::cast(id);
+      if (objects.contains(id_p)) {
+        objects.attr("__delitem__")(id_p);
+      }
+    };
   }
 
   IValue toIValue(Obj obj) const override {
-    return multipy::toTypeInferredIValue(unwrap(obj));
+    MULTIPY_SAFE_RETHROW {
+      return multipy::toTypeInferredIValue(unwrap(obj));
+    };
   }
 
   Obj call(Obj obj, at::ArrayRef<Obj> args) override {
-    py::tuple m_args(args.size());
-    for (size_t i = 0, N = args.size(); i != N; ++i) {
-      m_args[i] = unwrap(args[i]);
-    }
-    return wrap(call(unwrap(obj), m_args));
+    MULTIPY_SAFE_RETHROW {
+      py::tuple m_args(args.size());
+      for (size_t i = 0, N = args.size(); i != N; ++i) {
+        m_args[i] = unwrap(args[i]);
+      }
+      return wrap(call(unwrap(obj), m_args));
+    };
   }
 
   Obj call(Obj obj, at::ArrayRef<IValue> args) override {
-    py::tuple m_args(args.size());
-    for (size_t i = 0, N = args.size(); i != N; ++i) {
-      m_args[i] = multipy::toPyObject(args[i]);
-    }
-    return wrap(call(unwrap(obj), m_args));
+    MULTIPY_SAFE_RETHROW {
+      py::tuple m_args(args.size());
+      for (size_t i = 0, N = args.size(); i != N; ++i) {
+        m_args[i] = multipy::toPyObject(args[i]);
+      }
+      return wrap(call(unwrap(obj), m_args));
+    };
   }
 
   Obj callKwargs(
       Obj obj,
       std::vector<at::IValue> args,
       std::unordered_map<std::string, c10::IValue> kwargs) override {
-    py::tuple py_args(args.size());
-    for (size_t i = 0, N = args.size(); i != N; ++i) {
-      py_args[i] = multipy::toPyObject(args[i]);
-    }
+    MULTIPY_SAFE_RETHROW {
+      py::tuple py_args(args.size());
+      for (size_t i = 0, N = args.size(); i != N; ++i) {
+        py_args[i] = multipy::toPyObject(args[i]);
+      }
 
-    py::dict py_kwargs;
-    for (auto kv : kwargs) {
-      py_kwargs[py::cast(std::get<0>(kv))] =
-          multipy::toPyObject(std::get<1>(kv));
-    }
-    return wrap(call(unwrap(obj), py_args, py_kwargs));
+      py::dict py_kwargs;
+      for (auto kv : kwargs) {
+        py_kwargs[py::cast(std::get<0>(kv))] =
+            multipy::toPyObject(std::get<1>(kv));
+      }
+      return wrap(call(unwrap(obj), py_args, py_kwargs));
+    };
   }
 
   Obj callKwargs(Obj obj, std::unordered_map<std::string, c10::IValue> kwargs)
       override {
-    std::vector<at::IValue> args;
-    return callKwargs(obj, args, kwargs);
+    return callKwargs(obj, {}, kwargs);
   }
 
   bool hasattr(Obj obj, const char* attr) override {
-    return py::hasattr(unwrap(obj), attr);
+    MULTIPY_SAFE_RETHROW {
+      return py::hasattr(unwrap(obj), attr);
+    };
   }
 
   Obj attr(Obj obj, const char* attr) override {
-    return wrap(unwrap(obj).attr(attr));
+    MULTIPY_SAFE_RETHROW {
+      return wrap(unwrap(obj).attr(attr));
+    };
   }
 
   static py::object
   call(py::handle object, py::handle args, py::handle kwargs = nullptr) {
-    PyObject* result = PyObject_Call(object.ptr(), args.ptr(), kwargs.ptr());
-    if (!result) {
-      throw py::error_already_set();
-    }
-    return py::reinterpret_steal<py::object>(result);
+    MULTIPY_SAFE_RETHROW {
+      PyObject* result = PyObject_Call(object.ptr(), args.ptr(), kwargs.ptr());
+      if (!result) {
+        throw py::error_already_set();
+      }
+      return py::reinterpret_steal<py::object>(result);
+    };
   }
 
   py::handle unwrap(Obj obj) const {

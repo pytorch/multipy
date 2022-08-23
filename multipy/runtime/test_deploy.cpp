@@ -53,6 +53,7 @@ TEST(TorchpyTest, InitManagerBasic) {
   ASSERT_EQ(m.countRegisteredModuleSources(), 1);
 }
 
+#ifdef FBCODE_CAFFE2
 TEST(TorchpyTest, LoadLibrary) {
   torch::deploy::InterpreterManager m(1);
   torch::deploy::Package p = m.loadPackage(
@@ -60,6 +61,7 @@ TEST(TorchpyTest, LoadLibrary) {
   auto model = p.loadPickle("fn", "fn.pkl");
   model({});
 }
+#endif
 
 TEST(TorchpyTest, InitTwice) {
   { torch::deploy::InterpreterManager m(2); }
@@ -208,9 +210,6 @@ TEST(TorchpyTest, ErrorsReplicatingObj) {
 TEST(TorchpyTest, ThrowsSafely) {
   // See explanation in deploy.h
   torch::deploy::InterpreterManager manager(3);
-  // NOLINTNEXTLINE(hicpp-avoid-goto,cppcoreguidelines-avoid-goto)
-  EXPECT_THROW(manager.loadPackage("some garbage path"), std::runtime_error);
-
   torch::deploy::Package p = manager.loadPackage(path("SIMPLE", simple));
   // NOLINTNEXTLINE(hicpp-avoid-goto,cppcoreguidelines-avoid-goto)
   EXPECT_THROW(p.loadPickle("some other", "garbage path"), std::runtime_error);
