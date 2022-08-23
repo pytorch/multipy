@@ -5,6 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import importlib
+import inspect
 from abc import ABC, abstractmethod
 from pickle import (  # type: ignore[attr-defined]  # type: ignore[attr-defined]
     _getattribute,
@@ -212,6 +213,15 @@ class OrderedImporter(Importer):
         return module.__file__ is None
 
     def import_module(self, module_name: str) -> ModuleType:
+        def check_if_torch_package(obj):
+            for cls in inspect.getmro(type(obj)):
+                if (
+                    cls.__module__ == "torch.package.importer"
+                    and cls.__name__ == "Importer"
+                ):
+                    return True
+            return False
+
         last_err = None
         for importer in self._importers:
             # allow for torch.package bc

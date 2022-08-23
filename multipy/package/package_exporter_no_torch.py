@@ -10,6 +10,8 @@ import io
 import linecache
 import pickletools
 import platform
+
+import sys
 import types
 from collections import defaultdict, OrderedDict
 from dataclasses import dataclass
@@ -523,7 +525,9 @@ class PackageExporter:
             # and continue.
             filename = getattr(module_obj, "__file__", None)
             error_context = None
-            if filename is None:
+            if module_name in sys.builtin_module_names:
+                pass
+            elif filename is None:
                 packaging_error = PackagingErrorReason.NO_DUNDER_FILE
             elif filename.endswith(tuple(importlib.machinery.EXTENSION_SUFFIXES)):
                 if self.auto_extern_c_extension_modules:
