@@ -38,14 +38,10 @@ struct TORCH_API InterpreterSession {
   // NOLINTNEXTLINE(bugprone-exception-escape)
   ~InterpreterSession();
   Obj global(const char* module, const char* name) {
-    TORCH_DEPLOY_TRY
     return impl_->global(module, name);
-    TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
   Obj fromIValue(at::IValue ivalue) {
-    TORCH_DEPLOY_TRY
     return impl_->fromIValue(std::move(ivalue));
-    TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
   ReplicatedObj createMovable(Obj obj);
   Obj fromMovable(const ReplicatedObj& obj);
@@ -73,9 +69,7 @@ class TORCH_API Interpreter {
  public:
   Interpreter(InterpreterManager* manager, std::shared_ptr<Environment> env);
   InterpreterSession acquireSession() const {
-    TORCH_DEPLOY_TRY
     return InterpreterSession(pImpl_->acquireSession(), manager_);
-    TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
   ~Interpreter();
   Interpreter(Interpreter&& rhs) noexcept
@@ -98,16 +92,12 @@ struct Package;
 struct TORCH_API LoadBalancer {
   explicit LoadBalancer(size_t n)
       : uses_(new uint64_t[8 * n]), allocated_(n), n_(n) {
-    TORCH_DEPLOY_TRY
     // 8*... to avoid false sharing of atomics on the same cache line
     memset(uses_.get(), 0, 8 * n_ * sizeof(uint64_t));
-    TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
   void setResourceLimit(size_t n) {
-    TORCH_DEPLOY_TRY
     MULTIPY_INTERNAL_ASSERT(n <= allocated_);
     n_ = n;
-    TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
   int acquire();
   void free(int where);
@@ -128,26 +118,20 @@ struct TORCH_API InterpreterManager {
   // get a free model, guarenteed that no other user of acquireOne has the same
   // model. It _is_ possible that other users will be using the interpreter.
   InterpreterSession acquireOne() {
-    TORCH_DEPLOY_TRY
     int where = resources_.acquire();
     InterpreterSession I = instances_[where].acquireSession();
     I.notifyIdx_ = where;
     return I;
-    TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
 
   // use to make sure something gets run on all interpreters, such as loading or
   // unloading a model eagerly
   at::ArrayRef<Interpreter> allInstances() {
-    TORCH_DEPLOY_TRY
     return instances_;
-    TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
   void debugLimitInterpreters(size_t N) {
-    TORCH_DEPLOY_TRY
     AT_ASSERT(N <= instances_.size());
     resources_.setResourceLimit(N);
-    TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
   Package loadPackage(const std::string& uri);
   Package loadPackage(
@@ -200,34 +184,26 @@ struct TORCH_API ReplicatedObj {
   InterpreterSession acquireSession(
       const Interpreter* onThisInterpreter = nullptr) const;
   at::IValue operator()(at::ArrayRef<at::IValue> args) const {
-    TORCH_DEPLOY_TRY
     auto I = acquireSession();
     return I.self(args).toIValue();
-    TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
 
   [[nodiscard]] at::IValue callKwargs(
       std::vector<at::IValue> args,
       std::unordered_map<std::string, c10::IValue> kwargs) const {
-    TORCH_DEPLOY_TRY
     auto I = acquireSession();
     return I.self.callKwargs(std::move(args), std::move(kwargs)).toIValue();
-    TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
 
   [[nodiscard]] at::IValue callKwargs(
       std::unordered_map<std::string, c10::IValue> kwargs) const {
-    TORCH_DEPLOY_TRY
     auto I = acquireSession();
     return I.self.callKwargs(std::move(kwargs)).toIValue();
-    TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
 
   [[nodiscard]] bool hasattr(const char* name) const {
-    TORCH_DEPLOY_TRY
     auto I = acquireSession();
     return I.self.hasattr(name);
-    TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
 
   void unload(const Interpreter* onThisInterpreter = nullptr);
@@ -276,20 +252,16 @@ class PythonMethodWrapper : public torch::IMethod {
 struct TORCH_API Package {
   // shorthand for getting the object as a pickle resource in the package
   ReplicatedObj loadPickle(const std::string& module, const std::string& file) {
-    TORCH_DEPLOY_TRY
     auto I = acquireSession();
     auto loaded = I.self.attr("load_pickle")({module, file});
     return I.createMovable(loaded);
-    TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
 
   InterpreterSession acquireSession() {
-    TORCH_DEPLOY_TRY
     auto I = manager_->acquireOne();
     I.self =
         I.impl_->createOrGetPackageImporterFromContainerFile(containerFile_);
     return I;
-    TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
 
  private:
