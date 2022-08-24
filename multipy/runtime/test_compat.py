@@ -13,7 +13,6 @@ class TestCompat(unittest.TestCase):
     def test_torchvision(self):
         import torchvision  # noqa: F401
 
-    @unittest.skip("torchaudio has a symbol error")
     def test_torchaudio(self):
         import torchaudio  # noqa: F401
 
