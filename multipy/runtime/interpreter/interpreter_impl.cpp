@@ -237,73 +237,89 @@ bool file_exists(const std::string& path) {
   return (stat(path.c_str(), &buf) == 0);
 }
 
+extern "C" __attribute__((visibility("default"))) void
+ConcreteInterpreterImplConstructorCommon(
+    const std::vector<std::string>& extra_python_paths,
+    const std::vector<std::string>& plugin_paths) {
+  BuiltinRegistry::runPreInitialization();
+  PyPreConfig preconfig;
+  PyPreConfig_InitIsolatedConfig(&preconfig);
+  PyStatus status = Py_PreInitialize(&preconfig);
+  TORCH_INTERNAL_ASSERT(!PyStatus_Exception(status))
+
+  PyConfig config;
+
+#ifdef FBCODE_CAFFE2
+  PyConfig_InitIsolatedConfig(&config);
+
+  // Completely blank out the path configuration. This ensures we have
+  // complete control of how our embedded Python searches for modules, and we
+  // will never consult the external filesystem. See:
+  // https://docs.python.org/3/c-api/init_config.html#path-configuration
+  config.site_import = 0;
+  status = PyConfig_SetString(&config, &config.base_exec_prefix, L"");
+  status =
+      PyConfig_SetString(&config, &config.base_executable, L"torch_deploy");
+  status = PyConfig_SetString(&config, &config.base_prefix, L"");
+  status = PyConfig_SetString(&config, &config.exec_prefix, L"");
+  status = PyConfig_SetString(&config, &config.executable, L"torch_deploy");
+  status = PyConfig_SetString(&config, &config.prefix, L"");
+  config.module_search_paths_set = 1;
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
+  wchar_t* module_search_paths[0] = {};
+  status = PyConfig_SetWideStringList(
+      &config, &config.module_search_paths, 0, module_search_paths);
+#else
+  // dynamic linking path
+  PyConfig_InitPythonConfig(&config);
+
+#endif
+
+  status = Py_InitializeFromConfig(&config);
+  PyConfig_Clear(&config);
+  TORCH_INTERNAL_ASSERT(!PyStatus_Exception(status))
+#ifdef FBCODE_CAFFE2
+  auto sys_path = global_impl("sys", "path");
+  for (const auto& entry : extra_python_paths) {
+    sys_path.attr("insert")(0, entry);
+  }
+#endif
+
+  if (plugin_paths.size() > 0) {
+    auto sys_path = global_impl("sys", "path").cast<std::vector<std::string>>();
+    std::string libtorch_python_path;
+    for (auto path : sys_path) {
+      auto file = path + "/torch/lib/libtorch_python.so";
+      if (file_exists(file)) {
+        libtorch_python_path = file;
+        break;
+      }
+    }
+    loadSearchFile(libtorch_python_path.c_str());
+    for (auto path : plugin_paths) {
+      loadSearchFile(path.c_str());
+    }
+  }
+
+  BuiltinRegistry::runPostInitialization();
+}
+
 struct __attribute__((visibility("hidden"))) ConcreteInterpreterImpl
     : public torch::deploy::InterpreterImpl {
   explicit ConcreteInterpreterImpl(
+      py::object saveStorageArg,
+      py::object loadStorageArg,
+      py::object getPackageArg,
+      py::dict objectsArg)
+      : saveStorage(saveStorageArg),
+        loadStorage(loadStorageArg),
+        getPackage(getPackageArg),
+        objects(objectsArg) {}
+
+  explicit ConcreteInterpreterImpl(
       const std::vector<std::string>& extra_python_paths,
       const std::vector<std::string>& plugin_paths) {
-    BuiltinRegistry::runPreInitialization();
-    PyPreConfig preconfig;
-    PyPreConfig_InitIsolatedConfig(&preconfig);
-    PyStatus status = Py_PreInitialize(&preconfig);
-    TORCH_INTERNAL_ASSERT(!PyStatus_Exception(status))
-
-    PyConfig config;
-
-#ifdef FBCODE_CAFFE2
-    PyConfig_InitIsolatedConfig(&config);
-
-    // Completely blank out the path configuration. This ensures we have
-    // complete control of how our embedded Python searches for modules, and we
-    // will never consult the external filesystem. See:
-    // https://docs.python.org/3/c-api/init_config.html#path-configuration
-    config.site_import = 0;
-    status = PyConfig_SetString(&config, &config.base_exec_prefix, L"");
-    status =
-        PyConfig_SetString(&config, &config.base_executable, L"torch_deploy");
-    status = PyConfig_SetString(&config, &config.base_prefix, L"");
-    status = PyConfig_SetString(&config, &config.exec_prefix, L"");
-    status = PyConfig_SetString(&config, &config.executable, L"torch_deploy");
-    status = PyConfig_SetString(&config, &config.prefix, L"");
-    config.module_search_paths_set = 1;
-    // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
-    wchar_t* module_search_paths[0] = {};
-    status = PyConfig_SetWideStringList(
-        &config, &config.module_search_paths, 0, module_search_paths);
-#else
-    // dynamic linking path
-    PyConfig_InitPythonConfig(&config);
-
-#endif
-
-    status = Py_InitializeFromConfig(&config);
-    PyConfig_Clear(&config);
-    TORCH_INTERNAL_ASSERT(!PyStatus_Exception(status))
-#ifdef FBCODE_CAFFE2
-    auto sys_path = global_impl("sys", "path");
-    for (const auto& entry : extra_python_paths) {
-      sys_path.attr("insert")(0, entry);
-    }
-#endif
-
-    if (plugin_paths.size() > 0) {
-      auto sys_path =
-          global_impl("sys", "path").cast<std::vector<std::string>>();
-      std::string libtorch_python_path;
-      for (auto path : sys_path) {
-        auto file = path + "/torch/lib/libtorch_python.so";
-        if (file_exists(file)) {
-          libtorch_python_path = file;
-          break;
-        }
-      }
-      loadSearchFile(libtorch_python_path.c_str());
-      for (auto path : plugin_paths) {
-        loadSearchFile(path.c_str());
-      }
-    }
-
-    BuiltinRegistry::runPostInitialization();
+    ConcreteInterpreterImplConstructorCommon(extra_python_paths, plugin_paths);
 
     int r = PyRun_SimpleString(start);
     TORCH_INTERNAL_ASSERT(r == 0);
@@ -550,5 +566,20 @@ torch::deploy::InterpreterImpl*
 newInterpreterImpl(
     const std::vector<std::string>& extra_python_paths,
     const std::vector<std::string>& plugin_paths) {
-  return new ConcreteInterpreterImpl(extra_python_paths, plugin_paths);
+  ConcreteInterpreterImplConstructorCommon(extra_python_paths, plugin_paths);
+
+  int r = PyRun_SimpleString(start);
+  TORCH_INTERNAL_ASSERT(r == 0);
+
+  py::object saveStorage =
+      global_impl("multipy.utils._deploy", "_save_storages");
+  py::object loadStorage =
+      global_impl("multipy.utils._deploy", "_load_storages");
+  py::object getPackage = global_impl("multipy.utils._deploy", "_get_package");
+  py::dict objects = global_impl("multipy.utils._deploy", "_deploy_objects");
+
+  PyEval_SaveThread();
+
+  return new ConcreteInterpreterImpl(
+      saveStorage, loadStorage, getPackage, objects);
 }
