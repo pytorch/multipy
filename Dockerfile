@@ -49,6 +49,7 @@ COPY . .
 RUN git submodule update --init --recursive --jobs 0
 
 # Install conda + neccessary python dependencies
+# Note: libpython-static available from 3.8 onwards in conda forge: https://anaconda.org/conda-forge/libpython-static/files.
 FROM dev-base as conda
 ARG PYTHON_VERSION=3.8
 RUN curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
@@ -57,7 +58,7 @@ RUN curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Mini
     rm ~/miniconda.sh && \
     /opt/conda/bin/conda install -y python=${PYTHON_VERSION} cmake mkl mkl-include conda-build pyyaml numpy ipython && \
     /opt/conda/bin/conda install -y -c conda-forge libpython-static=${PYTHON_VERSION} && \
-    # /opt/conda/bin/conda install -y pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly && \
+    /opt/conda/bin/conda install -y pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly && \
     /opt/conda/bin/conda clean -ya
 
 # Build/Install pytorch with post-cxx11 ABI
