@@ -57,7 +57,7 @@ RUN curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Mini
     rm ~/miniconda.sh && \
     /opt/conda/bin/conda install -y python=${PYTHON_VERSION} cmake mkl mkl-include conda-build pyyaml numpy ipython && \
     /opt/conda/bin/conda install -y -c conda-forge libpython-static=${PYTHON_VERSION} && \
-    /opt/conda/bin/conda install -y pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly && \
+    # /opt/conda/bin/conda install -y pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly && \
     /opt/conda/bin/conda clean -ya
 
 # Build/Install pytorch with post-cxx11 ABI
