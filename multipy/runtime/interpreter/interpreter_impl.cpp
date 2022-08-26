@@ -20,6 +20,7 @@
 #include <torch/csrc/Dtype.h>
 #include <torch/csrc/DynamicTypes.h>
 #include <torch/csrc/autograd/generated/variable_factories.h>
+#include <torch/csrc/jit/frontend/tracer.h>
 
 #include <cassert>
 #include <cstdio>
@@ -110,6 +111,10 @@ class MultiPySafeRethrow {
   const char* file_;
   const int line_;
 };
+
+std::vector<::torch::jit::StackEntry> noPythonCallstack() {
+  return std::vector<::torch::jit::StackEntry>();
+}
 
 } // namespace
 
@@ -315,24 +320,6 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterImpl
         loadStorage(loadStorageArg),
         getPackage(getPackageArg),
         objects(objectsArg) {}
-
-  explicit ConcreteInterpreterImpl(
-      const std::vector<std::string>& extra_python_paths,
-      const std::vector<std::string>& plugin_paths) {
-    ConcreteInterpreterImplConstructorCommon(extra_python_paths, plugin_paths);
-
-    int r = PyRun_SimpleString(start);
-    TORCH_INTERNAL_ASSERT(r == 0);
-
-    // we cache these so we don't have to repeat the conversion of strings into
-    // Python and hash table lookups to get to these object
-    saveStorage = global_impl("multipy.utils._deploy", "_save_storages");
-    loadStorage = global_impl("multipy.utils._deploy", "_load_storages");
-    getPackage = global_impl("multipy.utils._deploy", "_get_package");
-    objects = global_impl("multipy.utils._deploy", "_deploy_objects");
-    // Release the GIL that PyInitialize acquires
-    PyEval_SaveThread();
-  }
 
   ~ConcreteInterpreterImpl() override {
     PyGILState_Ensure();
@@ -570,6 +557,9 @@ newInterpreterImpl(
 
   int r = PyRun_SimpleString(start);
   TORCH_INTERNAL_ASSERT(r == 0);
+
+  // disable python callstack for jit tracer
+  ::torch::jit::tracer::setPythonCallstack(&noPythonCallstack);
 
   py::object saveStorage =
       global_impl("multipy.utils._deploy", "_save_storages");

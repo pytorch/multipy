@@ -33,9 +33,10 @@ class TestCompat(unittest.TestCase):
 
         fn(torch.randn(10), torch.randn(10))
 
-    @unittest.skip("ofi segfaults")
     def test_torchdynamo_ofi(self):
         import torchdynamo
+
+        torchdynamo.reset()
 
         @torchdynamo.optimize("ofi")
         def fn(x, y):
