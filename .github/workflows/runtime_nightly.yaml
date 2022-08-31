@@ -15,6 +15,7 @@ jobs:
       matrix:
         python-version: [3.8, 3.9, '3.10']
         platform: [ubuntu-18.04]
+        runner_dir: [$RUNNER_TEMP] #needed since releaser has trouble parsing env variables
       fail-fast: false
     runs-on: ${{ matrix.platform }}
     steps:
@@ -40,10 +41,10 @@ jobs:
           tar -czvf multipy_runtime.tar.gz multipy/
 
       - name: Update nightly release
-        env:
-          INPUT_FILES: $RUNNER_TEMP/multipy_runtime.tar.gz
         uses: pyTooling/Actions/releaser@main
         with:
           tag: nightly-runtime-python${{ matrix.python-version }}
           rm: true
           token: ${{ secrets.GITHUB_TOKEN }}
+          files: |
+            ${{matrix.runner_dir}}/multipy_runtime.tar.gz
