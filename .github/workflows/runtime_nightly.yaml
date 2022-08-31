@@ -34,6 +34,7 @@ jobs:
 
       - name: Create Tarball
         run: |
+          cd ${RUNNER_TEMP}
           docker cp $(docker run -d multipy):/opt/dist/multipy .
           tar -czvf multipy_runtime.tar.gz multipy/
           pwd
@@ -46,4 +47,4 @@ jobs:
           rm: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
-            multipy_runtime.tar.gz
+            "${RUNNER_TEMP}/multipy_runtime.tar.gz""
