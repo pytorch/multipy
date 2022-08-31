@@ -42,7 +42,7 @@ jobs:
       - name: Update nightly release
         uses: pyTooling/Actions/releaser@main
         with:
-          tag: nightly-runtime-python-${{ matrix.python-version }}
+          tag: nightly-runtime-python${{ matrix.python-version }}
           rm: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
