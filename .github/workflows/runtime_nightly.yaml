@@ -32,19 +32,13 @@ jobs:
           DOCKER_BUILDKIT: 1
         run: docker build -t multipy --progress=plain --build-arg PYTHON_VERSION=${{ matrix.python-version }} .
 
-      - name: Test
-        run: |
-          docker run --rm multipy multipy/runtime/build/test_deploy
-
-      - name: Compat Tests
-        run: |
-          docker run --rm multipy bash -c "pip install -r compat-requirements.txt && multipy/runtime/build/interactive_embedded_interpreter --pyscript multipy/runtime/test_compat.py"
-      
       - name: Create Tarball
         run: |
           cd ${RUNNER_TEMP}
           docker cp $(docker run -d multipy):/opt/dist/multipy .
           tar -czvf multipy_runtime.tar.gz multipy/
+          pwd
+          ls
 
       - name: Update nightly release
         uses: pyTooling/Actions/releaser@main
