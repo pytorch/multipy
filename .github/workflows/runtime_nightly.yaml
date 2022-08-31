@@ -34,18 +34,16 @@ jobs:
 
       - name: Create Tarball
         run: |
-          cd ${RUNNER_TEMP}
+          mkdir dist
+          cd dist
           docker cp $(docker run -d multipy):/opt/dist/multipy .
           tar -czvf multipy_runtime.tar.gz multipy/
-          pwd
-          ls
 
       - name: Update nightly release
-        working-directory: ${RUNNER_TEMP}
         uses: pyTooling/Actions/releaser@main
         with:
           tag: nightly-runtime-python-${{ matrix.python-version }}
           rm: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
-            multipy_runtime.tar.gz
+            dist/multipy_runtime.tar.gz
