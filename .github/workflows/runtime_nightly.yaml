@@ -56,5 +56,6 @@ jobs:
 
       - name: Push docker image
         run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
           docker tag multipy "ghcr.io/pytorch/multipy-runtime-python${{ matrix.python-version }}:nightly"
           docker push "ghcr.io/pytorch/multipy-runtime-python${{ matrix.python-version }}:nightly"
