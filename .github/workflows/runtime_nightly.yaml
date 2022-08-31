@@ -1,4 +1,4 @@
-name: Multipy runtime nightly release
+name: Multipy runtime nightly test + release
 
 on:
   schedule:
@@ -9,27 +9,10 @@ jobs:
     strategy:
       matrix:
         python-version: [3.8, 3.9, '3.10']
-        platform: [linux.2xlarge]
-        abi: [0,1]
+        platform: [ubuntu-18.04]
       fail-fast: false
     runs-on: ${{ matrix.platform }}
     steps:
-      - name: Update pip
-        run: |
-          sudo yum update -y
-          sudo yum -y install git python3-pip
-          sudo pip3 install --upgrade pip
-
-      - name: Setup conda
-        run: |
-          wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ${RUNNER_TEMP}/miniconda.sh
-          bash ${RUNNER_TEMP}/miniconda.sh -b -p ${RUNNER_TEMP}/miniconda
-
-      - name: setup Path
-        run: |
-          echo "${RUNNER_TEMP}/miniconda/bin" >> $GITHUB_PATH
-          echo "CONDA=${RUNNER_TEMP}/miniconda" >> $GITHUB_PATH
-
       - name: Checkout MultiPy
         uses: actions/checkout@v2
         with:
@@ -40,94 +23,28 @@ jobs:
         with:
           github-secret: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install C++ toolchain
-        run: |
-              sudo yum -y install clang llvm
-              export CC=clang
-              export CXX=clang++
-              sudo yum -y install xz-devel bzip2-devel libnsl2-devel readline-devel expat-devel gdbm-devel glibc-devel gmp-devel libffi-devel libGL-devel libX11-devel ncurses-devel openssl-devel sqlite-devel tcl-devel tix-devel tk-devel
-              sudo yum -y install lzma
-              sudo yum -y install uuid
-              sudo yum -y install openmpi-devel
-              sudo yum -y install zlib-devel
-
-      - name: create conda env
-        run: |
-          conda create --name multipy_runtime_env python=${{ matrix.python-version }}
-          conda info
-
-      - name: Install python/pytorch dependencies
-        shell: bash -l {0}
+      - name: Build
         env:
-          PYTHON_VERSION: ${{ matrix.python-version }}
-        run: |
-          conda run -n multipy_runtime_env python -m pip install astunparse numpy ninja pyyaml mkl mkl-include setuptools cmake cffi typing_extensions future six requests dataclasses pytest
+          DOCKER_BUILDKIT: 1
+        run: docker build -t multipy --progress=plain --build-arg PYTHON_VERSION=${{ matrix.python-version }} .
 
-      - name: gen examples
-        shell: bash -l {0}
-        env:
-          PYTHON_VERSION: ${{ matrix.python-version }}
+      - name: Test
         run: |
-            # A minor hack to get the CI working as conda doesn't have torch,
-            # fortunately we can remove this once we have a dynamically linked torch
-            cd multipy/runtime/example
-            conda create --name example_env python=${{ matrix.python-version }}
-            conda run -n example_env python -m pip install torch torchvision torchaudio pathlib
-            conda run -n example_env python generate_examples.py
+          docker run --rm multipy multipy/runtime/build/test_deploy
+      - name: Compat Tests
+        run: |
+          docker run --rm multipy bash -c "pip install -r compat-requirements.txt && multipy/runtime/build/interactive_embedded_interpreter --pyscript multipy/runtime/test_compat.py"
 
-      - name: Build pytorch with ABI=${{ matrix.abi }}
-        shell: bash -l {0}
-        env:
-          PYTHON_VERSION: ${{ matrix.python-version }}
+      - name: Create Tarball
         run: |
-              export GLIBCXX_USE_CXX11_ABI=${{ matrix.abi }}
-              export CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=${{ matrix.abi }}"
-              export TORCH_CXX_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=${{ matrix.abi }}"
-              cd multipy/runtime/third-party/pytorch
-              export USE_DEPLOY=1
-              conda run -n multipy_runtime_env python setup.py develop
-
-      - name: Build multipy runtime with ABI=${{ matrix.abi }}
-        shell: bash -l {0}
-        env:
-          PYTHON_VERSION: ${{ matrix.python-version }}
-        run: |
-              cd multipy/runtime
-              mkdir build
-              cd build
-              conda run -n multipy_runtime_env cmake -DABI_EQUALS_1=${{ matrix.abi }} ..
-              conda run -n multipy_runtime_env cmake --build . --config Release
-
-      - name: install files
-        shell: bash -l {0}
-        env:
-          PYTHON_VERSION: ${{ matrix.python-version }}
-        run: |
-              cd multipy/runtime/build
-              conda run -n multipy_runtime_env cmake --install . --prefix "."
-
-      - name: Run unit tests with ABI=${{ matrix.abi }}
-        shell: bash -l {0}
-        env:
-          PYTHON_VERSION: ${{ matrix.python-version }}
-        run: |
-              export PYTHONPATH=$PYTHONPATH:$(pwd)
-              cd multipy/runtime/build
-              ./test_deploy
-
-      - name: create tarball [click me to get a list of files for the nightly release]
-        shell: bash -l {0}
-        env:
-          PYTHON_VERSION: ${{ matrix.python-version }}
-        run: |
-              cd multipy/runtime/build/dist
-              tar -czvf multipy_runtime.tar.gz multipy/
+          docker cp $(docker run -d multipy):/opt/dist/multipy .
+          tar -czvf multipy_runtime_python${{ matrix.python-version }}.tar.gz multipy/
 
       - name: Update nightly release
         uses: pyTooling/Actions/releaser@main
         with:
-          tag: nightly-runtime-abi-${{ matrix.abi }}
+          tag: nightly-runtime-python${{ matrix.python-version }}
           rm: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
-            multipy/runtime/build/dist/multipy_runtime.tar.gz
+            multipy_runtime_python${{ matrix.python-version }}.tar.gz

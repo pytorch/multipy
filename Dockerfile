@@ -78,4 +78,4 @@ RUN mkdir multipy/runtime/build && \
 RUN cd multipy/runtime/example && python generate_examples.py
 ENV PYTHONPATH=. LIBTEST_DEPLOY_LIB=multipy/runtime/build/libtest_deploy_lib.so
 
-RUN mkdir /opt/dist && cp -r multipy/runtime/build/dist /opt/dist/
+RUN mkdir /opt/dist && cp -r multipy/runtime/build/dist/* /opt/dist/
