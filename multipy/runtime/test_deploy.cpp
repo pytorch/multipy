@@ -459,7 +459,7 @@ result = torch.Tensor([1,2,3])
   EXPECT_TRUE(w_grad0.equal(w_grad1));
 }
 
-#ifndef LEGACY_PYTHON_3_7
+#ifndef LEGACY_PYTHON_BEFORE_3_8
 TEST(TorchpyTest, ImportlibMetadata) {
   torch::deploy::InterpreterManager m(1);
   m.registerModuleSource("importlib_test", R"PYTHON(
