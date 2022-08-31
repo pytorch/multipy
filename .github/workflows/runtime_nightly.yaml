@@ -15,7 +15,7 @@ jobs:
       matrix:
         python-version: [3.8, 3.9, '3.10']
         platform: [ubuntu-18.04]
-        runner_dir: [{{ env.RUNNER_TEMP }}] #needed since releaser has trouble parsing env variables
+        runner_dir: [${{ env.RUNNER_TEMP }}] #needed since releaser has trouble parsing env variables
       fail-fast: false
     runs-on: ${{ matrix.platform }}
     steps:
@@ -47,4 +47,4 @@ jobs:
           rm: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
-            ${{matrix.runner_dir}}/multipy_runtime.tar.gz
+            ${{env.RUNNER_TEMP}}/multipy_runtime.tar.gz
