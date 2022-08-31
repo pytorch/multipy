@@ -313,7 +313,7 @@ int main(int argc, char* argv[]) {
   // make sure gpu_wrapper.py is in the import path
   for (auto& interp : manager.allInstances()) {
     auto I = interp.acquireSession();
-    I.global("sys", "path").attr("append")({"torch/csrc/deploy/example"});
+    I.global("sys", "path").attr("append")({"multipy/runtime/example"});
   }
 
   auto n_threads = {1, 2, 4, 8, 16, 32, 40};
