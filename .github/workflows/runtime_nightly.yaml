@@ -42,9 +42,10 @@ jobs:
 
       - name: Update nightly release
         uses: pyTooling/Actions/releaser@main
+        working-directory: ${RUNNER_TEMP}
         with:
           tag: nightly-runtime-python-${{ matrix.python-version }}
           rm: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
-            "${RUNNER_TEMP}/multipy_runtime.tar.gz""
+            multipy_runtime.tar.gz
