@@ -3,6 +3,11 @@ name: Multipy runtime nightly test + release
 on:
   schedule:
     - cron: '0 2 * * *' # run at 2 AM UTC
+  pull_request:
+  push:
+    branches:
+      - main
+
 
 jobs:
   unittest:
@@ -48,3 +53,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
             multipy_runtime_python${{ matrix.python-version }}.tar.gz
+
+      - name: Push docker image
+        run: |
+          docker tag multipy "ghcr.io/pytorch/multipy-runtime-python${{ matrix.python-version }}:nightly"
+          docker push "ghcr.io/pytorch/multipy-runtime-python${{ matrix.python-version }}:nightly"
