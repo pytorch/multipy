@@ -267,6 +267,10 @@ static void* local__tls_get_addr(TLSIndex* idx);
 __attribute__((noinline)) void __deploy_register_code() {
   std::cout << ""; // otherwise the breakpoint doesn't get hit, not sure if
                    // there is a more stable way of doing this.
+  unsigned i;
+  for (i = 0; i < 10; i++) {
+    __asm__ volatile("" : "+g"(i) : :);
+  }
 };
 
 struct DeployModuleInfo {
