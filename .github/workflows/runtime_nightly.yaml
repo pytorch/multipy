@@ -8,6 +8,9 @@ on:
     branches:
       - main
 
+env:
+  INPUT_FILES: $RUNNER_TEMP/multipy_runtime.tar.gz
+
 jobs:
   unittest:
     strategy:
@@ -44,5 +47,3 @@ jobs:
           tag: nightly-runtime-python${{ matrix.python-version }}
           rm: true
           token: ${{ secrets.GITHUB_TOKEN }}
-          files: |
-            ${{ RUNNER_TEMP }}/multipy_runtime.tar.gz
