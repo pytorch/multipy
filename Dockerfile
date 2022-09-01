@@ -67,7 +67,7 @@ RUN git submodule update --init --recursive --jobs 0
 # FROM prep as conda_pyenv
 # RUN if [[ $LEGACY_PYTHON_PRE_3_8 -eq 0 ]]; then \
     # echo "conda true" && \
-FROM dev-base as conda
+FROM dev-base as conda-pyenv
 ARG PYTHON_VERSION=3.8
 RUN curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
     chmod +x ~/miniconda.sh && \
@@ -88,9 +88,9 @@ RUN curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Mini
     # fi
 
 # Build/Install pytorch with post-cxx11 ABI
-FROM conda as build
+FROM conda-pyenv as build
 WORKDIR /opt/multipy/multipy/runtime/third-party/pytorch
-COPY --from=conda /opt/conda /opt/conda
+COPY --from=conda-pyenv /opt/conda /opt/conda
 COPY --from=submodule-update /opt/multipy /opt/multipy
 
 WORKDIR /opt/multipy
