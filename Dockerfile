@@ -60,16 +60,13 @@ RUN if [[ $MULTIPY_BUILD_PYTHON_MAJOR_VERSION -eq 3 && $MULTIPY_BUILD_PYTHON_MIN
     elif [[ $MULTIPY_BUILD_PYTHON_MAJOR_VERSION -eq 3 && $MULTIPY_BUILD_PYTHON_MINOR_VERSION -eq 7 ]]; then \
     export LEGACY_PYTHON_PRE_3_8=1; \
     fi
-RUN echo $LEGACY_PYTHON_PRE_3_8
 
-# Install conda + necessary python dependencies for 3.8+.
-# Use pyenv for 3.7, as libpython-static is available in conda forge for 3.8+.
-FROM prep as conda_pyenv
-RUN if [[ $LEGACY_PYTHON_PRE_3_8 -eq 0 ]]; then \
     # echo "conda true" && \
 # FROM prep as conda-pyenv
 # ARG PYTHON_VERSION=3.8
 # RUN curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
+
+RUN if [[ $LEGACY_PYTHON_PRE_3_8 -eq 0 ]]; then \
     curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
     chmod +x ~/miniconda.sh && \
     ~/miniconda.sh -b -p /opt/conda && \
@@ -78,6 +75,7 @@ RUN if [[ $LEGACY_PYTHON_PRE_3_8 -eq 0 ]]; then \
     /opt/conda/bin/conda install -y -c conda-forge libpython-static=${MULTIPY_BUILD_PYTHON_VERSION} && \
     /opt/conda/bin/conda install -y pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly && \
     /opt/conda/bin/conda clean -ya; \
+    fi
     # else \
     # echo "pyenv true" && \
     # export CFLAGS="-fPIC -g" && \
@@ -85,7 +83,7 @@ RUN if [[ $LEGACY_PYTHON_PRE_3_8 -eq 0 ]]; then \
     # pyenv install --force 3.7.10 && \
     # virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy_3_7_10 && \
     # source ~/venvs/multipy_3_7_10/bin/activate; \
-    fi
+    # fi
 
 # Build/Install pytorch with post-cxx11 ABI
 FROM conda-pyenv as build
@@ -95,10 +93,12 @@ COPY --from=submodule-update /opt/multipy /opt/multipy
 
 WORKDIR /opt/multipy
 
+
+   # cmake .. -DLEGACY_PYTHON_PRE_3_8=${LEGACY_PYTHON_PRE_3_8} && \
+
 # Build Multipy
 RUN mkdir multipy/runtime/build && \
    cd multipy/runtime/build && \
-   # cmake .. -DLEGACY_PYTHON_PRE_3_8=${LEGACY_PYTHON_PRE_3_8} && \
    cmake .. && \
    cmake --build . --config Release && \
    cmake --install . --prefix "."
