@@ -60,8 +60,7 @@ RUN if [[ $MULTIPY_BUILD_PYTHON_MAJOR_VERSION -eq 3 && $MULTIPY_BUILD_PYTHON_MIN
     elif [[ $MULTIPY_BUILD_PYTHON_MAJOR_VERSION -eq 3 && $MULTIPY_BUILD_PYTHON_MINOR_VERSION -eq 7 ]]; then \
     export LEGACY_PYTHON_PRE_3_8 = 1; \
     fi
-RUN if [[ $LEGACY_PYTHON_PRE_3_8 -eq 0 ]]; then \
-    curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
+RUN curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
     chmod +x ~/miniconda.sh && \
     ~/miniconda.sh -b -p /opt/conda && \
     rm ~/miniconda.sh && \
@@ -71,7 +70,7 @@ RUN if [[ $LEGACY_PYTHON_PRE_3_8 -eq 0 ]]; then \
     /opt/conda/bin/conda clean -ya; \
     fi
 
-
+#RUN if [[ $LEGACY_PYTHON_PRE_3_8 -eq 0 ]]; then \
     # echo "conda true" && \
 # FROM prep as conda-pyenv
 # ARG PYTHON_VERSION=3.8
