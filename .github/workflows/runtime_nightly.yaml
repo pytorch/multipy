@@ -3,11 +3,6 @@ name: Multipy runtime nightly test + release
 on:
   schedule:
     - cron: '0 2 * * *' # run at 2 AM UTC
-  pull_request:
-  push:
-    branches:
-      - main
-
 
 jobs:
   unittest:
