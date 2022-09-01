@@ -70,12 +70,13 @@ RUN if [[ $LEGACY_PYTHON_PRE_3_8 -eq 0 ]]; then \
     /opt/conda/bin/conda install -y -c conda-forge libpython-static=${MULTIPY_BUILD_PYTHON_VERSION} && \
     /opt/conda/bin/conda install -y pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly && \
     /opt/conda/bin/conda clean -ya; \
-    else \
-    export CFLAGS="-fPIC -g" && \
-    pyenv install --force 3.7.10 && \
-    virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy_3_7_10 && \
-    source ~/venvs/multipy_3_7_10/bin/activate; \
     fi
+    # else \ # default 3.7 in 18.04?
+    # export CFLAGS="-fPIC -g" && \
+    # pyenv install --force 3.7.10 && \
+    # virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy_3_7_10 && \
+    # source ~/venvs/multipy_3_7_10/bin/activate; \
+    # fi
 
 # Build/Install pytorch with post-cxx11 ABI
 FROM conda-pyenv as build
