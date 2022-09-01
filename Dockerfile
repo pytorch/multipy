@@ -2,6 +2,8 @@ ARG BASE_IMAGE=nvidia/cuda:11.3.1-devel-ubuntu18.04
 
 FROM ${BASE_IMAGE} as dev-base
 
+SHELL ["/bin/bash", "-c"]
+
 # Install system dependencies
 RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
         apt update && DEBIAN_FRONTEND=noninteractive apt install -yq --no-install-recommends \
