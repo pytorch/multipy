@@ -92,7 +92,7 @@ WORKDIR /opt/multipy
 # Build Multipy
 RUN mkdir multipy/runtime/build && \
    cd multipy/runtime/build && \
-   cmake .. -DLEGACY_PYTHON_PRE_3_8 && \
+   cmake .. -DLEGACY_PYTHON_PRE_3_8=${LEGACY_PYTHON_PRE_3_8} && \
    cmake --build . --config Release && \
    cmake --install . --prefix "."
 
