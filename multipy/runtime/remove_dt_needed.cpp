@@ -33,7 +33,7 @@ int main(int argc, const char** argv) {
     return 1;
   }
   const char* filename = argv[1];
-  int fd_ = open(filename, O_RDWR);
+  int fd_ = open(filename, O_RDONLY);
   CHECK(fd_ != -1, "failed to open {}: {}", filename, strerror(errno));
   struct stat s = {0};
   if (-1 == fstat(fd_, &s)) {
