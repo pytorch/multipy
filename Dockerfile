@@ -52,7 +52,7 @@ RUN git submodule update --init --recursive --jobs 0
 # ARG is in scope of stage it is defined in.
 FROM dev-base as prep
 ARG PYTHON_VERSION=3.8
-ENV MULTIPY_BUILD_PYTHON_VERSION=${PYTHON_VERSION}
+RUN export MULTIPY_BUILD_PYTHON_VERSION=${PYTHON_VERSION}
 RUN export MULTIPY_BUILD_PYTHON_MAJOR_VERSION=${MULTIPY_BUILD_PYTHON_VERSION%%.*}
 RUN export MULTIPY_BUILD_PYTHON_MINOR_VERSION=${MULTIPY_BUILD_PYTHON_VERSION##*.}
 RUN if [[ $MULTIPY_BUILD_PYTHON_MAJOR_VERSION -eq 3 && $MULTIPY_BUILD_PYTHON_MINOR_VERSION -gt 7 ]]; then \
@@ -62,11 +62,11 @@ RUN if [[ $MULTIPY_BUILD_PYTHON_MAJOR_VERSION -eq 3 && $MULTIPY_BUILD_PYTHON_MIN
     fi
 RUN echo $LEGACY_PYTHON_PRE_3_8
 
-# Install conda + neccessary python dependencies for 3.8+.
+# Install conda + necessary python dependencies for 3.8+.
 # Use pyenv for 3.7, as libpython-static is available in conda forge for 3.8+.
 FROM prep as conda_pyenv
 RUN if [[ $LEGACY_PYTHON_PRE_3_8 -eq 0 ]]; then \
-    echo "conda true" && \
+    # echo "conda true" && \
     curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
     chmod +x ~/miniconda.sh && \
     ~/miniconda.sh -b -p /opt/conda && \
@@ -75,13 +75,13 @@ RUN if [[ $LEGACY_PYTHON_PRE_3_8 -eq 0 ]]; then \
     /opt/conda/bin/conda install -y -c conda-forge libpython-static=${MULTIPY_BUILD_PYTHON_VERSION} && \
     /opt/conda/bin/conda install -y pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly && \
     /opt/conda/bin/conda clean -ya; \
-    else \
-    echo "pyenv true" && \
-    export CFLAGS="-fPIC -g" && \
-    # install pyenv ?
-    pyenv install --force 3.7.10 && \
-    virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy_3_7_10 && \
-    source ~/venvs/multipy_3_7_10/bin/activate; \
+    # else \
+    # echo "pyenv true" && \
+    # export CFLAGS="-fPIC -g" && \
+    # # install pyenv ?
+    # pyenv install --force 3.7.10 && \
+    # virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy_3_7_10 && \
+    # source ~/venvs/multipy_3_7_10/bin/activate; \
     fi
 
 # Build/Install pytorch with post-cxx11 ABI
