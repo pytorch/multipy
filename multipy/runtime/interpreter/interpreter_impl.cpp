@@ -243,62 +243,8 @@ ConcreteInterpreterImplConstructorCommon(
     const std::vector<std::string>& plugin_paths) {
   BuiltinRegistry::runPreInitialization();
 
-//   PyPreConfig preconfig;
-//   PyPreConfig_InitIsolatedConfig(&preconfig);
-//   PyStatus status = Py_PreInitialize(&preconfig);
-//   TORCH_INTERNAL_ASSERT(!PyStatus_Exception(status))
-
-//   PyConfig config;
-
-// #ifdef FBCODE_CAFFE2
-//   PyConfig_InitIsolatedConfig(&config);
-
-//   // Completely blank out the path configuration. This ensures we have
-//   // complete control of how our embedded Python searches for modules, and we
-//   // will never consult the external filesystem. See:
-//   // https://docs.python.org/3/c-api/init_config.html#path-configuration
-//   config.site_import = 0;
-//   status = PyConfig_SetString(&config, &config.base_exec_prefix, L"");
-//   status =
-//       PyConfig_SetString(&config, &config.base_executable, L"torch_deploy");
-//   status = PyConfig_SetString(&config, &config.base_prefix, L"");
-//   status = PyConfig_SetString(&config, &config.exec_prefix, L"");
-//   status = PyConfig_SetString(&config, &config.executable, L"torch_deploy");
-//   status = PyConfig_SetString(&config, &config.prefix, L"");
-//   config.module_search_paths_set = 1;
-//   // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
-//   wchar_t* module_search_paths[0] = {};
-//   status = PyConfig_SetWideStringList(
-//       &config, &config.module_search_paths, 0, module_search_paths);
-// #else
-//   // dynamic linking path
-//   PyConfig_InitPythonConfig(&config);
-
-// #endif
-
-//   status = Py_InitializeFromConfig(&config);
-//   PyConfig_Clear(&config);
-//   TORCH_INTERNAL_ASSERT(!PyStatus_Exception(status))
-
-  // std::wstring wsPName(Py_GetProgramName());
-  // std::wstring wsPath(Py_GetPath());
-  // std::wstring wsPrefix(Py_GetPrefix());
-  // std::wstring wsExecPrefix(Py_GetExecPrefix());
-
-  // std::string sPName(wsPName.begin(), wsPName.end());
-  // std::string sPath(wsPath.begin(), wsPath.end());
-  // std::string sPrefix(wsPrefix.begin(), wsPrefix.end());
-  // std::string sExecPrefix(wsExecPrefix.begin(), wsExecPrefix.end());
-
-  fwprintf(stderr, Py_GetProgramName());
-  fwprintf(stderr, Py_GetPath());
-  fwprintf(stderr, Py_GetPrefix());
-  fwprintf(stderr, Py_GetExecPrefix());
-
-Py_InitializeEx(1);
-TORCH_INTERNAL_ASSERT(Py_IsInitialized);
-// wchar_t* argv = L"torch_deploy";
-// PySys_SetArgvEx(1, &argv, 0);
+  Py_InitializeEx(1);
+  TORCH_INTERNAL_ASSERT(Py_IsInitialized);
 
 #ifdef FBCODE_CAFFE2
   auto sys_path = global_impl("sys", "path");

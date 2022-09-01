@@ -459,6 +459,7 @@ result = torch.Tensor([1,2,3])
   EXPECT_TRUE(w_grad0.equal(w_grad1));
 }
 
+// Python 3.8+ only.
 TEST(TorchpyTest, ImportlibMetadata) {
   torch::deploy::InterpreterManager m(1);
   m.registerModuleSource("importlib_test", R"PYTHON(
