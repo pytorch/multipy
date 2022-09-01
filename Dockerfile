@@ -4,6 +4,10 @@ FROM ${BASE_IMAGE} as dev-base
 
 SHELL ["/bin/bash", "-c"]
 
+ARG ARGX=1
+FROM xyz${ARGX} as new_stage
+RUN echo "Hello"
+
 # Install system dependencies
 RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
         apt update && DEBIAN_FRONTEND=noninteractive apt install -yq --no-install-recommends \
@@ -134,8 +138,3 @@ RUN cd multipy/runtime/example && python generate_examples.py
 ENV PYTHONPATH=. LIBTEST_DEPLOY_LIB=multipy/runtime/build/libtest_deploy_lib.so
 
 RUN mkdir /opt/dist && cp -r multipy/runtime/build/dist/* /opt/dist/
-
-
-ARG VAR_NAME=1234
-FROM xyz-${VAR_NAME} as new_stage
-# do stuff
