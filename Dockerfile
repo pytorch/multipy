@@ -67,7 +67,8 @@ ENV LEGACY_PYTHON_PRE_3_8=0
 FROM dev-base as multipy-python-minor-version-10
 ENV LEGACY_PYTHON_PRE_3_8=0
 
-FROM multipy-python-minor-version-${PYTHON_MINOR_VERSION} as conda-pyenv
+#FROM multipy-python-minor-version-${PYTHON_MINOR_VERSION} as conda-pyenv
+FROM dev-base as conda-pyenv
 RUN if [[ $LEGACY_PYTHON_PRE_3_8 -eq 0 ]]; then \
     curl -fsSL -v -o ~/miniconda.sh -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
     chmod +x ~/miniconda.sh && \
@@ -133,3 +134,8 @@ RUN cd multipy/runtime/example && python generate_examples.py
 ENV PYTHONPATH=. LIBTEST_DEPLOY_LIB=multipy/runtime/build/libtest_deploy_lib.so
 
 RUN mkdir /opt/dist && cp -r multipy/runtime/build/dist/* /opt/dist/
+
+
+ARG VAR_NAME=1234
+FROM xyz-${VAR_NAME} as new_stage
+# do stuff
