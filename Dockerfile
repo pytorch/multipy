@@ -52,13 +52,12 @@ RUN git submodule update --init --recursive --jobs 0
 # ARG is in scope of stage it is defined in.
 FROM dev-base as conda-pyenv
 ARG PYTHON_VERSION=3.8
-RUN export MULTIPY_BUILD_PYTHON_VERSION=${PYTHON_VERSION}
-RUN export MULTIPY_BUILD_PYTHON_MAJOR_VERSION=${MULTIPY_BUILD_PYTHON_VERSION%%.*}
-RUN export MULTIPY_BUILD_PYTHON_MINOR_VERSION=${MULTIPY_BUILD_PYTHON_VERSION##*.}
-RUN if [[ $MULTIPY_BUILD_PYTHON_MAJOR_VERSION -eq 3 && $MULTIPY_BUILD_PYTHON_MINOR_VERSION -gt 7 ]]; then \
-    export LEGACY_PYTHON_PRE_3_8=0; \
-    elif [[ $MULTIPY_BUILD_PYTHON_MAJOR_VERSION -eq 3 && $MULTIPY_BUILD_PYTHON_MINOR_VERSION -eq 7 ]]; then \
-    export LEGACY_PYTHON_PRE_3_8=1; \
+ENV MULTIPY_BUILD_PYTHON_VERSION=${PYTHON_VERSION}
+ENV LEGACY_PYTHON_PRE_3_8=0
+RUN export MULTIPY_BUILD_PYTHON_MAJOR_VERSION=${MULTIPY_BUILD_PYTHON_VERSION%%.*} && \
+    export MULTIPY_BUILD_PYTHON_MINOR_VERSION=${MULTIPY_BUILD_PYTHON_VERSION##*.} && \
+    if [[ $MULTIPY_BUILD_PYTHON_MAJOR_VERSION -eq 3 && $MULTIPY_BUILD_PYTHON_MINOR_VERSION -lt 8 ]]; then \
+    LEGACY_PYTHON_PRE_3_8=1; \
     fi
 RUN if [[ $LEGACY_PYTHON_PRE_3_8 -eq 0 ]]; then \
     curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
@@ -84,13 +83,10 @@ COPY --from=submodule-update /opt/multipy /opt/multipy
 
 WORKDIR /opt/multipy
 
-
-   # cmake .. -DLEGACY_PYTHON_PRE_3_8=${LEGACY_PYTHON_PRE_3_8} && \
-
 # Build Multipy
 RUN mkdir multipy/runtime/build && \
    cd multipy/runtime/build && \
-   cmake .. && \
+   cmake .. -DLEGACY_PYTHON_PRE_3_8=${LEGACY_PYTHON_PRE_3_8} && \
    cmake --build . --config Release && \
    cmake --install . --prefix "."
 
