@@ -460,17 +460,17 @@ result = torch.Tensor([1,2,3])
 }
 
 // Python 3.8+ only.
-TEST(TorchpyTest, ImportlibMetadata) {
-  torch::deploy::InterpreterManager m(1);
-  m.registerModuleSource("importlib_test", R"PYTHON(
-from importlib.metadata import version
+// TEST(TorchpyTest, ImportlibMetadata) {
+//   torch::deploy::InterpreterManager m(1);
+//   m.registerModuleSource("importlib_test", R"PYTHON(
+// from importlib.metadata import version
 
-result = version("torch")
-)PYTHON");
-  auto I = m.allInstances()[0].acquireSession();
-  auto ver = I.global("importlib_test", "result").toIValue().toString();
-  ASSERT_EQ(ver->string(), "0.0.1+fake_multipy");
-}
+// result = version("torch")
+// )PYTHON");
+//   auto I = m.allInstances()[0].acquireSession();
+//   auto ver = I.global("importlib_test", "result").toIValue().toString();
+//   ASSERT_EQ(ver->string(), "0.0.1+fake_multipy");
+// }
 
 // OSS build does not have bultin numpy support yet. Use this flag to guard the
 // test case.
