@@ -64,6 +64,7 @@ void BuiltinRegistry::runPreInitialization() {
   appendCPythonInittab();
 }
 
+#ifndef LEGACY_PYTHON_PRE_3_8
 const char* metaPathSetupTemplate = R"PYTHON(
 import sys
 from importlib.metadata import DistributionFinder, Distribution
@@ -107,6 +108,22 @@ class DummyDistribution(Distribution):
 
 sys.meta_path.insert(0, F())
 )PYTHON";
+#else
+const char* metaPathSetupTemplate = R"PYTHON(
+import sys
+class F:
+    MODULES = set({<<<DEPLOY_BUILTIN_MODULES_CSV>>>})
+
+    def find_spec(self, fullname, path, target=None):
+        if fullname in self.MODULES:
+            # Load this module using `BuiltinImporter`, but set `path` to None
+            # in order to trick it into loading our module.
+            return sys.meta_path[1].find_spec(fullname, path=None, target=None)
+        return None
+
+sys.meta_path.insert(0, F())
+)PYTHON";
+#endif
 
 void BuiltinRegistry::runPostInitialization() {
   TORCH_INTERNAL_ASSERT(Py_IsInitialized());
