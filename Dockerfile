@@ -75,9 +75,8 @@ ENV LEGACY_PYTHON_PRE_3_8=0
 FROM dev-base as pythonv10
 ENV LEGACY_PYTHON_PRE_3_8=0
 
-
-#FROM dev-base as conda-pyenv
-FROM pythonv${PYTHON_MINOR_VERSION} as conda-pyenv
+#FROM pythonv${PYTHON_MINOR_VERSION} as conda-pyenv
+FROM pythonv8 as conda-pyenv
 RUN if [[ $LEGACY_PYTHON_PRE_3_8 -eq 0 ]]; then \
     curl -fsSL -v -o ~/miniconda.sh -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
     chmod +x ~/miniconda.sh && \
