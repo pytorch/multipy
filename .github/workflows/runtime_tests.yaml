@@ -29,7 +29,7 @@ jobs:
       - name: Build
         env:
           DOCKER_BUILDKIT: 1
-        run: docker build -t multipy --progress=plain --build-arg PYTHON_MAJOR_VERSION=${{ matrix.python-major-version }} --build-arg PYTHON_MINOR_VERSION=${{ matrix.python-minor-version }}  . --no-cache
+        run: docker build -t multipy --progress=plain --build-arg PYTHON_MAJOR_VERSION=${{ matrix.python-major-version }} --build-arg PYTHON_MINOR_VERSION=${{ matrix.python-minor-version }}  .
 
       - name: Test
         run: |

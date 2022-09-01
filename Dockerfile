@@ -59,20 +59,21 @@ ARG PYTHON_MAJOR_VERSION=3
 ARG PYTHON_MINOR_VERSION=8
 ENV PYTHON_VERSION=${PYTHON_MAJOR_VERSION}.${PYTHON_MINOR_VERSION}
 
-FROM dev-base as multipy-python-minor-version-7
+FROM dev-base as multipy-python-minor-v7
 ENV LEGACY_PYTHON_PRE_3_8=1
 
-FROM dev-base as multipy-python-minor-version-8
+FROM dev-base as multipy-python-minor-v8
 ENV LEGACY_PYTHON_PRE_3_8=0
 
-FROM dev-base as multipy-python-minor-version-9
+FROM dev-base as multipy-python-minor-v9
 ENV LEGACY_PYTHON_PRE_3_8=0
 
-FROM dev-base as multipy-python-minor-version-10
+FROM dev-base as multipy-python-minor-v10
 ENV LEGACY_PYTHON_PRE_3_8=0
 
-#FROM multipy-python-minor-version-${PYTHON_MINOR_VERSION} as conda-pyenv
-FROM dev-base as conda-pyenv
+
+#FROM dev-base as conda-pyenv
+FROM multipy-python-minor-v${PYTHON_MINOR_VERSION} as conda-pyenv
 RUN if [[ $LEGACY_PYTHON_PRE_3_8 -eq 0 ]]; then \
     curl -fsSL -v -o ~/miniconda.sh -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
     chmod +x ~/miniconda.sh && \
