@@ -50,24 +50,25 @@ RUN git submodule update --init --recursive --jobs 0
 
 # Check python version.
 # ARG is in scope of stage it is defined in.
-FROM dev-base as prep
-ARG PYTHON_VERSION=3.8
-RUN export MULTIPY_BUILD_PYTHON_VERSION=${PYTHON_VERSION}
-RUN export MULTIPY_BUILD_PYTHON_MAJOR_VERSION=${MULTIPY_BUILD_PYTHON_VERSION%%.*}
-RUN export MULTIPY_BUILD_PYTHON_MINOR_VERSION=${MULTIPY_BUILD_PYTHON_VERSION##*.}
-RUN if [[ $MULTIPY_BUILD_PYTHON_MAJOR_VERSION -eq 3 && $MULTIPY_BUILD_PYTHON_MINOR_VERSION -gt 7 ]]; then \
-    export LEGACY_PYTHON_PRE_3_8=0; \
-    elif [[ $MULTIPY_BUILD_PYTHON_MAJOR_VERSION -eq 3 && $MULTIPY_BUILD_PYTHON_MINOR_VERSION -eq 7 ]]; then \
-    export LEGACY_PYTHON_PRE_3_8=1; \
-    fi
-RUN echo $LEGACY_PYTHON_PRE_3_8
+# FROM dev-base as prep
+# ARG PYTHON_VERSION=3.8
+# RUN export MULTIPY_BUILD_PYTHON_VERSION=${PYTHON_VERSION}
+# RUN export MULTIPY_BUILD_PYTHON_MAJOR_VERSION=${MULTIPY_BUILD_PYTHON_VERSION%%.*}
+# RUN export MULTIPY_BUILD_PYTHON_MINOR_VERSION=${MULTIPY_BUILD_PYTHON_VERSION##*.}
+# RUN if [[ $MULTIPY_BUILD_PYTHON_MAJOR_VERSION -eq 3 && $MULTIPY_BUILD_PYTHON_MINOR_VERSION -gt 7 ]]; then \
+#     export LEGACY_PYTHON_PRE_3_8=0; \
+#     elif [[ $MULTIPY_BUILD_PYTHON_MAJOR_VERSION -eq 3 && $MULTIPY_BUILD_PYTHON_MINOR_VERSION -eq 7 ]]; then \
+#     export LEGACY_PYTHON_PRE_3_8=1; \
+#     fi
+# RUN echo $LEGACY_PYTHON_PRE_3_8
 
 # Install conda + necessary python dependencies for 3.8+.
 # Use pyenv for 3.7, as libpython-static is available in conda forge for 3.8+.
-FROM prep as conda_pyenv
-RUN if [[ $LEGACY_PYTHON_PRE_3_8 -eq 0 ]]; then \
+# FROM prep as conda_pyenv
+# RUN if [[ $LEGACY_PYTHON_PRE_3_8 -eq 0 ]]; then \
     # echo "conda true" && \
-    curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
+FROM dev-base as conda_pyenv
+RUN curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
     chmod +x ~/miniconda.sh && \
     ~/miniconda.sh -b -p /opt/conda && \
     rm ~/miniconda.sh && \
@@ -82,7 +83,7 @@ RUN if [[ $LEGACY_PYTHON_PRE_3_8 -eq 0 ]]; then \
     # pyenv install --force 3.7.10 && \
     # virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy_3_7_10 && \
     # source ~/venvs/multipy_3_7_10/bin/activate; \
-    fi
+    # fi
 
 # Build/Install pytorch with post-cxx11 ABI
 FROM conda_pyenv as build
@@ -95,7 +96,8 @@ WORKDIR /opt/multipy
 # Build Multipy
 RUN mkdir multipy/runtime/build && \
    cd multipy/runtime/build && \
-   cmake .. -DLEGACY_PYTHON_PRE_3_8=${LEGACY_PYTHON_PRE_3_8} && \
+   # cmake .. -DLEGACY_PYTHON_PRE_3_8=${LEGACY_PYTHON_PRE_3_8} && \
+   cmake .. && \
    cmake --build . --config Release && \
    cmake --install . --prefix "."
 
