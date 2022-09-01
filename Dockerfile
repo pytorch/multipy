@@ -53,7 +53,7 @@ RUN git submodule update --init --recursive --jobs 0
 
 ARG PYTHON_MAJOR_VERSION=3
 ARG PYTHON_MINOR_VERSION=8
-
+ENV PYTHON_VERSION=${PYTHON_MAJOR_VERSION}.${PYTHON_MINOR_VERSION}
 
 FROM dev-base as multipy-python-minor-version7
 ENV LEGACY_PYTHON_PRE_3_8=1
@@ -74,7 +74,7 @@ RUN if [[ $LEGACY_PYTHON_PRE_3_8 -eq 0 ]]; then \
     ~/miniconda.sh -b -p /opt/conda && \
     rm ~/miniconda.sh && \
     /opt/conda/bin/conda install -y python=${PYTHON_VERSION} cmake mkl mkl-include conda-build pyyaml numpy ipython && \
-    /opt/conda/bin/conda install -y -c conda-forge libpython-static=${PYTHON_MAJOR_VERSION}.${PYTHON_MINOR_VERSION} && \
+    /opt/conda/bin/conda install -y -c conda-forge libpython-static=${PYTHON_VERSION} && \
     /opt/conda/bin/conda install -y pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly && \
     /opt/conda/bin/conda clean -ya; \
     fi
