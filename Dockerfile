@@ -51,31 +51,32 @@ COPY . .
 RUN git submodule update --init --recursive --jobs 0
 
 
-ARG PYTHON_VERSION
-# ENV MINOR_VERSION=${PYTHON_VERSION##*.}
+ARG PYTHON_MAJOR_VERSION=3
+ARG PYTHON_MINOR_VERSION=8
 
-FROM dev-base as multipy-python-version3.7
+
+FROM dev-base as multipy-python-minor-version7
 ENV LEGACY_PYTHON_PRE_3_8=1
 
-FROM dev-base as multipy-python-version3.8
+FROM dev-base as multipy-python-minor-version8
 ENV LEGACY_PYTHON_PRE_3_8=0
 
-FROM dev-base as multipy-python-version3.9
+FROM dev-base as multipy-python-minor-version9
 ENV LEGACY_PYTHON_PRE_3_8=0
 
-FROM dev-base as multipy-python-version3.10
+FROM dev-base as multipy-python-minor-version10
 ENV LEGACY_PYTHON_PRE_3_8=0
 
-FROM multipy-python-version${PYTHON_VERSION} as conda-pyenv
+FROM multipy-python-minor-version${PYTHON_VERSION} as conda-pyenv
 RUN if [[ $LEGACY_PYTHON_PRE_3_8 -eq 0 ]]; then \
     curl -fsSL -v -o ~/miniconda.sh -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
     chmod +x ~/miniconda.sh && \
     ~/miniconda.sh -b -p /opt/conda && \
     rm ~/miniconda.sh && \
     /opt/conda/bin/conda install -y python=${PYTHON_VERSION} cmake mkl mkl-include conda-build pyyaml numpy ipython && \
-    /opt/conda/bin/conda install -y -c conda-forge libpython-static=${PYTHON_VERSION} && \
+    /opt/conda/bin/conda install -y -c conda-forge libpython-static=${PYTHON_MAJOR_VERSION}.${PYTHON_MINOR_VERSION} && \
     /opt/conda/bin/conda install -y pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly && \
-    /opt/conda/bin/conda clean -ya \
+    /opt/conda/bin/conda clean -ya; \
     fi
 
 # Check python version.
