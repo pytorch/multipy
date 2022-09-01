@@ -51,21 +51,22 @@ COPY . .
 RUN git submodule update --init --recursive --jobs 0
 
 
-ARG PYTHON_VERSION
+ARG PYTHON_VERSION=3.8
+ENV MINOR_VERSION=${PYTHON_VERSION##*.}
 
-FROM dev-base as multipy-python-version3.7
+FROM dev-base as multipy-python-version7
 ENV LEGACY_PYTHON_PRE_3_8=1
 
-FROM dev-base as multipy-python-version3.8
+FROM dev-base as multipy-python-version8
 ENV LEGACY_PYTHON_PRE_3_8=0
 
-FROM dev-base as multipy-python-version3.9
+FROM dev-base as multipy-python-version9
 ENV LEGACY_PYTHON_PRE_3_8=0
 
-FROM dev-base as multipy-python-version3.10
+FROM dev-base as multipy-python-version10
 ENV LEGACY_PYTHON_PRE_3_8=0
 
-FROM multipy-python-version${PYTHON_VERSION} as conda-pyenv
+FROM multipy-python-version${MINOR_VERSION} as conda-pyenv
 RUN if [[ $LEGACY_PYTHON_PRE_3_8 -eq 0 ]]; then \
     curl -fsSL -v -o ~/miniconda.sh -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
     chmod +x ~/miniconda.sh && \
