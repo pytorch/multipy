@@ -51,7 +51,7 @@ COPY . .
 RUN git submodule update --init --recursive --jobs 0
 
 
-ARG PYTHON_VERSION=3.8
+ARG PYTHON_VERSION
 ENV MINOR_VERSION=${PYTHON_VERSION##*.}
 
 FROM dev-base as multipy-python-version7
