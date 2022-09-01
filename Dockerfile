@@ -55,41 +55,39 @@ ARG PYTHON_VERSION=3.8
 RUN export MULTIPY_BUILD_PYTHON_VERSION=${PYTHON_VERSION}
 RUN export MULTIPY_BUILD_PYTHON_MAJOR_VERSION=${MULTIPY_BUILD_PYTHON_VERSION%%.*}
 RUN export MULTIPY_BUILD_PYTHON_MINOR_VERSION=${MULTIPY_BUILD_PYTHON_VERSION##*.}
-# RUN if [[ $MULTIPY_BUILD_PYTHON_MAJOR_VERSION -eq 3 && $MULTIPY_BUILD_PYTHON_MINOR_VERSION -gt 7 ]]; then \
-#     export LEGACY_PYTHON_PRE_3_8=0; \
-#     elif [[ $MULTIPY_BUILD_PYTHON_MAJOR_VERSION -eq 3 && $MULTIPY_BUILD_PYTHON_MINOR_VERSION -eq 7 ]]; then \
-#     export LEGACY_PYTHON_PRE_3_8=1; \
-#     fi
+RUN if [[ $MULTIPY_BUILD_PYTHON_MAJOR_VERSION -eq 3 && $MULTIPY_BUILD_PYTHON_MINOR_VERSION -gt 7 ]]; then \
+    export LEGACY_PYTHON_PRE_3_8=0; \
+    elif [[ $MULTIPY_BUILD_PYTHON_MAJOR_VERSION -eq 3 && $MULTIPY_BUILD_PYTHON_MINOR_VERSION -eq 7 ]]; then \
+    export LEGACY_PYTHON_PRE_3_8=1; \
+    fi
 RUN echo $LEGACY_PYTHON_PRE_3_8
 
 # Install conda + necessary python dependencies for 3.8+.
 # Use pyenv for 3.7, as libpython-static is available in conda forge for 3.8+.
-# FROM prep as conda_pyenv
-# RUN if [[ $LEGACY_PYTHON_PRE_3_8 -eq 0 ]]; then \
-    # echo "conda true" && \
-FROM prep as conda-pyenv
-RUN curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
+FROM prep as conda_pyenv
+RUN if [[ $LEGACY_PYTHON_PRE_3_8 -eq 0 ]]; then \
+    echo "conda true" && \
+    curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
     chmod +x ~/miniconda.sh && \
     ~/miniconda.sh -b -p /opt/conda && \
     rm ~/miniconda.sh && \
     /opt/conda/bin/conda install -y python=${MULTIPY_BUILD_PYTHON_VERSION} cmake mkl mkl-include conda-build pyyaml numpy ipython && \
     /opt/conda/bin/conda install -y -c conda-forge libpython-static=${MULTIPY_BUILD_PYTHON_VERSION} && \
     /opt/conda/bin/conda install -y pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly && \
-    /opt/conda/bin/conda clean -ya
-    #; \
-    # else \
-    # echo "pyenv true" && \
-    # export CFLAGS="-fPIC -g" && \
-    # # install pyenv ?
-    # pyenv install --force 3.7.10 && \
-    # virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy_3_7_10 && \
-    # source ~/venvs/multipy_3_7_10/bin/activate; \
-    # fi
+    /opt/conda/bin/conda clean -ya; \
+    else \
+    echo "pyenv true" && \
+    export CFLAGS="-fPIC -g" && \
+    # install pyenv ?
+    pyenv install --force 3.7.10 && \
+    virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy_3_7_10 && \
+    source ~/venvs/multipy_3_7_10/bin/activate; \
+    fi
 
 # Build/Install pytorch with post-cxx11 ABI
 FROM conda-pyenv as build
 WORKDIR /opt/multipy/multipy/runtime/third-party/pytorch
-COPY --from=conda /opt/conda /opt/conda
+COPY --from=conda-pyenv /opt/conda /opt/conda
 COPY --from=submodule-update /opt/multipy /opt/multipy
 
 WORKDIR /opt/multipy
@@ -97,8 +95,8 @@ WORKDIR /opt/multipy
 # Build Multipy
 RUN mkdir multipy/runtime/build && \
    cd multipy/runtime/build && \
-   # cmake .. -DLEGACY_PYTHON_PRE_3_8=${LEGACY_PYTHON_PRE_3_8} && \
-   cmake .. && \
+   cmake .. -DLEGACY_PYTHON_PRE_3_8=${LEGACY_PYTHON_PRE_3_8} && \
+   # cmake .. && \
    cmake --build . --config Release && \
    cmake --install . --prefix "."
 
