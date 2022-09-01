@@ -52,20 +52,14 @@ RUN git submodule update --init --recursive --jobs 0
 # ARG is in scope of stage it is defined in.
 FROM dev-base as prep
 ARG PYTHON_VERSION=3.8
-RUN export MULTIPY_BUILD_PYTHON_VERSION=${PYTHON_VERSION}
-RUN export MULTIPY_BUILD_PYTHON_MAJOR_VERSION=${MULTIPY_BUILD_PYTHON_VERSION%%.*}
-RUN export MULTIPY_BUILD_PYTHON_MINOR_VERSION=${MULTIPY_BUILD_PYTHON_VERSION##*.}
+RUN export MULTIPY_BUILD_PYTHON_VERSION = ${PYTHON_VERSION}
+RUN export MULTIPY_BUILD_PYTHON_MAJOR_VERSION = ${MULTIPY_BUILD_PYTHON_VERSION%%.*}
+RUN export MULTIPY_BUILD_PYTHON_MINOR_VERSION = ${MULTIPY_BUILD_PYTHON_VERSION##*.}
 RUN if [[ $MULTIPY_BUILD_PYTHON_MAJOR_VERSION -eq 3 && $MULTIPY_BUILD_PYTHON_MINOR_VERSION -gt 7 ]]; then \
-    export LEGACY_PYTHON_PRE_3_8=0; \
+    export LEGACY_PYTHON_PRE_3_8 = 0; \
     elif [[ $MULTIPY_BUILD_PYTHON_MAJOR_VERSION -eq 3 && $MULTIPY_BUILD_PYTHON_MINOR_VERSION -eq 7 ]]; then \
-    export LEGACY_PYTHON_PRE_3_8=1; \
+    export LEGACY_PYTHON_PRE_3_8 = 1; \
     fi
-
-    # echo "conda true" && \
-# FROM prep as conda-pyenv
-# ARG PYTHON_VERSION=3.8
-# RUN curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
-
 RUN if [[ $LEGACY_PYTHON_PRE_3_8 -eq 0 ]]; then \
     curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
     chmod +x ~/miniconda.sh && \
@@ -76,6 +70,14 @@ RUN if [[ $LEGACY_PYTHON_PRE_3_8 -eq 0 ]]; then \
     /opt/conda/bin/conda install -y pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly && \
     /opt/conda/bin/conda clean -ya; \
     fi
+
+
+    # echo "conda true" && \
+# FROM prep as conda-pyenv
+# ARG PYTHON_VERSION=3.8
+# RUN curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
+
+
     # else \
     # echo "pyenv true" && \
     # export CFLAGS="-fPIC -g" && \
