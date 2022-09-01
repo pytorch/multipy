@@ -50,7 +50,7 @@ RUN git submodule update --init --recursive --jobs 0
 
 # Check python version.
 # ARG is in scope of stage it is defined in.
-FROM dev-base as prep
+FROM dev-base as conda-pyenv
 ARG PYTHON_VERSION=3.8
 RUN export MULTIPY_BUILD_PYTHON_VERSION = ${PYTHON_VERSION}
 RUN export MULTIPY_BUILD_PYTHON_MAJOR_VERSION = ${MULTIPY_BUILD_PYTHON_VERSION%%.*}
