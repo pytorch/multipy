@@ -72,8 +72,8 @@ RUN if [[ $LEGACY_PYTHON_PRE_3_8 -eq 0 ]]; then \
     chmod +x ~/miniconda.sh && \
     ~/miniconda.sh -b -p /opt/conda && \
     rm ~/miniconda.sh && \
-    /opt/conda/bin/conda install -y python=${MULTIPY_BUILD_PYTHON_VERSION} cmake mkl mkl-include conda-build pyyaml numpy ipython && \
-    /opt/conda/bin/conda install -y -c conda-forge libpython-static=${MULTIPY_BUILD_PYTHON_VERSION} && \
+    /opt/conda/bin/conda install -y python=${PYTHON_VERSION} cmake mkl mkl-include conda-build pyyaml numpy ipython && \
+    /opt/conda/bin/conda install -y -c conda-forge libpython-static=${PYTHON_VERSION} && \
     /opt/conda/bin/conda install -y pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly && \
     /opt/conda/bin/conda clean -ya \
     fi
