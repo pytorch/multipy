@@ -123,7 +123,7 @@ RUN if [[ $PYTHON_MINOR_VERSION -gt 7 ]]; then \
 # Build/Install pytorch with post-cxx11 ABI
 FROM conda-pyenv as build
 WORKDIR /opt/multipy/multipy/runtime/third-party/pytorch
-COPY --from=conda-pyenv /opt/conda /opt/conda
+COPY --from=conda-pyenv /opt/cond[a] /opt/conda
 COPY --from=submodule-update /opt/multipy /opt/multipy
 WORKDIR /opt/multipy
 RUN if [[ $PYTHON_MINOR_VERSION -lt 8 ]]; then \
