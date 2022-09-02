@@ -1,14 +1,33 @@
+#include <ATen/ATen.h>
+#include <ATen/core/ivalue.h>
+#include <caffe2/serialize/inline_container.h>
+#include <multipy/runtime/interpreter/obj.h>
+
+#include <multipy/runtime/interpreter/Optional.hpp>
+#include <multipy/runtime/interpreter/plugin_registry.h>
+#include <multipy/runtime/Exception.h>
+
+#define PY_SSIZE_T_CLEAN
+#include <Python.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/embed.h>
+#include <pybind11/functional.h>
+#include <unordered_map>
+
+namespace py = pybind11;
+using namespace py::literals;
+
 namespace torch {
 namespace deploy {
 
-inline at::IValue Obj::toIValue() {
+at::IValue Obj::toIValue() {
   TORCH_DEPLOY_TRY
   py::handle pyObj = getPyObject();
   return multipy::toTypeInferredIValue(pyObj);
   TORCH_DEPLOY_SAFE_CATCH_RETHROW
 }
 
-inline Obj Obj::call(at::ArrayRef<Obj> args) {
+Obj Obj::call(at::ArrayRef<Obj> args) {
     TORCH_DEPLOY_TRY
     py::tuple m_args(args.size());
     for (size_t i = 0, N = args.size(); i != N; ++i) {
@@ -19,7 +38,7 @@ inline Obj Obj::call(at::ArrayRef<Obj> args) {
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
 
-  inline Obj Obj::call(at::ArrayRef<c10::IValue> args) {
+Obj Obj::call(at::ArrayRef<c10::IValue> args) {
       TORCH_DEPLOY_TRY
       py::tuple m_args(args.size());
       for (size_t i = 0, N = args.size(); i != N; ++i) {
@@ -30,7 +49,7 @@ inline Obj Obj::call(at::ArrayRef<Obj> args) {
       TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
 
-  inline py::object Obj::call(py::handle args, py::handle kwargs) {
+py::object Obj::call(py::handle args, py::handle kwargs) {
     TORCH_DEPLOY_TRY
     PyObject* result = PyObject_Call((*getPyObject()).ptr(), args.ptr(), kwargs.ptr());
     if (!result) {
@@ -41,7 +60,7 @@ inline Obj Obj::call(at::ArrayRef<Obj> args) {
   }
 
 
- inline Obj Obj::callKwargs(
+Obj Obj::callKwargs(
       std::vector<at::IValue> args,
       std::unordered_map<std::string, c10::IValue> kwargs) {
 
@@ -69,20 +88,20 @@ inline Obj Obj::call(at::ArrayRef<Obj> args) {
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
 
-inline bool Obj::hasattr(const char* attr) {
+bool Obj::hasattr(const char* attr) {
   TORCH_DEPLOY_TRY
   return py::hasattr(getPyObject(), attr);
   TORCH_DEPLOY_SAFE_CATCH_RETHROW
 }
 
-inline Obj Obj::attr(const char* attr) {
+Obj Obj::attr(const char* attr) {
   TORCH_DEPLOY_TRY
   py::object pyObj = getPyObject().attr(attr);
   return Obj(&pyObj);
   TORCH_DEPLOY_SAFE_CATCH_RETHROW
 }
 
-inline void Obj::unload(){
+void Obj::unload(){
   TORCH_DEPLOY_TRY
   MULTIPY_CHECK(pyObject_, "pyObject has already been freed");
   free(pyObject_);
@@ -90,7 +109,7 @@ inline void Obj::unload(){
   TORCH_DEPLOY_SAFE_CATCH_RETHROW
 }
 
-inline py::object Obj::getPyObject() const {
+py::object Obj::getPyObject() const {
   MULTIPY_CHECK(pyObject_, "pyObject has already been freed");
   return *pyObject_;
 }

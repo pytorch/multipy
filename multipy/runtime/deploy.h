@@ -19,7 +19,6 @@
 #include <string>
 #include <thread>
 #include <vector>
-#include <functional>
 
 namespace torch {
 namespace deploy {

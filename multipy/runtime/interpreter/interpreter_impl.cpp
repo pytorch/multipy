@@ -5,7 +5,6 @@
 // LICENSE file in the root directory of this source tree.
 
 #include <multipy/runtime/interpreter/interpreter_impl.h>
-
 #include <dlfcn.h>
 
 #define PY_SSIZE_T_CLEAN
@@ -22,6 +21,7 @@
 #include <torch/csrc/DynamicTypes.h>
 #include <torch/csrc/autograd/generated/variable_factories.h>
 #include <unordered_map>
+#include <unordered_set>
 
 #include <cassert>
 #include <cstdio>
@@ -294,14 +294,19 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
     : public torch::deploy::InterpreterSessionImpl {
   ConcreteInterpreterSessionImpl(ConcreteInterpreterImpl* interp)
       : interp_(interp) {}
+  Obj createObj(py::object* pyObj){
+    Obj obj = Obj(pyObj);
+    createdObjs_.insert(pyObj);
+    return obj;
+  }
   Obj global(const char* module, const char* name) override {
     py::object globalObj = global_impl(module, name);
-    return Obj(&globalObj);
+    return createObj(&globalObj);
   }
 
   Obj fromIValue(IValue value) override {
     py::object pyObj = multipy::toPyObject(value);
-    return Obj(&pyObj);
+    return createObj(&pyObj);
   }
   Obj createOrGetPackageImporterFromContainerFile(
       const std::shared_ptr<caffe2::serialize::PyTorchStreamReader>&
@@ -310,7 +315,7 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
     py::object pet =
         (py::object)py::module_::import("torch._C").attr("PyTorchFileReader");
     py::object pyObj =  interp_->getPackage(containerFile_);
-    return Obj(&pyObj);
+    return createObj(&pyObj);
   }
 
   PickledObject pickle(Obj container, Obj obj) override {
@@ -338,14 +343,14 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
   }
   Obj unpickleOrGet(int64_t id, const PickledObject& obj) override {
     if (unpickled_objects.find(id) != unpickled_objects.end()){
-      return Obj(unpickled_objects[id]);
+      return createObj(unpickled_objects[id]);
     }
 
     InitLockAcquire guard(interp_->init_lock_);
     // re-check if something else loaded this before we acquired the
     // init_lock_
     if (unpickled_objects.find(id) != unpickled_objects.end()){
-      return Obj(unpickled_objects[id]);
+      return createObj(unpickled_objects[id]);
     }
 
     py::tuple storages(obj.storages_.size());
@@ -363,7 +368,7 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
     py::object result = interp_->loadStorage(
         id, obj.containerFile_, py::bytes(obj.data_), storages, dtypes);
     unpickled_objects[id] = &result;
-    return Obj(&result);
+    return createObj(&result);
   }
   void unload(int64_t id) override {
     Obj obj = unpickled_objects[id];
@@ -402,12 +407,19 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
     return obj.attr(attr);
   }
 
+  bool isOwner(Obj obj){
+    py::object pyObj = obj.getPyObject();
+    return createdObjs_.find(&pyObj) != createdObjs_.end();
+  }
+
   ~ConcreteInterpreterSessionImpl() override {
     objects_.clear();
   }
   ConcreteInterpreterImpl* interp_;
   ScopedAcquire acquire_;
   std::vector<py::object> objects_;
+  std::unordered_map<int64_t, py::object*> unpickled_objects;
+  std::unordered_set<py::object*> createdObjs_;
 };
 
 torch::deploy::InterpreterSessionImpl*

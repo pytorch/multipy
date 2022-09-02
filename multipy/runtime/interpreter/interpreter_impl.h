@@ -5,23 +5,13 @@
 // LICENSE file in the root directory of this source tree.
 
 #pragma once
-// multi-python abstract code
 #include <ATen/ATen.h>
 #include <ATen/core/ivalue.h>
 #include <caffe2/serialize/inline_container.h>
-
-#include <multipy/runtime/interpreter/Optional.hpp>
-#include <multipy/runtime/interpreter/plugin_registry.h>
-#include <multipy/runtime/Exception.h>
+#include <multipy/runtime/interpreter/obj.h>
 #include <unordered_map>
+#include <set>
 
-#define PY_SSIZE_T_CLEAN
-#include <Python.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/embed.h>
-#include <pybind11/functional.h>
-namespace py = pybind11;
-using namespace py::literals;
 
 /* Torch Deploy intentionally embeds multiple copies of c++ libraries
    providing python bindings necessary for torch::deploy users in the same
@@ -48,20 +38,6 @@ using namespace py::literals;
    but still seems worth sealing off.
 
 */
-#define TORCH_DEPLOY_TRY try {
-#define TORCH_DEPLOY_SAFE_CATCH_RETHROW                                      \
-  }                                                                          \
-  catch (std::exception & err) {                                             \
-    throw std::runtime_error(                                                \
-        std::string(__FILE__) + ":" + std::to_string(__LINE__) +             \
-        ": Exception Caught inside torch::deploy embedded library: \n" +     \
-        err.what());                                                         \
-  }                                                                          \
-  catch (...) {                                                              \
-    throw std::runtime_error(                                                \
-        std::string(__FILE__) + ":" + std::to_string(__LINE__) +             \
-        ": Unknown Exception Caught inside torch::deploy embedded library"); \
-  }
 namespace torch {
 namespace deploy {
 
@@ -74,42 +50,6 @@ struct PickledObject {
   // reconstruct correct Python storages
   std::vector<at::ScalarType> types_;
   std::shared_ptr<caffe2::serialize::PyTorchStreamReader> containerFile_;
-};
-
-// this is a wrapper class that refers to a PyObject* instance in a particular
-// interpreter. We can't use normal PyObject or pybind11 objects here
-// because these objects get used in a user application which will not directly
-// link against libpython. Instead all interaction with the Python state in each
-// interpreter is done via this wrapper class, and methods on
-// InterpreterSession.
-struct Obj {
-  friend struct InterpreterSessionImpl;
-  Obj() : interaction_(nullptr), id_(0), pyObject_(nullptr) {}
-  Obj(InterpreterSessionImpl* interaction, int64_t id, py::object* pyObject)
-      : interaction_(interaction), id_(id), pyObject_(pyObject) {}
-  Obj(py::object* pyObject)
-      : interaction_(nullptr), id_(0), pyObject_(pyObject) {}
-
-  at::IValue toIValue();
-  Obj operator()(at::ArrayRef<Obj> args);
-  Obj operator()(at::ArrayRef<at::IValue> args);
-  Obj callKwargs(
-      std::vector<at::IValue> args,
-      std::unordered_map<std::string, c10::IValue> kwargs);
-  Obj callKwargs(std::unordered_map<std::string, c10::IValue> kwargs);
-
-  bool hasattr(const char* attr);
-  Obj attr(const char* attr);
-  py::object getPyObject() const;
-  py::object call(py::handle args, py::handle kwargs = nullptr);
-  Obj call(at::ArrayRef<c10::IValue> args);
-  Obj call(at::ArrayRef<Obj> args);
-  void unload();
- private:
-  InterpreterSessionImpl* interaction_;
-  int64_t id_;
-  py::object* pyObject_;
-
 };
 
 struct InterpreterSessionImpl {
@@ -144,16 +84,7 @@ struct InterpreterSessionImpl {
       std::unordered_map<std::string, c10::IValue> kwargs) = 0;
   virtual Obj attr(Obj obj, const char* attr) = 0;
   virtual bool hasattr(Obj obj, const char* attr) = 0;
-
- protected:
-  int64_t ID(Obj obj) const {
-    return obj.id_;
-  }
-
-  bool isOwner(Obj obj) const {
-    return this == obj.interaction_;
-  }
-  std::unordered_map<int64_t, py::object*> unpickled_objects;
+  virtual bool isOwner(Obj obj) = 0;
 };
 
 struct InterpreterImpl {
@@ -163,104 +94,6 @@ struct InterpreterImpl {
           find_module) = 0;
   virtual ~InterpreterImpl() = default; // this will uninitialize python
 };
-
-// inline definitions for Objs are necessary to avoid introducing a
-// source file that would need to exist it both the libinterpreter.so and then
-// the libtorchpy library.
-inline at::IValue Obj::toIValue() {
-  TORCH_DEPLOY_TRY
-  py::handle pyObj = getPyObject();
-  return multipy::toTypeInferredIValue(pyObj);
-  TORCH_DEPLOY_SAFE_CATCH_RETHROW
-}
-
-inline Obj Obj::call(at::ArrayRef<Obj> args) {
-    TORCH_DEPLOY_TRY
-    py::tuple m_args(args.size());
-    for (size_t i = 0, N = args.size(); i != N; ++i) {
-      m_args[i] = args[i].getPyObject();
-    }
-    py::object pyObj = call(m_args);
-    return Obj(&pyObj);
-    TORCH_DEPLOY_SAFE_CATCH_RETHROW
-  }
-
-  inline Obj Obj::call(at::ArrayRef<c10::IValue> args) {
-      TORCH_DEPLOY_TRY
-      py::tuple m_args(args.size());
-      for (size_t i = 0, N = args.size(); i != N; ++i) {
-        m_args[i] = multipy::toPyObject(args[i]);
-      }
-      py::object pyObj = call(m_args);
-      return Obj(&pyObj);
-      TORCH_DEPLOY_SAFE_CATCH_RETHROW
-  }
-
-  inline py::object Obj::call(py::handle args, py::handle kwargs) {
-    TORCH_DEPLOY_TRY
-    PyObject* result = PyObject_Call((*getPyObject()).ptr(), args.ptr(), kwargs.ptr());
-    if (!result) {
-      throw py::error_already_set();
-    }
-    return py::reinterpret_steal<py::object>(result);
-    TORCH_DEPLOY_SAFE_CATCH_RETHROW
-  }
-
-
- inline Obj Obj::callKwargs(
-      std::vector<at::IValue> args,
-      std::unordered_map<std::string, c10::IValue> kwargs) {
-
-    TORCH_DEPLOY_TRY
-    py::tuple py_args(args.size());
-    for (size_t i = 0, N = args.size(); i != N; ++i) {
-      py_args[i] = multipy::toPyObject(args[i]);
-    }
-
-    py::dict py_kwargs;
-    for (auto kv : kwargs) {
-      py_kwargs[py::cast(std::get<0>(kv))] =
-          multipy::toPyObject(std::get<1>(kv));
-    }
-    py::object pyObj =call(py_args, py_kwargs);
-    return Obj(&pyObj);
-    TORCH_DEPLOY_SAFE_CATCH_RETHROW
-  }
-
-  inline Obj Obj::callKwargs(std::unordered_map<std::string, c10::IValue> kwargs)
-      {
-    TORCH_DEPLOY_TRY
-    std::vector<at::IValue> args;
-    return callKwargs(args, kwargs);
-    TORCH_DEPLOY_SAFE_CATCH_RETHROW
-  }
-
-
-inline bool Obj::hasattr(const char* attr) {
-  TORCH_DEPLOY_TRY
-  return py::hasattr(getPyObject(), attr);
-  TORCH_DEPLOY_SAFE_CATCH_RETHROW
-}
-
-inline Obj Obj::attr(const char* attr) {
-  TORCH_DEPLOY_TRY
-  py::object pyObj = getPyObject().attr(attr);
-  return Obj(&pyObj);
-  TORCH_DEPLOY_SAFE_CATCH_RETHROW
-}
-
-inline void Obj::unload(){
-  TORCH_DEPLOY_TRY
-  MULTIPY_CHECK(pyObject_, "pyObject has already been freed");
-  free(pyObject_);
-  pyObject_ = nullptr;
-  TORCH_DEPLOY_SAFE_CATCH_RETHROW
-}
-
-inline py::object Obj::getPyObject() const {
-  MULTIPY_CHECK(pyObject_, "pyObject has already been freed");
-  return *pyObject_;
-}
 
 } // namespace deploy
 } // namespace torch
