@@ -51,10 +51,7 @@ COPY . .
 RUN git submodule update --init --recursive --jobs 0
 
 
-ARG PYTHON_MAJOR_VERSION=3
-ARG PYTHON_MINOR_VERSION=8
-ENV PYTHON_MINOR_VERSION=${PYTHON_MINOR_VERSION}
-ENV PYTHON_VERSION=${PYTHON_MAJOR_VERSION}.${PYTHON_MINOR_VERSION}
+
 
 # FROM dev-base as pythonv7
 # ENV LEGACY_PYTHON_PRE_3_8=1
@@ -70,6 +67,10 @@ ENV PYTHON_VERSION=${PYTHON_MAJOR_VERSION}.${PYTHON_MINOR_VERSION}
 
 # FROM pythonv${PYTHON_MINOR_VERSION} as conda-pyenv
 FROM dev-base as conda-pyenv
+ARG PYTHON_MAJOR_VERSION=3
+ARG PYTHON_MINOR_VERSION=8
+ENV PYTHON_MINOR_VERSION=${PYTHON_MINOR_VERSION}
+ENV PYTHON_VERSION=${PYTHON_MAJOR_VERSION}.${PYTHON_MINOR_VERSION}
 RUN if [[ $PYTHON_MINOR_VERSION -gt 7 ]]; then \
     curl -fsSL -v -o ~/miniconda.sh -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
     chmod +x ~/miniconda.sh && \
