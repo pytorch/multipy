@@ -10,8 +10,8 @@ jobs:
   unittest:
     strategy:
       matrix:
-        python-major-version: ['3']
-        python-minor-version: ['7','8','9','10']
+        python-major-version: [3]
+        python-minor-version: [7,8,9,10]
         platform: [ubuntu-18.04]
       fail-fast: false
     runs-on: ${{ matrix.platform }}

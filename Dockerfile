@@ -4,14 +4,6 @@ FROM ${BASE_IMAGE} as dev-base
 
 SHELL ["/bin/bash", "-c"]
 
-ARG ARGX=1
-
-FROM dev-base AS xyz1
-RUN echo "Hello"
-
-FROM xyz${ARGX} as new_stage
-RUN echo "World"
-
 # Install system dependencies
 RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
         apt update && DEBIAN_FRONTEND=noninteractive apt install -yq --no-install-recommends \
@@ -63,21 +55,21 @@ ARG PYTHON_MAJOR_VERSION=3
 ARG PYTHON_MINOR_VERSION=8
 ENV PYTHON_VERSION=${PYTHON_MAJOR_VERSION}.${PYTHON_MINOR_VERSION}
 
-FROM dev-base as pythonv7
-ENV LEGACY_PYTHON_PRE_3_8=1
+# FROM dev-base as pythonv7
+# ENV LEGACY_PYTHON_PRE_3_8=1
 
-FROM dev-base as pythonv8
-ENV LEGACY_PYTHON_PRE_3_8=0
+# FROM dev-base as pythonv8
+# ENV LEGACY_PYTHON_PRE_3_8=0
 
-FROM dev-base as pythonv9
-ENV LEGACY_PYTHON_PRE_3_8=0
+# FROM dev-base as pythonv9
+# ENV LEGACY_PYTHON_PRE_3_8=0
 
-FROM dev-base as pythonv10
-ENV LEGACY_PYTHON_PRE_3_8=0
+# FROM dev-base as pythonv10
+# ENV LEGACY_PYTHON_PRE_3_8=0
 
-#FROM pythonv8 as conda-pyenv
-FROM pythonv${PYTHON_MINOR_VERSION} as conda-pyenv
-RUN if [[ $LEGACY_PYTHON_PRE_3_8 -eq 0 ]]; then \
+# FROM pythonv${PYTHON_MINOR_VERSION} as conda-pyenv
+FROM dev-base as conda-pyenv
+RUN if [[ $PYTHON_MINOR_VERSION -gt 7 ]]; then \
     curl -fsSL -v -o ~/miniconda.sh -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
     chmod +x ~/miniconda.sh && \
     ~/miniconda.sh -b -p /opt/conda && \
@@ -132,11 +124,16 @@ WORKDIR /opt/multipy/multipy/runtime/third-party/pytorch
 COPY --from=conda-pyenv /opt/conda /opt/conda
 COPY --from=submodule-update /opt/multipy /opt/multipy
 WORKDIR /opt/multipy
-RUN mkdir multipy/runtime/build && \
-   cd multipy/runtime/build && \
-   cmake .. -DLEGACY_PYTHON_PRE_3_8=${LEGACY_PYTHON_PRE_3_8} && \
-   cmake --build . --config Release && \
-   cmake --install . --prefix "."
+RUN if [[ $PYTHON_MINOR_VERSION -lt 8 ]]; then \
+    LEGACY_PYTHON_PRE_3_8 = 1; \
+    else \
+    LEGACY_PYTHON_PRE_3_8 = 0; \
+    fi && \
+    mkdir multipy/runtime/build && \
+    cd multipy/runtime/build && \
+    cmake .. -DLEGACY_PYTHON_PRE_3_8=${LEGACY_PYTHON_PRE_3_8} && \
+    cmake --build . --config Release && \
+    cmake --install . --prefix "."
 
 RUN cd multipy/runtime/example && python generate_examples.py
 ENV PYTHONPATH=. LIBTEST_DEPLOY_LIB=multipy/runtime/build/libtest_deploy_lib.so
