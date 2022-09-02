@@ -127,9 +127,9 @@ COPY --from=conda-pyenv /opt/cond[a] /opt/conda
 COPY --from=submodule-update /opt/multipy /opt/multipy
 WORKDIR /opt/multipy
 RUN if [[ $PYTHON_MINOR_VERSION -lt 8 ]]; then \
-    LEGACY_PYTHON_PRE_3_8 = 1; \
+    export LEGACY_PYTHON_PRE_3_8 = 1; \
     else \
-    LEGACY_PYTHON_PRE_3_8 = 0; \
+    export LEGACY_PYTHON_PRE_3_8 = 0; \
     fi && \
     mkdir multipy/runtime/build && \
     cd multipy/runtime/build && \
