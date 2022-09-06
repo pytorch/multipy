@@ -10,7 +10,6 @@ RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
         build-essential \
         ca-certificates \
         ccache \
-        cmake \
         curl \
         wget \
         git \
@@ -38,7 +37,7 @@ RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
         libsqlite3-dev && \
         echo "deb http://security.ubuntu.com/ubuntu focal-security main" >> /etc/apt/sources.list && \
         apt update && \
-        apt install -y binutils && \
+        apt install -y binutils cmake && \
     rm -rf /var/lib/apt/lists/*
 RUN /usr/sbin/update-ccache-symlinks
 RUN mkdir /opt/ccache && ccache --set-config=cache_dir=/opt/ccache
