@@ -8,7 +8,6 @@ RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
         build-essential \
         ca-certificates \
         ccache \
-        cmake \
         curl \
         wget \
         git \
@@ -33,10 +32,16 @@ RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
         tix-dev \
         libgtest-dev \
         tk-dev \
-        libsqlite3-dev && \
+        libsqlite3-dev \
+        apt-transport-https \
+        ca-certificates \
+        gnupg \
+        software-properties-common && \
+        wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add - && \
+        apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main' && \
         echo "deb http://security.ubuntu.com/ubuntu focal-security main" >> /etc/apt/sources.list && \
         apt update && \
-        apt install -y binutils && \
+        apt install -y binutils cmake && \
     rm -rf /var/lib/apt/lists/*
 RUN /usr/sbin/update-ccache-symlinks
 RUN mkdir /opt/ccache && ccache --set-config=cache_dir=/opt/ccache
