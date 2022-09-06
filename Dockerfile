@@ -34,10 +34,10 @@ RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
         tix-dev \
         libgtest-dev \
         tk-dev \
-        libsqlite3-dev && \
-        apt-transport-https && \
-        ca-certificates && \
-        gnupg && \
+        libsqlite3-dev \
+        apt-transport-https \
+        ca-certificates \
+        gnupg \
         software-properties-common && \
         echo "deb http://security.ubuntu.com/ubuntu focal-security main" >> /etc/apt/sources.list && \
         wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add - && \
