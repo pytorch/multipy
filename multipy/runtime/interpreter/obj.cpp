@@ -9,9 +9,7 @@
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/embed.h>
-#include <pybind11/functional.h>
+
 #include <unordered_map>
 
 namespace py = pybind11;
@@ -80,13 +78,13 @@ Obj Obj::callKwargs(
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
 
-  inline Obj Obj::callKwargs(std::unordered_map<std::string, c10::IValue> kwargs)
+Obj Obj::callKwargs(std::unordered_map<std::string, c10::IValue> kwargs)
       {
     TORCH_DEPLOY_TRY
     std::vector<at::IValue> args;
     return callKwargs(args, kwargs);
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
-  }
+}
 
 bool Obj::hasattr(const char* attr) {
   TORCH_DEPLOY_TRY

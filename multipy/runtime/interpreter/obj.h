@@ -9,9 +9,6 @@
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/embed.h>
-#include <pybind11/functional.h>
 #include <unordered_map>
 namespace py = pybind11;
 using namespace py::literals;
