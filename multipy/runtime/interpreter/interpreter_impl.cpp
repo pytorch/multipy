@@ -9,8 +9,6 @@
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
-#include <fmt/format.h>
-#include <multipy/runtime/Exception.h>
 #include <multipy/runtime/interpreter/builtin_registry.h>
 #include <multipy/runtime/interpreter/import_find_sharedfuncptr.h>
 #include <multipy/runtime/interpreter/plugin_registry.h>
@@ -29,7 +27,6 @@
 #include <thread>
 
 namespace py = pybind11;
-using namespace py::literals;
 
 // TODO this should come from cmake
 #define DEBUG 1
