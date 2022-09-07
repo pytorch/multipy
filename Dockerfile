@@ -33,6 +33,9 @@ RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
         libgtest-dev \
         tk-dev \
         libsqlite3-dev \
+        zlib1g-dev \
+        llvm \
+        python-openssl \
         apt-transport-https \
         ca-certificates \
         gnupg \
@@ -53,6 +56,14 @@ WORKDIR /opt/multipy
 COPY . .
 RUN git submodule update --init --recursive --jobs 0
 
+# install pyenv
+FROM dev-base as pyenv-install
+RUN git clone https://github.com/pyenv/pyenv.git ~/.pyenv && \
+    export PYENV_ROOT="~/.pyenv" && \
+    export PATH="$PYENV_ROOT/bin:$PATH"
+# dummy cmd to verify installation.
+RUN pyenv install --list
+
 # Install conda + neccessary python dependencies
 FROM dev-base as conda
 ARG PYTHON_VERSION=3.8
@@ -64,6 +75,7 @@ RUN curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Mini
     /opt/conda/bin/conda install -y -c conda-forge libpython-static=${PYTHON_VERSION} && \
     /opt/conda/bin/conda install -y pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly && \
     /opt/conda/bin/conda clean -ya
+
 
 # Build/Install pytorch with post-cxx11 ABI
 FROM conda as build
