@@ -77,13 +77,13 @@ RUN curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Mini
     /opt/conda/bin/conda install -y pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly && \
     /opt/conda/bin/conda clean -ya && \
     pip3 install virtualenv && \
-    git clone https://github.com/pyenv/pyenv.git ~/.pyenv && \
+    git clone https://github.com/pyenv/pyenv.git ~/.pyenv
     # export PYENV_ROOT="~/.pyenv" && \
     # export PATH="$PYENV_ROOT/bin:$PATH"
     # exec shell ?
 ENV PATH ~/.pyenv/bin:$PATH
 RUN export CFLAGS="-fPIC -g" && \
-    ~/.pyenv/bin/pyenv install --force 3.7.10 && \
+    pyenv install --force 3.7.10 && \
     virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy_3_7_10
 
 
