@@ -64,7 +64,8 @@ RUN git clone https://github.com/pyenv/pyenv.git ~/.pyenv && \
 # dummy cmd to verify installation.
 RUN pyenv install --list
 
-# Install conda + neccessary python dependencies
+
+# Install conda + necessary python dependencies
 FROM dev-base as conda
 ARG PYTHON_VERSION=3.8
 RUN curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
