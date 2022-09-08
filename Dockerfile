@@ -39,7 +39,8 @@ RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
         apt-transport-https \
         ca-certificates \
         gnupg \
-        software-properties-common && \
+        software-properties-common \
+        python3-pip && \
         wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add - && \
         apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main' && \
         echo "deb http://security.ubuntu.com/ubuntu focal-security main" >> /etc/apt/sources.list && \
@@ -74,7 +75,14 @@ RUN curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Mini
     /opt/conda/bin/conda install -y python=${PYTHON_VERSION} mkl mkl-include conda-build pyyaml numpy ipython && \
     /opt/conda/bin/conda install -y -c conda-forge libpython-static=${PYTHON_VERSION} && \
     /opt/conda/bin/conda install -y pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly && \
-    /opt/conda/bin/conda clean -ya
+    /opt/conda/bin/conda clean -ya && \
+    git clone https://github.com/pyenv/pyenv.git ~/.pyenv && \
+    export PYENV_ROOT="~/.pyenv" && \
+    export PATH="$PYENV_ROOT/bin:$PATH" && \
+    pyenv install --list && \
+    pip3 install virtualenv && \
+    pyenv install --force 3.7.10 && \
+    virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy_3_7_10
 
 
 # Build/Install pytorch with post-cxx11 ABI
