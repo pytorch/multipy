@@ -38,7 +38,8 @@ RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
         apt-transport-https \
         ca-certificates \
         gnupg \
-        software-properties-common && \
+        software-properties-common \
+        python3-pip && \
         echo "deb http://security.ubuntu.com/ubuntu focal-security main" >> /etc/apt/sources.list && \
         wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add - && \
         apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main' && \
@@ -85,6 +86,8 @@ RUN if [[ $PYTHON_MINOR_VERSION -gt 7 ]]; then \
     /opt/conda/bin/conda install -y -c conda-forge libpython-static=${PYTHON_VERSION} && \
     /opt/conda/bin/conda install -y pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly && \
     /opt/conda/bin/conda clean -ya; \
+    else \
+    pip3 install virtualenv;
     fi
 
 # Check python version.
