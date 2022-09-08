@@ -58,12 +58,12 @@ COPY . .
 RUN git submodule update --init --recursive --jobs 0
 
 # install pyenv
-FROM dev-base as pyenv-install
-RUN git clone https://github.com/pyenv/pyenv.git ~/.pyenv && \
-    export PYENV_ROOT="~/.pyenv" && \
-    export PATH="$PYENV_ROOT/bin:$PATH"
-# dummy cmd to verify installation.
-RUN pyenv install --list
+# FROM dev-base as pyenv-install
+# RUN git clone https://github.com/pyenv/pyenv.git ~/.pyenv && \
+#     export PYENV_ROOT="~/.pyenv" && \
+#     export PATH="$PYENV_ROOT/bin:$PATH"
+# # dummy cmd to verify installation.
+# RUN pyenv install --list
 
 # Install conda + neccessary python dependencies
 FROM dev-base as conda
@@ -76,11 +76,12 @@ RUN curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Mini
     /opt/conda/bin/conda install -y -c conda-forge libpython-static=${PYTHON_VERSION} && \
     /opt/conda/bin/conda install -y pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly && \
     /opt/conda/bin/conda clean -ya && \
+    pip3 install virtualenv && \
     git clone https://github.com/pyenv/pyenv.git ~/.pyenv && \
     export PYENV_ROOT="~/.pyenv" && \
-    export PATH="$PYENV_ROOT/bin:$PATH" && \
-    pyenv install --list && \
-    pip3 install virtualenv && \
+    export PATH="$PYENV_ROOT/bin:$PATH"
+    # exec shell ?
+RUN export CFLAGS="-fPIC -g" && \
     pyenv install --force 3.7.10 && \
     virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy_3_7_10
 
