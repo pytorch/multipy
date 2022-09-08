@@ -81,9 +81,7 @@ ARG PYTHON_VERSION=3.8
 RUN pip3 install virtualenv && \
     git clone https://github.com/pyenv/pyenv.git ~/.pyenv && \
     ~/.pyenv/bin/pyenv install --force 3.7.10 && \
-    virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy_3_7_10 && \
-    source ~/venvs/multipy_3_7_10/bin/activate && \
-    pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cu113
+    virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy_3_7_10
     # export PYENV_ROOT="~/.pyenv" && \
     # export PATH="$PYENV_ROOT/bin:$PATH"
     # exec shell ?
@@ -102,10 +100,10 @@ COPY --from=submodule-update /opt/multipy /opt/multipy
 WORKDIR /opt/multipy
 
 # Build Multipy
-RUN mkdir multipy/runtime/build && \
+RUN source ~/venvs/multipy_3_7_10/bin/activate && \
+   pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cu113
+   mkdir multipy/runtime/build && \
    cd multipy/runtime/build && \
-   export CC=/usr/bin/gcc-7 && \
-   export CXX=/usr/bin/g++-7 && \
    export CFLAGS="-fPIC -g" && \
    cmake .. && \
    cmake --build . --config Release && \
