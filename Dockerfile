@@ -79,7 +79,10 @@ RUN curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Mini
     pip3 install virtualenv && \
     git clone https://github.com/pyenv/pyenv.git ~/.pyenv && \
     export CFLAGS="-fPIC -g" && \
-    ~/.pyenv/bin/pyenv install --force 3.7.10
+    ~/.pyenv/bin/pyenv install --force 3.7.10 && \
+    virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy_3_7_10 && \
+    source ~/venvs/multipy_3_7_10/bin/activate && \
+    pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cu113
     # export PYENV_ROOT="~/.pyenv" && \
     # export PATH="$PYENV_ROOT/bin:$PATH"
     # exec shell ?
