@@ -88,6 +88,9 @@ RUN if [[ $PYTHON_MINOR_VERSION -gt 7 ]]; then \
     /opt/conda/bin/conda clean -ya; \
     else \
     pip3 install virtualenv;
+    pyenv install --force 3.7.10 && \
+    virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy_3_7_10 && \
+    source ~/venvs/multipy_3_7_10/bin/activate; \
     fi
 
 # Check python version.
