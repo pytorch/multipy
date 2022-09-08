@@ -96,7 +96,7 @@ RUN pip3 install virtualenv && \
 # Build/Install pytorch with post-cxx11 ABI
 FROM conda as build
 WORKDIR /opt/multipy/multipy/runtime/third-party/pytorch
-COPY --from=conda /opt/conda /opt/conda
+# COPY --from=conda /opt/conda /opt/conda
 COPY --from=submodule-update /opt/multipy /opt/multipy
 
 WORKDIR /opt/multipy
