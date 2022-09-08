@@ -490,7 +490,10 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
     py::object pyObj =  interp_->getPackage(containerFile_);
     return createObj(&pyObj);
   }
-  // for this we stil have to enforce a hashtable relationship between objects and py::objects in the interpretersession.
+  // optoin 1) for this we stil have to enforce a hashtable relationship between objects and py::objects in the interpretersession.
+  // option 2) another option is to embedded saveStorages into objects which are created from this interpreter
+  // we can track if something is which is not too difficult
+  // Regardless we probably have to do an isOwnerCheck :(
   PickledObject pickle(Obj container, Obj obj) override {
     py::tuple result = interp_->saveStorage(container.getPyObject(), obj.getPyObject());
     py::bytes bytes = py::cast<py::bytes>(result[0]);
