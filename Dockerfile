@@ -105,6 +105,8 @@ WORKDIR /opt/multipy
 # Build Multipy
 RUN mkdir multipy/runtime/build && \
    cd multipy/runtime/build && \
+   export CC=/usr/bin/gcc-7 && \
+   export CXX=/usr/bin/g++-7 && \
    cmake .. && \
    cmake --build . --config Release && \
    cmake --install . --prefix "."
