@@ -80,7 +80,6 @@ ARG PYTHON_VERSION=3.8
 #     /opt/conda/bin/conda clean -ya && \
 RUN pip3 install virtualenv && \
     git clone https://github.com/pyenv/pyenv.git ~/.pyenv && \
-    export CFLAGS="-fPIC -g" && \
     ~/.pyenv/bin/pyenv install --force 3.7.10 && \
     virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy_3_7_10 && \
     source ~/venvs/multipy_3_7_10/bin/activate && \
@@ -107,6 +106,7 @@ RUN mkdir multipy/runtime/build && \
    cd multipy/runtime/build && \
    export CC=/usr/bin/gcc-7 && \
    export CXX=/usr/bin/g++-7 && \
+   export CFLAGS="-fPIC -g" && \
    cmake .. && \
    cmake --build . --config Release && \
    cmake --install . --prefix "."
