@@ -65,7 +65,7 @@ ARG PYTHON_MAJOR_VERSION=3
 ARG PYTHON_MINOR_VERSION=8
 ENV PYTHON_MINOR_VERSION=${PYTHON_MINOR_VERSION}
 ENV PYTHON_VERSION=${PYTHON_MAJOR_VERSION}.${PYTHON_MINOR_VERSION}
-RUN if [[ $PYTHON_MINOR_VERSION -gt 7 ]]; then \
+RUN if [[ ${PYTHON_MINOR_VERSION} -gt 7 ]]; then \
     curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
     chmod +x ~/miniconda.sh && \
     ~/miniconda.sh -b -p /opt/conda && \
@@ -90,14 +90,14 @@ COPY --from=submodule-update /opt/multipy /opt/multipy
 WORKDIR /opt/multipy
 
 # Build Multipy
-RUN if [[ $PYTHON_MINOR_VERSION -lt 8 ]]; then \
+RUN if [[ ${PYTHON_MINOR_VERSION} -lt 8 ]]; then \
     source ~/venvs/multipy_3_7_10/bin/activate && \
     pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cu113 && \
+    export CFLAGS="-fPIC -g" && \
     export LEGACY_PYTHON_PRE_3_8=1; \
     else \
     export LEGACY_PYTHON_PRE_3_8=0; \
     fi && \
-    export CFLAGS="-fPIC -g" && \
     mkdir multipy/runtime/build && \
     cd multipy/runtime/build && \
     cmake .. -DLEGACY_PYTHON_PRE_3_8=${LEGACY_PYTHON_PRE_3_8} && \
