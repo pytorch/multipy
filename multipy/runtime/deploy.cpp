@@ -24,6 +24,7 @@ const std::initializer_list<ExeSection> pythonInterpreterSections = {
     {".torch_deploy_payload.interpreter_all", true},
     {".torch_deploy_payload.interpreter_cuda", false},
     {".torch_deploy_payload.interpreter_cpu", false},
+    {".torch_deploy_payload.interpreter_hip", false},
 };
 
 const std::initializer_list<InterpreterSymbol> pythonInterpreterSymbols = {
@@ -35,6 +36,9 @@ const std::initializer_list<InterpreterSymbol> pythonInterpreterSymbols = {
      false},
     {"_binary_libtorch_deployinterpreter_cpu_so_start",
      "_binary_libtorch_deployinterpreter_cpu_so_end",
+     false},
+    {"_binary_libtorch_deployinterpreter_hip_so_start",
+     "_binary_libtorch_deployinterpreter_hip_so_end",
      false},
 };
 const std::initializer_list<ExeSection> multipyTorchSections = {
