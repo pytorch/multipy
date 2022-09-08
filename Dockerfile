@@ -93,11 +93,11 @@ WORKDIR /opt/multipy
 RUN if [[ $PYTHON_MINOR_VERSION -lt 8 ]]; then \
     source ~/venvs/multipy_3_7_10/bin/activate && \
     pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cu113 && \
-    export LEGACY_PYTHON_PRE_3_8=1 && \
-    export CFLAGS="-fPIC -g";\
+    export LEGACY_PYTHON_PRE_3_8=1; \
     else \
     export LEGACY_PYTHON_PRE_3_8=0; \
     fi && \
+    export CFLAGS="-fPIC -g" && \
     mkdir multipy/runtime/build && \
     cd multipy/runtime/build && \
     cmake .. -DLEGACY_PYTHON_PRE_3_8=${LEGACY_PYTHON_PRE_3_8} && \
