@@ -54,7 +54,6 @@ add_custom_target(libpython_multipy DEPENDS libpython_multipy.a)
 # Build the interpreter lib, designed to be standalone and dlopened
 # We bake the python and torch_python binding objs into libinterpreter
 set(INTERPRETER_LIB_SOURCES
-  ${INTERPRETER_DIR}/obj.cpp
   ${INTERPRETER_DIR}/interpreter_impl.cpp
   ${INTERPRETER_DIR}/builtin_registry.cpp
   ${INTERPRETER_DIR}/import_find_sharedfuncptr.cpp

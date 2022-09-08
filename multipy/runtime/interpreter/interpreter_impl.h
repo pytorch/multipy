@@ -8,7 +8,7 @@
 #include <ATen/ATen.h>
 #include <ATen/core/ivalue.h>
 #include <caffe2/serialize/inline_container.h>
-#include <multipy/runtime/interpreter/obj.h>
+#include <multipy/runtime/interpreter/Optional.hpp>
 #include <unordered_map>
 #include <set>
 
@@ -38,6 +38,19 @@
    but still seems worth sealing off.
 
 */
+#define TORCH_DEPLOY_TRY try {
+#define TORCH_DEPLOY_SAFE_CATCH_RETHROW                                     \
+  }                                                                         \
+  catch (std::exception & err) {                                            \
+    throw std::runtime_error(                                               \
+        std::string(                                                        \
+            "Exception Caught inside torch::deploy embedded library: \n") + \
+        err.what());                                                        \
+  }                                                                         \
+  catch (...) {                                                             \
+    throw std::runtime_error(std::string(                                   \
+        "Unknown Exception Caught inside torch::deploy embedded library")); \
+  }
 namespace torch {
 namespace deploy {
 
@@ -52,10 +65,45 @@ struct PickledObject {
   std::shared_ptr<caffe2::serialize::PyTorchStreamReader> containerFile_;
 };
 
+struct InterpreterObj {
+  friend struct InterpreterSessionImpl;
+  friend struct Obj;
+
+  private:
+    virtual at::IValue toIValue() const;
+    virtual InterpreterObj call(at::ArrayRef<InterpreterObj> args);
+    virtual InterpreterObj call(at::ArrayRef<c10::IValue> args);
+    virtual InterpreterObj callKwargs(
+        std::vector<at::IValue> args,
+        std::unordered_map<std::string, c10::IValue> kwargs);
+    virtual InterpreterObj callKwargs(std::unordered_map<std::string, c10::IValue> kwargs);
+    virtual bool hasattr(const char* attr);
+    virtual InterpreterObj attr(const char* attr);
+};
+
+struct Obj {
+  friend struct InterpreterSessionImpl;
+  friend struct InterpreterObj;
+  Obj(InterpreterObj* baseObj)
+      : baseObj_(baseObj){}
+
+  at::IValue toIValue() const;
+  Obj operator()(at::ArrayRef<Obj> args);
+  Obj operator()(at::ArrayRef<at::IValue> args);
+  Obj callKwargs(
+      std::vector<at::IValue> args,
+      std::unordered_map<std::string, c10::IValue> kwargs);
+  Obj callKwargs(std::unordered_map<std::string, c10::IValue> kwargs);
+  bool hasattr(const char* attr);
+  Obj attr(const char* attr);
+  InterpreterObj* baseObj_;
+};
+
 struct InterpreterSessionImpl {
   friend struct Package;
   friend struct ReplicatedObj;
   friend struct Obj;
+  friend struct InterpreterObj;
   friend struct InterpreterSession;
   friend struct ReplicatedObjImpl;
 
@@ -94,6 +142,48 @@ struct InterpreterImpl {
           find_module) = 0;
   virtual ~InterpreterImpl() = default; // this will uninitialize python
 };
+
+
+// inline definitions for Objs are necessary to avoid introducing a
+// source file that would need to exist it both the libinterpreter.so and then
+// the libtorchpy library.
+inline at::IValue Obj::toIValue() const {
+  return baseObj_->toIValue();
+}
+
+inline Obj Obj::operator()(at::ArrayRef<Obj> args) {
+  std::vector<InterpreterObj> iArgs;
+  for (size_t i = 0, N = args.size(); i != N; ++i) {
+    iArgs.emplace_back(args[i].baseObj_);
+  }
+  InterpreterObj iObj =  baseObj_->call(iArgs);
+  return Obj(&iObj);
+}
+
+inline Obj Obj::operator()(at::ArrayRef<at::IValue> args) {
+  InterpreterObj iObj = baseObj_->call(args);
+  return Obj(&iObj);
+}
+
+inline Obj Obj::callKwargs(
+    std::vector<at::IValue> args,
+    std::unordered_map<std::string, c10::IValue> kwargs) {
+  InterpreterObj iObj =  baseObj_->callKwargs(std::move(args), std::move(kwargs));
+  return Obj(&iObj);
+}
+inline Obj Obj::callKwargs(
+    std::unordered_map<std::string, c10::IValue> kwargs) {
+  InterpreterObj iObj =  baseObj_->callKwargs(std::move(kwargs));
+  return Obj(&iObj);
+}
+inline bool Obj::hasattr(const char* attr) {
+  return baseObj_->hasattr(attr);
+}
+
+inline Obj Obj::attr(const char* attr) {
+  InterpreterObj iObj =  baseObj_->attr(attr);
+  return Obj(&iObj);
+}
 
 } // namespace deploy
 } // namespace torch

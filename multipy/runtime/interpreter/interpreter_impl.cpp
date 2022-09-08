@@ -4,12 +4,12 @@
 // This source code is licensed under the BSD-style license found in the
 // LICENSE file in the root directory of this source tree.
 
-#include <multipy/runtime/interpreter/interpreter_impl.h>
 #include <dlfcn.h>
+#include <multipy/runtime/interpreter/interpreter_impl.h>
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
-
+#include <fmt/format.h>
 #include <multipy/runtime/Exception.h>
 #include <multipy/runtime/interpreter/builtin_registry.h>
 #include <multipy/runtime/interpreter/import_find_sharedfuncptr.h>
@@ -20,16 +20,13 @@
 #include <torch/csrc/Dtype.h>
 #include <torch/csrc/DynamicTypes.h>
 #include <torch/csrc/autograd/generated/variable_factories.h>
-#include <unordered_map>
-#include <unordered_set>
+#include <torch/csrc/jit/frontend/tracer.h>
 
 #include <cassert>
 #include <cstdio>
 #include <iostream>
 #include <map>
 #include <thread>
-
-#include <fmt/format.h>
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -46,6 +43,80 @@ using namespace py::literals;
 #elif (DEBUG == 0)
 #define PYOBJ_ASSERT(obj) assert(NULL != obj);
 #endif
+
+/* Torch Deploy intentionally embeds multiple copies of c++ libraries
+   providing python bindings necessary for torch::deploy users in the same
+   process space in order to provide a multi-python environment.  As a result,
+   any exception types defined by these duplicated libraries can't be safely
+   caught or handled outside of the originating dynamic library (.so).
+
+   In practice this means that you must either
+   catch these exceptions inside the torch::deploy API boundary or risk crashing
+   the client application.
+
+   It is safe to throw exception types that are defined once in
+   the context of the client application, such as std::runtime_error,
+   which isn't duplicated in torch::deploy interpreters.
+
+   ==> Use MULTIPY_SAFE_RETHROW around _ALL_ torch::deploy APIs
+
+   For more information, see
+    https://gcc.gnu.org/wiki/Visibility (section on c++ exceptions)
+    or https://stackoverflow.com/a/14364055
+    or
+   https://stackoverflow.com/questions/14268736/symbol-visibility-exceptions-runtime-error
+    note- this may be only a serious problem on versions of gcc prior to 4.0,
+   but still seems worth sealing off.
+
+*/
+#define MULTIPY_SAFE_RETHROW \
+  return MultiPySafeRethrow(__FILE__, __LINE__) + [&]()
+namespace {
+class MultiPySafeRethrow {
+ public:
+  MultiPySafeRethrow(const char* file, int line) : file_(file), line_(line) {}
+
+  // disable move and assignment
+  MultiPySafeRethrow(const MultiPySafeRethrow&) = delete;
+  MultiPySafeRethrow(MultiPySafeRethrow&&) = delete;
+  MultiPySafeRethrow& operator=(const MultiPySafeRethrow&) = delete;
+  MultiPySafeRethrow& operator=(MultiPySafeRethrow&&) = delete;
+
+  template <typename FunctionType>
+  auto operator+(FunctionType&& fn) const {
+    try {
+      return fn();
+    } catch (py::error_already_set& err) {
+      if (err.matches(PyExc_SystemExit)) {
+        auto code = err.value().attr("code").cast<int>();
+        std::exit(code);
+      }
+      throw std::runtime_error(
+          std::string(file_) + ":" + std::to_string(line_) +
+          ": Exception Caught inside torch::deploy embedded library: \n" +
+          err.what());
+    } catch (std::exception& err) {
+      throw std::runtime_error(
+          std::string(file_) + ":" + std::to_string(line_) +
+          ": Exception Caught inside torch::deploy embedded library: \n" +
+          err.what());
+    } catch (...) {
+      throw std::runtime_error(
+          std::string(file_) + ":" + std::to_string(line_) +
+          ": Unknown Exception Caught inside torch::deploy embedded library");
+    }
+  }
+
+ private:
+  const char* file_;
+  const int line_;
+};
+
+std::vector<::torch::jit::StackEntry> noPythonCallstack() {
+  return std::vector<::torch::jit::StackEntry>();
+}
+
+} // namespace
 
 const char* start = R"PYTHON(
 import _ssl # must come before _hashlib otherwise ssl's locks will be set to a Python that might no longer exist...
@@ -169,6 +240,107 @@ bool file_exists(const std::string& path) {
   struct stat buf;
   return (stat(path.c_str(), &buf) == 0);
 }
+
+struct __attribute__((visibility("hidden"))) ConcreteInterpreterObj
+    : public torch::deploy::InterpreterObj {
+  ConcreteInterpreterObj(py::object* pyObject)
+      : pyObject_(pyObject) {}
+
+  py::object getPyObject() const {
+    MULTIPY_CHECK(pyObject_, "pyObject has already been freed");
+    return *pyObject_;
+  }
+
+  at::IValue toIValue(){
+    TORCH_DEPLOY_TRY
+    py::handle pyObj = getPyObject();
+    return multipy::toTypeInferredIValue(pyObj);
+    TORCH_DEPLOY_SAFE_CATCH_RETHROW
+  }
+
+py::object call(py::handle args, py::handle kwargs) {
+    TORCH_DEPLOY_TRY
+    PyObject* result = PyObject_Call((*getPyObject()).ptr(), args.ptr(), kwargs.ptr());
+    if (!result) {
+      throw py::error_already_set();
+    }
+    return py::reinterpret_steal<py::object>(result);
+    TORCH_DEPLOY_SAFE_CATCH_RETHROW
+  }
+
+ConcreteInterpreterObj call(at::ArrayRef<ConcreteInterpreterObj> args) {
+    TORCH_DEPLOY_TRY
+    py::tuple m_args(args.size());
+    for (size_t i = 0, N = args.size(); i != N; ++i) {
+      m_args[i] = args[i].getPyObject();
+    }
+    py::object pyObj = call(m_args);
+    return ConcreteInterpreterObj(&pyObj);
+    TORCH_DEPLOY_SAFE_CATCH_RETHROW
+  }
+
+ConcreteInterpreterObj call(at::ArrayRef<c10::IValue> args) {
+      TORCH_DEPLOY_TRY
+      py::tuple m_args(args.size());
+      for (size_t i = 0, N = args.size(); i != N; ++i) {
+        m_args[i] = multipy::toPyObject(args[i]);
+      }
+      py::object pyObj = call(m_args);
+      return ConcreteInterpreterObj(&pyObj);
+      TORCH_DEPLOY_SAFE_CATCH_RETHROW
+  }
+
+ConcreteInterpreterObj callKwargs(
+      std::vector<at::IValue> args,
+      std::unordered_map<std::string, c10::IValue> kwargs) {
+
+    TORCH_DEPLOY_TRY
+    py::tuple py_args(args.size());
+    for (size_t i = 0, N = args.size(); i != N; ++i) {
+      py_args[i] = multipy::toPyObject(args[i]);
+    }
+
+    py::dict py_kwargs;
+    for (auto kv : kwargs) {
+      py_kwargs[py::cast(std::get<0>(kv))] =
+          multipy::toPyObject(std::get<1>(kv));
+    }
+    py::object pyObj =call(py_args, py_kwargs);
+    return ConcreteInterpreterObj(&pyObj);
+    TORCH_DEPLOY_SAFE_CATCH_RETHROW
+  }
+
+ConcreteInterpreterObj callKwargs(std::unordered_map<std::string, c10::IValue> kwargs)
+      {
+    TORCH_DEPLOY_TRY
+    std::vector<at::IValue> args;
+    return callKwargs(args, kwargs);
+    TORCH_DEPLOY_SAFE_CATCH_RETHROW
+}
+
+bool hasattr(const char* attr) {
+  TORCH_DEPLOY_TRY
+  return py::hasattr(getPyObject(), attr);
+  TORCH_DEPLOY_SAFE_CATCH_RETHROW
+}
+
+ConcreteInterpreterObj attr(const char* attr) {
+  TORCH_DEPLOY_TRY
+  py::object pyObj = getPyObject().attr(attr);
+  return ConcreteInterpreterObj(&pyObj);
+  TORCH_DEPLOY_SAFE_CATCH_RETHROW
+}
+
+void unload(){
+  TORCH_DEPLOY_TRY
+  MULTIPY_CHECK(pyObject_, "pyObject has already been freed");
+  free(pyObject_);
+  pyObject_ = nullptr;
+  TORCH_DEPLOY_SAFE_CATCH_RETHROW
+}
+  py::object* pyObject_;
+};
+
 
 struct __attribute__((visibility("hidden"))) ConcreteInterpreterImpl
     : public torch::deploy::InterpreterImpl {
@@ -295,7 +467,8 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
   ConcreteInterpreterSessionImpl(ConcreteInterpreterImpl* interp)
       : interp_(interp) {}
   Obj createObj(py::object* pyObj){
-    Obj obj = Obj(pyObj);
+    ConcreteInterpreterObj concreteObj = ConcreteInterpreterObj(pyObj)
+    Obj obj = Obj(&concreteObj);
     createdObjs_.insert(pyObj);
     return obj;
   }
@@ -317,7 +490,7 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
     py::object pyObj =  interp_->getPackage(containerFile_);
     return createObj(&pyObj);
   }
-
+  // for this we stil have to enforce a hashtable relationship between objects and py::objects in the interpretersession.
   PickledObject pickle(Obj container, Obj obj) override {
     py::tuple result = interp_->saveStorage(container.getPyObject(), obj.getPyObject());
     py::bytes bytes = py::cast<py::bytes>(result[0]);
