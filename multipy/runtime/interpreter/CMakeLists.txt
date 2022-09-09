@@ -4,7 +4,7 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+# set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" )
 SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" PARENT_SCOPE)
@@ -70,6 +70,7 @@ set(INTERPRETER_LIB_SOURCES
   ${LINKER_SCRIPT}
 )
 add_library(torch_deployinterpreter SHARED ${INTERPRETER_LIB_SOURCES} ${LINKER_SCRIPT})
+set_property(TARGET torch_deployinterpreter PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 add_library(multipy_torch SHARED plugin_torch.cpp)
 
