@@ -12,4 +12,4 @@
 
 #pragma once
 
-#include <torch/csrc/deploy/deploy.h>
+#include <multipy/runtime/deploy.h>

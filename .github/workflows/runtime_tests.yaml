@@ -10,7 +10,7 @@ jobs:
   unittest:
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: [3.8, 3.9, '3.10']
         platform: [ubuntu-18.04]
       fail-fast: false
     runs-on: ${{ matrix.platform }}
@@ -33,3 +33,7 @@ jobs:
       - name: Test
         run: |
           docker run --rm multipy multipy/runtime/build/test_deploy
+
+      - name: Compat Tests
+        run: |
+          docker run --rm multipy bash -c "pip install -r compat-requirements.txt && multipy/runtime/build/interactive_embedded_interpreter --pyscript multipy/runtime/test_compat.py"

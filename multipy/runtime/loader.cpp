@@ -70,7 +70,8 @@ namespace torch {
 namespace deploy {
 
 #define DEPLOY_ERROR(msg_fmt, ...) \
-  throw DeployLoaderError(fmt::format(msg_fmt, ##__VA_ARGS__))
+  throw DeployLoaderError(         \
+      fmt::format("{}:{}: " msg_fmt, __FILE__, __LINE__, ##__VA_ARGS__))
 
 #define DEPLOY_CHECK(cond, fmt, ...)  \
   if (!(cond)) {                      \
@@ -266,6 +267,10 @@ static void* local__tls_get_addr(TLSIndex* idx);
 __attribute__((noinline)) void __deploy_register_code() {
   std::cout << ""; // otherwise the breakpoint doesn't get hit, not sure if
                    // there is a more stable way of doing this.
+  unsigned i;
+  for (i = 0; i < 10; i++) {
+    __asm__ volatile("" : "+g"(i) : :);
+  }
 };
 
 struct DeployModuleInfo {
@@ -286,8 +291,10 @@ struct __attribute__((visibility("hidden"))) SystemLibraryImpl
   SystemLibraryImpl(void* handle, bool steal)
       : handle_(handle), own_handle_(steal && handle != RTLD_DEFAULT) {}
 
-  multipy::optional<Elf64_Addr> sym(const char* name) const override {
-    void* r = dlsym(handle_, name);
+  multipy::optional<Elf64_Addr> sym(
+      const char* name,
+      const char* version = nullptr) const override {
+    void* r = version ? dlvsym(handle_, name, version) : dlsym(handle_, name);
     if (!r) {
       return multipy::nullopt;
     }
@@ -390,6 +397,9 @@ struct ElfDynamicInfo {
   size_t n_plt_rela_ = 0;
   Elf64_Rela* rela_ = nullptr;
   size_t n_rela_ = 0;
+  Elf64_Versym* versym_ = nullptr;
+  Elf64_Verneed* verneed_ = nullptr;
+  size_t n_verneed_ = 0;
   linker_ctor_function_t init_func_ = nullptr;
   linker_ctor_function_t* init_array_ = nullptr;
   linker_dtor_function_t fini_func_ = nullptr;
@@ -446,6 +456,16 @@ struct ElfDynamicInfo {
           break;
         case DT_RELASZ:
           n_rela_ = value / sizeof(Elf64_Rela);
+          break;
+
+        case DT_VERSYM:
+          versym_ = (Elf64_Versym*)addr;
+          break;
+        case DT_VERNEED:
+          verneed_ = (Elf64_Verneed*)addr;
+          break;
+        case DT_VERNEEDNUM:
+          n_verneed_ = value;
           break;
 
         case DT_INIT:
@@ -970,21 +990,51 @@ struct __attribute__((visibility("hidden"))) CustomLibraryImpl
         return (Elf64_Addr)__cxa_thread_atexit_impl;
       }
     }
+
+    // Get the version string if required by the symbol.
+    // https://refspecs.linuxfoundation.org/LSB_3.0.0/LSB-PDA/LSB-PDA.junk/symversion.html
+    const char* version = nullptr;
+    Elf64_Versym versym = 0;
+    if (dyninfo_.versym_) {
+      versym = dyninfo_.versym_[r_sym];
+      // 0=local, 1=global, >2=version
+      if (versym >= 2) {
+        auto* verneed = dyninfo_.verneed_;
+        for (auto i = 0; i < dyninfo_.n_verneed_; i++) {
+          Elf64_Vernaux* aux =
+              (Elf64_Vernaux*)((unsigned long)verneed + verneed->vn_aux);
+          for (auto j = 0; j < verneed->vn_cnt; j++) {
+            if (aux->vna_other == versym) {
+              version = dyninfo_.get_string(aux->vna_name);
+              break;
+            }
+            aux = (Elf64_Vernaux*)((unsigned long)aux + aux->vna_next);
+          }
+          verneed = (Elf64_Verneed*)((unsigned long)verneed + verneed->vn_next);
+        }
+      }
+    }
+
     for (const auto& sys_lib : symbol_search_path_) {
-      auto r = sys_lib->sym(sym_name);
+      auto r = sys_lib->sym(sym_name, version);
       if (r) {
         return r;
       }
     }
-    auto r = sym(sym_name);
+    auto r = sym(sym_name, version);
     if (r) {
       return r;
     }
     if (ELF64_ST_BIND(sym_st.st_info) != STB_WEAK) {
+      if (!version) {
+        version = "nullptr";
+      }
       DEPLOY_ERROR(
-          "{}: '{}' symbol not found in ElfFile lookup",
+          "{}: '{}' symbol not found in ElfFile lookup, version {} ({})",
           name_.c_str(),
-          sym_name);
+          sym_name,
+          version,
+          versym);
     }
     return multipy::nullopt;
   }
@@ -1170,7 +1220,11 @@ struct __attribute__((visibility("hidden"))) CustomLibraryImpl
     f(argc_, argv_, environ);
   }
 
-  multipy::optional<Elf64_Addr> sym(const char* name) const override {
+  multipy::optional<Elf64_Addr> sym(
+      const char* name,
+      const char* version = nullptr) const override {
+    // We ignore version since this is looking up symbols in this file and there
+    // should only be one.
     return dyninfo_.sym(name);
   }
 

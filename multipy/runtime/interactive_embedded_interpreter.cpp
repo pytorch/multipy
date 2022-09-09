@@ -33,8 +33,10 @@ int main(int argc, char** argv) {
   auto I = m.acquireOne();
 
   if (FLAGS_pyscript.size() > 0) {
-    auto realpath = I.global("os", "path").attr("expanduser")({FLAGS_pyscript});
-    I.global("runpy", "run_path")({realpath});
+    auto realpath =
+        I.global("os", "path").attr("expanduser")({FLAGS_pyscript}).toIValue();
+    I.global("runpy", "run_path")
+        .callKwargs({realpath}, {{"run_name", "__main__"}});
   } else {
     c10::ArrayRef<torch::deploy::Obj> noArgs;
     I.global("pdb", "set_trace")(noArgs);

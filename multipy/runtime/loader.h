@@ -25,7 +25,9 @@ struct TLSIndex {
 
 struct SymbolProvider {
   SymbolProvider() = default;
-  virtual multipy::optional<Elf64_Addr> sym(const char* name) const = 0;
+  virtual multipy::optional<Elf64_Addr> sym(
+      const char* name,
+      const char* version = nullptr) const = 0;
   virtual multipy::optional<TLSIndex> tls_sym(const char* name) const = 0;
   SymbolProvider(const SymbolProvider&) = delete;
   SymbolProvider& operator=(const SymbolProvider&) = delete;
