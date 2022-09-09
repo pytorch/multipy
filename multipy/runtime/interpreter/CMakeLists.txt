@@ -13,7 +13,8 @@ include_directories(BEFORE "${PYTORCH_ROOT}/torch/include")
 include_directories(BEFORE "${PYTORCH_ROOT}/torch/include/torch/csrc/api/include/")
 SET(MULTIPY_UTILS "${CMAKE_CURRENT_SOURCE_DIR}/../../utils")
 
-SET(LEGACY_PYTHON_PRE_3_8 0)
+#SET(LEGACY_PYTHON_PRE_3_8 0)
+OPTION(LEGACY_PYTHON_PRE_3_8 "fancy description" OFF)
 
 find_package (Python3 COMPONENTS Interpreter Development)
 
@@ -34,7 +35,7 @@ link_directories(BEFORE "${Python3_SITELIB}/torch/lib")
 include_directories(BEFORE "${Python3_INCLUDE_DIRS}")
 include_directories(BEFORE ${CMAKE_SOURCE_DIR}/../..)
 
-if (${LEGACY_PYTHON_PRE_3_8} EQUAL 1)
+if (${LEGACY_PYTHON_PRE_3_8})
   message(STATUS "LEGACY_PYTHON_PRE_3_8 set")
   add_compile_definitions(LEGACY_PYTHON_PRE_3_8)
 endif()
@@ -87,3 +88,5 @@ target_link_libraries(torch_deployinterpreter PRIVATE fmt::fmt-header-only)
 target_link_libraries(torch_deployinterpreter PRIVATE torch_python)
 target_link_libraries(torch_deployinterpreter PRIVATE gtest)
 target_link_libraries(torch_deployinterpreter PRIVATE multipy_torch)
+
+unset(LEGACY_PYTHON_PRE_3_8)
