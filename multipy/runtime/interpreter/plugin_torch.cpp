@@ -18,10 +18,10 @@ class TorchConverter : public Converter {
     deregisterConverter(this);
   }
 
-  optional<at::IValue> toTypeInferredIValue(py::handle input) override {
+  optional<c10::IValue> toTypeInferredIValue(py::handle input) override {
     return ::torch::jit::toTypeInferredIValue(input);
   }
-  optional<py::object> toPyObject(at::IValue ivalue) override {
+  optional<py::object> toPyObject(c10::IValue ivalue) override {
     return ::torch::jit::toPyObject(ivalue);
   }
   optional<at::Storage> createStorage(PyObject* obj) override {

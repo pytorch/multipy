@@ -43,7 +43,7 @@ TEST(TorchDeployGPUTest, SimpleModel) {
     M.self.attr("to")({"cuda"});
   }
   // NOLINTNEXTLINE(cppcoreguidelines-init-variables)
-  std::vector<at::IValue> inputs;
+  std::vector<c10::IValue> inputs;
   {
     auto I = p.acquireSession();
     auto eg = I.self.attr("load_pickle")({"model", "example.pkl"}).toIValue();
@@ -102,11 +102,11 @@ TEST(TorchDeployGPUTest, TensorRT) {
   auto makeModel = p.loadPickle("make_trt_module", "model.pkl");
   {
     auto I = makeModel.acquireSession();
-    auto model = I.self(at::ArrayRef<at::IValue>{});
+    auto model = I.self(std::vector<c10::IValue>{});
     auto input = at::ones({1, 2, 3}).cuda();
     auto output = input * 2;
     ASSERT_TRUE(
-        output.allclose(model(at::IValue{input}).toIValue().toTensor()));
+        output.allclose(model(c10::IValue{input}).toIValue().toTensor()));
   }
 }
 #endif
@@ -116,7 +116,7 @@ TEST(TorchDeployGPUTest, TensorRT) {
 #if HAS_NUMPY
 TEST(TorchpyTest, TestNumpy) {
   torch::deploy::InterpreterManager m(2);
-  auto noArgs = at::ArrayRef<torch::deploy::Obj>();
+  auto noArgs = std::vector<torch::deploy::Obj>();
   auto I = m.acquireOne();
   auto mat35 = I.global("numpy", "random").attr("rand")({3, 5});
   auto mat58 = I.global("numpy", "random").attr("rand")({5, 8});

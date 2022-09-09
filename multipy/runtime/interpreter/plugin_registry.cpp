@@ -21,7 +21,7 @@ void deregisterConverter(Converter* c) {
   }
 }
 
-at::IValue toTypeInferredIValue(py::handle input) {
+c10::IValue toTypeInferredIValue(py::handle input) {
   for (auto c : getConverters()) {
     auto out = c->toTypeInferredIValue(input);
     if (out) {
@@ -30,7 +30,7 @@ at::IValue toTypeInferredIValue(py::handle input) {
   }
   throw std::runtime_error("failed to convert to IValue");
 }
-py::object toPyObject(at::IValue ivalue) {
+py::object toPyObject(c10::IValue ivalue) {
   for (auto c : getConverters()) {
     auto out = c->toPyObject(ivalue);
     if (out) {

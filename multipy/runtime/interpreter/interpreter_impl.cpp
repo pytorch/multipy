@@ -195,7 +195,7 @@ static py::object global_impl(const char* module, const char* name) {
   return py::module::import(module).attr(name);
 }
 
-using at::IValue;
+using c10::IValue;
 using torch::deploy::Obj;
 using torch::deploy::PickledObject;
 
@@ -245,20 +245,30 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterObj
     : public torch::deploy::InterpreterObj {
   ConcreteInterpreterObj(py::object* pyObject)
       : pyObject_(pyObject) {}
+  ConcreteInterpreterObj(Obj obj){
+    ConcreteInterpreterObj* iObj = (ConcreteInterpreterObj*) (obj.getBaseObj());
+    py::object pyObj = iObj->getPyObject();
+    pyObject_ = &pyObj;
+  }
+  ConcreteInterpreterObj()
+      : pyObject_(nullptr) {}
+  ConcreteInterpreterObj(const ConcreteInterpreterObj& obj) = default;
+  ConcreteInterpreterObj(ConcreteInterpreterObj&& obj) = default;
+  ConcreteInterpreterObj(ConcreteInterpreterObj& obj) = default;
 
   py::object getPyObject() const {
     MULTIPY_CHECK(pyObject_, "pyObject has already been freed");
     return *pyObject_;
   }
 
-  at::IValue toIValue(){
+  c10::IValue toIValue() const override {
     TORCH_DEPLOY_TRY
     py::handle pyObj = getPyObject();
     return multipy::toTypeInferredIValue(pyObj);
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
 
-py::object call(py::handle args, py::handle kwargs) {
+  py::object call(py::handle args, py::handle kwargs = nullptr) {
     TORCH_DEPLOY_TRY
     PyObject* result = PyObject_Call((*getPyObject()).ptr(), args.ptr(), kwargs.ptr());
     if (!result) {
@@ -268,31 +278,34 @@ py::object call(py::handle args, py::handle kwargs) {
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
 
-ConcreteInterpreterObj call(at::ArrayRef<ConcreteInterpreterObj> args) {
+  torch::deploy::InterpreterObj* call(std::vector<Obj> args) override {
     TORCH_DEPLOY_TRY
     py::tuple m_args(args.size());
     for (size_t i = 0, N = args.size(); i != N; ++i) {
-      m_args[i] = args[i].getPyObject();
+      InterpreterObj* iObj = args[i].getBaseObj();
+      m_args[i] = ((ConcreteInterpreterObj*)iObj)->getPyObject();
     }
     py::object pyObj = call(m_args);
-    return ConcreteInterpreterObj(&pyObj);
+    ConcreteInterpreterObj iObj = ConcreteInterpreterObj(&pyObj);
+    return &iObj;
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
 
-ConcreteInterpreterObj call(at::ArrayRef<c10::IValue> args) {
+torch::deploy::InterpreterObj* call(std::vector<c10::IValue> args) override {
       TORCH_DEPLOY_TRY
       py::tuple m_args(args.size());
       for (size_t i = 0, N = args.size(); i != N; ++i) {
         m_args[i] = multipy::toPyObject(args[i]);
       }
       py::object pyObj = call(m_args);
-      return ConcreteInterpreterObj(&pyObj);
+      ConcreteInterpreterObj iObj = ConcreteInterpreterObj(&pyObj);
+      return &iObj;
       TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
 
-ConcreteInterpreterObj callKwargs(
-      std::vector<at::IValue> args,
-      std::unordered_map<std::string, c10::IValue> kwargs) {
+torch::deploy::InterpreterObj* callKwargs(
+      std::vector<c10::IValue> args,
+      std::unordered_map<std::string, c10::IValue> kwargs) override {
 
     TORCH_DEPLOY_TRY
     py::tuple py_args(args.size());
@@ -306,37 +319,43 @@ ConcreteInterpreterObj callKwargs(
           multipy::toPyObject(std::get<1>(kv));
     }
     py::object pyObj =call(py_args, py_kwargs);
-    return ConcreteInterpreterObj(&pyObj);
+    ConcreteInterpreterObj iObj = ConcreteInterpreterObj(&pyObj);
+    return &iObj;
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
 
-ConcreteInterpreterObj callKwargs(std::unordered_map<std::string, c10::IValue> kwargs)
+torch::deploy::InterpreterObj* callKwargs(std::unordered_map<std::string, c10::IValue> kwargs) override
       {
     TORCH_DEPLOY_TRY
-    std::vector<at::IValue> args;
+    std::vector<c10::IValue> args;
     return callKwargs(args, kwargs);
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
 }
 
-bool hasattr(const char* attr) {
+bool hasattr(const char* attr) override {
   TORCH_DEPLOY_TRY
   return py::hasattr(getPyObject(), attr);
   TORCH_DEPLOY_SAFE_CATCH_RETHROW
 }
 
-ConcreteInterpreterObj attr(const char* attr) {
+torch::deploy::InterpreterObj* attr(const char* attr) override {
   TORCH_DEPLOY_TRY
   py::object pyObj = getPyObject().attr(attr);
-  return ConcreteInterpreterObj(&pyObj);
+  ConcreteInterpreterObj iObj = ConcreteInterpreterObj(&pyObj);
+  return &iObj;
   TORCH_DEPLOY_SAFE_CATCH_RETHROW
 }
 
-void unload(){
+void unload() {
   TORCH_DEPLOY_TRY
   MULTIPY_CHECK(pyObject_, "pyObject has already been freed");
   free(pyObject_);
   pyObject_ = nullptr;
   TORCH_DEPLOY_SAFE_CATCH_RETHROW
+}
+
+~ConcreteInterpreterObj(){
+  unload();
 }
   py::object* pyObject_;
 };
@@ -467,7 +486,7 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
   ConcreteInterpreterSessionImpl(ConcreteInterpreterImpl* interp)
       : interp_(interp) {}
   Obj createObj(py::object* pyObj){
-    ConcreteInterpreterObj concreteObj = ConcreteInterpreterObj(pyObj)
+    ConcreteInterpreterObj concreteObj = ConcreteInterpreterObj(pyObj);
     Obj obj = Obj(&concreteObj);
     createdObjs_.insert(pyObj);
     return obj;
@@ -495,7 +514,11 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
   // we can track if something is which is not too difficult
   // Regardless we probably have to do an isOwnerCheck :(
   PickledObject pickle(Obj container, Obj obj) override {
-    py::tuple result = interp_->saveStorage(container.getPyObject(), obj.getPyObject());
+    ConcreteInterpreterObj* containerIObj = (ConcreteInterpreterObj*) (container.getBaseObj());
+    ConcreteInterpreterObj* iObj = (ConcreteInterpreterObj*) obj.getBaseObj();
+    py::object containerPyObject = containerIObj->getPyObject();
+    py::object objPyObject = iObj->getPyObject();
+    py::tuple result = interp_->saveStorage(containerPyObject, objPyObject);
     py::bytes bytes = py::cast<py::bytes>(result[0]);
     py::list storages = py::cast<py::list>(result[1]);
     py::list dtypes = py::cast<py::list>(result[2]);
@@ -547,25 +570,25 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
     return createObj(&result);
   }
   void unload(int64_t id) override {
-    Obj obj = unpickled_objects[id];
+    ConcreteInterpreterObj obj = unpickled_objects[id];
     obj.unload();
   }
 
-  IValue toIValue(Obj obj) const override {
+  c10::IValue toIValue(Obj obj) const override {
     return obj.toIValue();
   }
 
-  Obj call(Obj obj, at::ArrayRef<Obj> args) override {
-    return obj.call(args);
+  Obj call(Obj obj, std::vector<Obj> args) override {
+    return obj(args);
   }
 
-  Obj call(Obj obj, at::ArrayRef<IValue> args) override {
-    return obj.call(args);
+  Obj call(Obj obj, std::vector<c10::IValue> args) override {
+    return obj(args);
   }
 
   Obj callKwargs(
       Obj obj,
-      std::vector<at::IValue> args,
+      std::vector<c10::IValue> args,
       std::unordered_map<std::string, c10::IValue> kwargs) override {
     return obj.callKwargs(args, kwargs);
   }
@@ -584,7 +607,8 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
   }
 
   bool isOwner(Obj obj){
-    py::object pyObj = obj.getPyObject();
+    ConcreteInterpreterObj* iObj = (ConcreteInterpreterObj*) obj.getBaseObj();
+    py::object pyObj = iObj->getPyObject();
     return createdObjs_.find(&pyObj) != createdObjs_.end();
   }
 

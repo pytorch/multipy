@@ -15,9 +15,9 @@ class Converter {
  public:
   virtual ~Converter() = default;
 
-  virtual multipy::optional<at::IValue> toTypeInferredIValue(
+  virtual multipy::optional<c10::IValue> toTypeInferredIValue(
       py::handle input) = 0;
-  virtual multipy::optional<py::object> toPyObject(at::IValue ivalue) = 0;
+  virtual multipy::optional<py::object> toPyObject(c10::IValue ivalue) = 0;
   virtual multipy::optional<at::Storage> createStorage(PyObject* obj) = 0;
   virtual multipy::optional<PyObject*> createPyObject(
       const at::Storage& storage) = 0;
@@ -28,8 +28,8 @@ class Converter {
 void registerConverter(Converter*);
 void deregisterConverter(Converter*);
 
-at::IValue toTypeInferredIValue(py::handle input);
-py::object toPyObject(at::IValue ivalue);
+c10::IValue toTypeInferredIValue(py::handle input);
+py::object toPyObject(c10::IValue ivalue);
 at::Storage createStorage(PyObject* obj);
 PyObject* createPyObject(const at::Storage& storage);
 THPDtype* getTHPDtype(at::ScalarType scalarType);

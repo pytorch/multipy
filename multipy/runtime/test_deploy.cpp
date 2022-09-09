@@ -24,7 +24,7 @@ void compare_torchpy_jit(const char* model_filename, const char* jit_filename) {
   torch::deploy::InterpreterManager m(1);
   torch::deploy::Package p = m.loadPackage(model_filename);
   auto model = p.loadPickle("model", "model.pkl");
-  at::IValue eg;
+  c10::IValue eg;
   {
     auto I = p.acquireSession();
     eg = I.self.attr("load_pickle")({"model", "example.pkl"}).toIValue();
@@ -217,7 +217,7 @@ TEST(TorchpyTest, ThrowsSafely) {
 
   auto model = p.loadPickle("model", "model.pkl");
   // NOLINTNEXTLINE(hicpp-avoid-goto,cppcoreguidelines-avoid-goto)
-  EXPECT_THROW(model(at::IValue("unexpected input")), std::runtime_error);
+  EXPECT_THROW(model(c10::IValue("unexpected input")), std::runtime_error);
 }
 
 TEST(TorchpyTest, AcquireMultipleSessionsInTheSamePackage) {
@@ -345,7 +345,7 @@ def get_tensor():
   auto I2 = manager.acquireOne();
 
   auto objOnI =
-      I.global("test_module", "get_tensor")(at::ArrayRef<at::IValue>{});
+      I.global("test_module", "get_tensor")(std::vector<c10::IValue>{});
   auto replicated = manager.createMovable(objOnI, &I);
   auto objOnI2 = I2.fromMovable(replicated);
 
@@ -358,7 +358,7 @@ def get_tensor():
 thread_local int in_another_module = 5;
 TEST(TorchpyTest, SharedLibraryLoad) {
   torch::deploy::InterpreterManager manager(2);
-  auto no_args = at::ArrayRef<torch::deploy::Obj>();
+  auto no_args = std::vector<torch::deploy::Obj>();
   for (auto& interp : manager.allInstances()) {
     auto I = interp.acquireSession();
 
@@ -477,7 +477,7 @@ result = version("torch")
 #if HAS_NUMPY
 TEST(TorchpyTest, TestNumpy) {
   torch::deploy::InterpreterManager m(2);
-  auto noArgs = at::ArrayRef<torch::deploy::Obj>();
+  auto noArgs = std::vector<torch::deploy::Obj>();
   auto I = m.acquireOne();
   auto mat35 = I.global("numpy", "random").attr("rand")({3, 5});
   auto mat58 = I.global("numpy", "random").attr("rand")({5, 8});
@@ -517,7 +517,7 @@ TEST(TorchpyTest, PrintInstruction) {
       "Module", std::make_shared<at::CompilationUnit>());
   module->define(jit_script_with_print);
 
-  std::vector<at::IValue> inputs{at::IValue(input)};
+  std::vector<c10::IValue> inputs{c10::IValue(input)};
 
   // Checking that a module containing prim::Print() works fine.
   auto result1 = (*module)(inputs);

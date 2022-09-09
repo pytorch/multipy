@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
     auto realpath = I.global("os", "path").attr("expanduser")({FLAGS_pyscript});
     I.global("runpy", "run_path")({realpath});
   } else {
-    c10::ArrayRef<torch::deploy::Obj> noArgs;
+    std::vector<torch::deploy::Obj> noArgs;
     I.global("pdb", "set_trace")(noArgs);
   }
   return 0;

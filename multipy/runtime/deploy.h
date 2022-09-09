@@ -48,9 +48,9 @@ struct TORCH_API InterpreterSession {
     return impl_->global(module, name);
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
-  Obj fromIValue(at::IValue ivalue) {
+  Obj fromIValue(c10::IValue IValue) {
     TORCH_DEPLOY_TRY
-    return impl_->fromIValue(std::move(ivalue));
+    return impl_->fromIValue(std::move(IValue));
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
   ReplicatedObj createMovable(Obj obj);
@@ -157,7 +157,7 @@ struct TORCH_API InterpreterManager {
 
   // use to make sure something gets run on all interpreters, such as loading or
   // unloading a model eagerly
-  at::ArrayRef<Interpreter> allInstances() {
+  std::vector<Interpreter> allInstances() {
     TORCH_DEPLOY_TRY
     return instances_;
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
@@ -222,15 +222,15 @@ struct TORCH_API ReplicatedObj {
   ReplicatedObj() : pImpl_(nullptr) {}
   InterpreterSession acquireSession(
       const Interpreter* onThisInterpreter = nullptr) const;
-  at::IValue operator()(at::ArrayRef<at::IValue> args) const {
+  c10::IValue operator()(std::vector<c10::IValue> args) const {
     TORCH_DEPLOY_TRY
     auto I = acquireSession();
     return I.self(args).toIValue();
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
 
-  [[nodiscard]] at::IValue callKwargs(
-      std::vector<at::IValue> args,
+  [[nodiscard]] c10::IValue callKwargs(
+      std::vector<c10::IValue> args,
       std::unordered_map<std::string, c10::IValue> kwargs) const {
     TORCH_DEPLOY_TRY
     auto I = acquireSession();
@@ -238,7 +238,7 @@ struct TORCH_API ReplicatedObj {
     TORCH_DEPLOY_SAFE_CATCH_RETHROW
   }
 
-  [[nodiscard]] at::IValue callKwargs(
+  [[nodiscard]] c10::IValue callKwargs(
       std::unordered_map<std::string, c10::IValue> kwargs) const {
     TORCH_DEPLOY_TRY
     auto I = acquireSession();

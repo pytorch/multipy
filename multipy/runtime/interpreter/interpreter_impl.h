@@ -53,8 +53,7 @@
   }
 namespace torch {
 namespace deploy {
-
-struct InterpreterSessionImpl;
+struct Obj;
 
 struct PickledObject {
   std::string data_;
@@ -68,17 +67,23 @@ struct PickledObject {
 struct InterpreterObj {
   friend struct InterpreterSessionImpl;
   friend struct Obj;
-
+  friend struct ReplicatedObjImpl;
+  public:
+    InterpreterObj() = default;
+    InterpreterObj(const InterpreterObj& obj) = default;
+    InterpreterObj(InterpreterObj&& obj) = default;
+    // virtual ~InterpreterObj() = default;
   private:
-    virtual at::IValue toIValue() const;
-    virtual InterpreterObj call(at::ArrayRef<InterpreterObj> args);
-    virtual InterpreterObj call(at::ArrayRef<c10::IValue> args);
-    virtual InterpreterObj callKwargs(
-        std::vector<at::IValue> args,
-        std::unordered_map<std::string, c10::IValue> kwargs);
-    virtual InterpreterObj callKwargs(std::unordered_map<std::string, c10::IValue> kwargs);
-    virtual bool hasattr(const char* attr);
-    virtual InterpreterObj attr(const char* attr);
+
+    virtual c10::IValue toIValue() const = 0;
+    virtual InterpreterObj* call(std::vector<Obj> args) = 0;
+    virtual InterpreterObj* call(std::vector<c10::IValue> args) = 0;
+    virtual InterpreterObj* callKwargs(
+        std::vector<c10::IValue> args,
+        std::unordered_map<std::string, c10::IValue> kwargs) = 0;
+    virtual InterpreterObj* callKwargs(std::unordered_map<std::string, c10::IValue> kwargs) = 0;
+    virtual bool hasattr(const char* attr) = 0;
+    virtual InterpreterObj* attr(const char* attr) = 0;
 };
 
 struct Obj {
@@ -86,16 +91,19 @@ struct Obj {
   friend struct InterpreterObj;
   Obj(InterpreterObj* baseObj)
       : baseObj_(baseObj){}
+  Obj() : baseObj_(nullptr) {}
 
-  at::IValue toIValue() const;
-  Obj operator()(at::ArrayRef<Obj> args);
-  Obj operator()(at::ArrayRef<at::IValue> args);
+  c10::IValue toIValue() const;
+  Obj operator()(std::vector<Obj> args);
+  Obj operator()(std::vector<c10::IValue> args);
   Obj callKwargs(
-      std::vector<at::IValue> args,
+      std::vector<c10::IValue> args,
       std::unordered_map<std::string, c10::IValue> kwargs);
   Obj callKwargs(std::unordered_map<std::string, c10::IValue> kwargs);
   bool hasattr(const char* attr);
   Obj attr(const char* attr);
+  InterpreterObj* getBaseObj();
+private:
   InterpreterObj* baseObj_;
 };
 
@@ -111,21 +119,21 @@ struct InterpreterSessionImpl {
 
  private:
   virtual Obj global(const char* module, const char* name) = 0;
-  virtual Obj fromIValue(at::IValue value) = 0;
+  virtual Obj fromIValue(c10::IValue value) = 0;
   virtual Obj createOrGetPackageImporterFromContainerFile(
       const std::shared_ptr<caffe2::serialize::PyTorchStreamReader>&
           containerFile_) = 0;
   virtual PickledObject pickle(Obj container, Obj obj) = 0;
   virtual Obj unpickleOrGet(int64_t id, const PickledObject& obj) = 0;
 
-  virtual at::IValue toIValue(Obj obj) const = 0;
+  virtual c10::IValue toIValue(Obj obj) const = 0;
 
-  virtual Obj call(Obj obj, at::ArrayRef<Obj> args) = 0;
-  virtual Obj call(Obj obj, at::ArrayRef<at::IValue> args) = 0;
+  virtual Obj call(Obj obj, std::vector<Obj> args) = 0;
+  virtual Obj call(Obj obj, std::vector<c10::IValue> args) = 0;
   virtual void unload(int64_t id);
   virtual Obj callKwargs(
       Obj obj,
-      std::vector<at::IValue> args,
+      std::vector<c10::IValue> args,
       std::unordered_map<std::string, c10::IValue> kwargs) = 0;
   virtual Obj callKwargs(
       Obj obj,
@@ -147,42 +155,49 @@ struct InterpreterImpl {
 // inline definitions for Objs are necessary to avoid introducing a
 // source file that would need to exist it both the libinterpreter.so and then
 // the libtorchpy library.
-inline at::IValue Obj::toIValue() const {
+inline c10::IValue Obj::toIValue() const {
   return baseObj_->toIValue();
 }
 
-inline Obj Obj::operator()(at::ArrayRef<Obj> args) {
-  std::vector<InterpreterObj> iArgs;
-  for (size_t i = 0, N = args.size(); i != N; ++i) {
-    iArgs.emplace_back(args[i].baseObj_);
-  }
-  InterpreterObj iObj =  baseObj_->call(iArgs);
-  return Obj(&iObj);
+inline Obj Obj::operator()(std::vector<Obj> args) {
+  // std::vector<InterpreterObj> iArgs;
+  // for (size_t i = 0, N = args.size(); i != N; ++i) {
+  //   InterpreterObj* baseObj = args[i].baseObj_;
+  //   iArgs.emplace_back(std::move(baseObj));
+  // }
+  // InterpreterObj* iObj =  baseObj_->call(iArgs);
+  InterpreterObj* iObj =  baseObj_->call(args);
+
+  return Obj(iObj);
 }
 
-inline Obj Obj::operator()(at::ArrayRef<at::IValue> args) {
-  InterpreterObj iObj = baseObj_->call(args);
-  return Obj(&iObj);
+inline Obj Obj::operator()(std::vector<c10::IValue> args) {
+  InterpreterObj* iObj = baseObj_->call(args);
+  return Obj(iObj);
 }
 
 inline Obj Obj::callKwargs(
-    std::vector<at::IValue> args,
+    std::vector<c10::IValue> args,
     std::unordered_map<std::string, c10::IValue> kwargs) {
-  InterpreterObj iObj =  baseObj_->callKwargs(std::move(args), std::move(kwargs));
-  return Obj(&iObj);
+  InterpreterObj* iObj =  baseObj_->callKwargs(std::move(args), std::move(kwargs));
+  return Obj(iObj);
 }
 inline Obj Obj::callKwargs(
     std::unordered_map<std::string, c10::IValue> kwargs) {
-  InterpreterObj iObj =  baseObj_->callKwargs(std::move(kwargs));
-  return Obj(&iObj);
+  InterpreterObj* iObj =  baseObj_->callKwargs(std::move(kwargs));
+  return Obj(iObj);
 }
 inline bool Obj::hasattr(const char* attr) {
   return baseObj_->hasattr(attr);
 }
 
 inline Obj Obj::attr(const char* attr) {
-  InterpreterObj iObj =  baseObj_->attr(attr);
-  return Obj(&iObj);
+  InterpreterObj* iObj =  baseObj_->attr(attr);
+  return Obj(iObj);
+}
+
+inline InterpreterObj* Obj::getBaseObj() {
+  return baseObj_;
 }
 
 } // namespace deploy

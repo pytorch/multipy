@@ -71,14 +71,14 @@ struct RunPython {
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
   RunPython(
       torch::deploy::Package& package,
-      std::vector<at::IValue> eg,
+      std::vector<c10::IValue> eg,
       const torch::deploy::Interpreter* interps)
       : obj_(load_and_wrap(package)), eg_(std::move(eg)), interps_(interps) {}
   void operator()(int i) {
     auto I = obj_.acquireSession();
     if (cuda) {
       // NOLINTNEXTLINE(cppcoreguidelines-init-variables)
-      std::vector<at::IValue> eg2 = {i};
+      std::vector<c10::IValue> eg2 = {i};
       eg2.insert(eg2.end(), eg_.begin(), eg_.end());
       I.self(eg2);
     } else {
@@ -86,7 +86,7 @@ struct RunPython {
     }
   }
   torch::deploy::ReplicatedObj obj_;
-  std::vector<at::IValue> eg_;
+  std::vector<c10::IValue> eg_;
   const torch::deploy::Interpreter* interps_;
 };
 
@@ -101,7 +101,7 @@ struct RunPython {
 static torch::IValue to_device(const torch::IValue& v, torch::Device to);
 
 static std::vector<torch::IValue> to_device_vec(
-    at::ArrayRef<torch::IValue> vs,
+    std::vector<torch::IValue> vs,
     torch::Device to) {
   std::vector<torch::IValue> results;
   for (const torch::IValue& v : vs) {
@@ -115,7 +115,7 @@ static torch::IValue to_device(const torch::IValue& v, torch::Device to) {
     return v.toTensor().to(to);
   } else if (v.isTuple()) {
     auto tup = v.toTuple();
-    return c10::ivalue::Tuple::create(to_device_vec(tup->elements(), to));
+    return c10::IValue::Tuple::create(to_device_vec(tup->elements(), to));
   } else if (v.isList()) {
     auto converted = to_device_vec(v.toListRef(), to);
     torch::List<torch::IValue> result(v.toList().elementType());
@@ -162,7 +162,7 @@ struct RunJIT {
       models_[0].forward(eg_);
     }
   }
-  std::vector<at::IValue> eg_;
+  std::vector<c10::IValue> eg_;
   std::vector<torch::jit::Module> models_;
 };
 
@@ -198,7 +198,7 @@ struct Benchmark {
     torch::deploy::Package package = manager_.loadPackage(file_to_run_);
 
     // NOLINTNEXTLINE(cppcoreguidelines-init-variables)
-    std::vector<at::IValue> eg;
+    std::vector<c10::IValue> eg;
     {
       auto I = package.acquireSession();
 
