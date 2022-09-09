@@ -32,8 +32,8 @@ jobs:
 
       - name: Test
         run: |
-          docker run --rm multipy bash -c "source ~/venvs/multipy/bin/activate && multipy/runtime/build/test_deploy"
+          docker run --rm multipy bash -c "source ~/venvs/multipy/bin/activate && multipy/runtime/build/test_deploy && deactivate"
 
       - name: Compat Tests
         run: |
-          docker run --rm multipy bash -c "pip3 install -r compat-requirements.txt && multipy/runtime/build/interactive_embedded_interpreter --pyscript multipy/runtime/test_compat.py"
+          docker run --rm multipy bash -c "pip install -r compat-requirements.txt && multipy/runtime/build/interactive_embedded_interpreter --pyscript multipy/runtime/test_compat.py"
