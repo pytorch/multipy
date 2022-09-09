@@ -61,6 +61,7 @@ add_custom_command(
   COMMAND "${CMAKE_OBJCOPY}" --weaken-symbol=_PyImport_FindSharedFuncptr libpython_multipy.a
 )
 add_custom_target(libpython_multipy DEPENDS libpython_multipy.a)
+set_property(TARGET libpython_multipy PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 # Build the interpreter lib, designed to be standalone and dlopened
 # We bake the python and torch_python binding objs into libinterpreter
