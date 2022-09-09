@@ -32,7 +32,7 @@ jobs:
 
       - name: Test
         run: |
-          docker run --rm multipy bash -c "source ~/venvs/multipy/bin/activate && multipy/runtime/build/test_deploy && deactivate"
+          docker run --rm multipy multipy/runtime/build/test_deploy
 
       - name: Compat Tests
         run: |
