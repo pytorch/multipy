@@ -11,6 +11,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.8, 3.9, '3.10']
+        py-minor: [7]
         platform: [ubuntu-18.04]
       fail-fast: false
     runs-on: ${{ matrix.platform }}
@@ -32,8 +33,8 @@ jobs:
 
       - name: Test
         run: |
-          docker run --rm multipy bash -c "source ~/venvs/multipy/bin/activate && multipy/runtime/build/test_deploy && deactivate"
+          docker run --rm multipy bash -c "if [[ ${{ matrix.py-minor }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && multipy/runtime/build/test_deploy"
 
       - name: Compat Tests
         run: |
-          docker run --rm multipy bash -c "source ~/venvs/multipy/bin/activate && pip install -r compat-requirements.txt && multipy/runtime/build/interactive_embedded_interpreter --pyscript multipy/runtime/test_compat.py && deactivate"
+          docker run --rm multipy bash -c "if [[ ${{ matrix.py-minor }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && pip install -r compat-requirements.txt && multipy/runtime/build/interactive_embedded_interpreter --pyscript multipy/runtime/test_compat.py"
