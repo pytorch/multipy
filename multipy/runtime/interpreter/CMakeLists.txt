@@ -58,8 +58,7 @@ add_custom_command(
   OUTPUT libpython_multipy.a
   COMMAND cp ${Python3_STATIC_LIBRARIES} libpython_multipy.a
   COMMAND chmod +w libpython_multipy.a
-  COMMAND "${CMAKE_OBJCOPY}" libpython_multipy.a
-  # COMMAND "${CMAKE_OBJCOPY}" --weaken-symbol=_PyImport_FindSharedFuncptr libpython_multipy.a
+  COMMAND "${CMAKE_OBJCOPY}" --weaken-symbol=_PyImport_FindSharedFuncptr libpython_multipy.a
 )
 add_custom_target(libpython_multipy DEPENDS libpython_multipy.a)
 # target_compile_options(libpython_multipy PUBLIC -fpic -fpie)
@@ -84,6 +83,7 @@ set_property(TARGET multipy_torch PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 add_dependencies(torch_deployinterpreter libpython_multipy)
 target_link_libraries(torch_deployinterpreter PRIVATE  "-Wl,--no-as-needed -rdynamic" ${CMAKE_CURRENT_BINARY_DIR}/libpython_multipy.a)
+set_property(TARGET torch_deployinterpreter PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 # need to ensure headers are present before any .cpp in interpreter are compiled,
 # but cpp themselves don't clearly depend on cpython so there is a race otherwise
