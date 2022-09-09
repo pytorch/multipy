@@ -58,7 +58,8 @@ add_custom_command(
   OUTPUT libpython_multipy.a
   COMMAND cp ${Python3_STATIC_LIBRARIES} libpython_multipy.a
   COMMAND chmod +w libpython_multipy.a
-  COMMAND "${CMAKE_OBJCOPY}" --weaken-symbol=_PyImport_FindSharedFuncptr libpython_multipy.a
+  COMMAND "${CMAKE_OBJCOPY}" libpython_multipy.a
+  # COMMAND "${CMAKE_OBJCOPY}" --weaken-symbol=_PyImport_FindSharedFuncptr libpython_multipy.a
 )
 add_custom_target(libpython_multipy DEPENDS libpython_multipy.a)
 # target_compile_options(libpython_multipy PUBLIC -fpic -fpie)
