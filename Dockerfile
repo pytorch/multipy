@@ -110,7 +110,7 @@ RUN source ~/venvs/multipy_3_7_10/bin/activate && \
    if [[ ${PY_MINOR} -lt 8 ]]; then \
    cmake -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DLEGACY_PYTHON_PRE_3_8=ON ..; \
    else \
-   cmake -DCMAKE_POSITION_INDEPENDENT_CODE=ON reebvugkjlkjjettvtfdfjigbnrjdbgj-DLEGACY_PYTHON_PRE_3_8=OFF ..; \
+   cmake -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DLEGACY_PYTHON_PRE_3_8=OFF ..; \
    fi && \
    # cmake -DLEGACY_PYTHON_PRE_3_8=${FLAG} .. && \
    cmake --build . --config Release && \

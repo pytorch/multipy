@@ -4,6 +4,7 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" )
 SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" PARENT_SCOPE)
@@ -39,8 +40,6 @@ if (${LEGACY_PYTHON_PRE_3_8})
   message(STATUS "LEGACY_PYTHON_PRE_3_8 set")
   add_compile_definitions(LEGACY_PYTHON_PRE_3_8)
 endif()
-
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # add gtest dependency
 include(FetchContent)
