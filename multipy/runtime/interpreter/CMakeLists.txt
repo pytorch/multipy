@@ -73,9 +73,10 @@ set(INTERPRETER_LIB_SOURCES
   ${LINKER_SCRIPT}
 )
 add_library(torch_deployinterpreter SHARED ${INTERPRETER_LIB_SOURCES} ${LINKER_SCRIPT})
-set_property(TARGET torch_deployinterpreter PROPERTY POSITION_INDEPENDENT_CODE ON)
+target_compile_options(torch_deployinterpreter PRIVATE -fpic -fpie)
 
 add_library(multipy_torch SHARED plugin_torch.cpp)
+target_compile_options(multipy_torch PRIVATE -fpic -fpie)
 
 add_dependencies(torch_deployinterpreter libpython_multipy)
 target_link_libraries(torch_deployinterpreter PRIVATE  "-Wl,--no-as-needed -rdynamic" ${CMAKE_CURRENT_BINARY_DIR}/libpython_multipy.a)
@@ -95,5 +96,7 @@ target_link_libraries(torch_deployinterpreter PRIVATE fmt::fmt-header-only)
 target_link_libraries(torch_deployinterpreter PRIVATE torch_python)
 target_link_libraries(torch_deployinterpreter PRIVATE gtest)
 target_link_libraries(torch_deployinterpreter PRIVATE multipy_torch)
+
+target_compile_options(torch_deployinterpreter PRIVATE -fpic -fpie)
 
 unset(LEGACY_PYTHON_PRE_3_8)
