@@ -87,7 +87,7 @@ add_library(torch_deploy STATIC
   ${DEPLOY_DIR}/path_environment.cpp
   ${DEPLOY_DIR}/elf_file.cpp
 )
-target_compile_options(torch_deploy PRIVATE -fpic -fpie)
+target_compile_options(torch_deploy PUBLIC -fpic -fpie)
 target_link_libraries(torch_deploy PRIVATE crypt pthread dl util m z ffi lzma readline nsl ncursesw panelw) # for python builtins
 target_link_libraries(torch_deploy PUBLIC  shm torch fmt::fmt-header-only)
 target_include_directories(torch_deploy PRIVATE ${CMAKE_SOURCE_DIR}/../..)

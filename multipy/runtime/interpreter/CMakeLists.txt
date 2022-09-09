@@ -76,7 +76,7 @@ add_library(torch_deployinterpreter SHARED ${INTERPRETER_LIB_SOURCES} ${LINKER_S
 target_compile_options(torch_deployinterpreter PRIVATE -fpic -fpie)
 
 add_library(multipy_torch SHARED plugin_torch.cpp)
-target_compile_options(multipy_torch PRIVATE -fpic -fpie)
+target_compile_options(multipy_torch PUBLIC -fpic -fpie)
 
 add_dependencies(torch_deployinterpreter libpython_multipy)
 target_link_libraries(torch_deployinterpreter PRIVATE  "-Wl,--no-as-needed -rdynamic" ${CMAKE_CURRENT_BINARY_DIR}/libpython_multipy.a)
