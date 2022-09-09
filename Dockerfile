@@ -90,17 +90,15 @@ COPY --from=submodule-update /opt/multipy /opt/multipy
 WORKDIR /opt/multipy
 
 # Build Multipy
-RUN if [[ ${PYTHON_MINOR_VERSION} -lt 8 ]]; then \
+RUN mkdir multipy/runtime/build && \
+    cd multipy/runtime/build && \
+    if [[ ${PYTHON_MINOR_VERSION} -lt 8 ]]; then \
     source ~/venvs/multipy_3_7_10/bin/activate && \
     pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cu113 && \
-    export CFLAGS="-fPIC -g" && \
-    export LEGACY_PYTHON_PRE_3_8=1; \
+    cmake -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DLEGACY_PYTHON_PRE_3_8=ON ..; \
     else \
-    export LEGACY_PYTHON_PRE_3_8=0; \
+    cmake -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DLEGACY_PYTHON_PRE_3_8=OFF ..; \
     fi && \
-    mkdir multipy/runtime/build && \
-    cd multipy/runtime/build && \
-    cmake .. -DLEGACY_PYTHON_PRE_3_8=${LEGACY_PYTHON_PRE_3_8} && \
     cmake --build . --config Release && \
     cmake --install . --prefix "."
 

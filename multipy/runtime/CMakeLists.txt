@@ -105,7 +105,7 @@ set(INTERPRETER_TEST_SOURCES_GPU
 
 LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
 add_executable(test_deploy ${INTERPRETER_TEST_SOURCES})
-target_compile_definitions(test_deploy PUBLIC TEST_CUSTOM_LIBRARY)
+# target_compile_definitions(test_deploy PUBLIC TEST_CUSTOM_LIBRARY)
 target_include_directories(test_deploy PRIVATE ${PYTORCH_ROOT}/torch)
 target_link_libraries(test_deploy
   PUBLIC "-Wl,--no-as-needed -rdynamic" gtest dl torch_deploy_interface c10 torch_cpu
