@@ -61,7 +61,8 @@ add_custom_command(
   COMMAND "${CMAKE_OBJCOPY}" --weaken-symbol=_PyImport_FindSharedFuncptr libpython_multipy.a
 )
 add_custom_target(libpython_multipy DEPENDS libpython_multipy.a)
-set_property(TARGET libpython_multipy PROPERTY POSITION_INDEPENDENT_CODE ON)
+target_compile_options(libpython_multipy PUBLIC -fpic -fpie)
+# set_property(TARGET libpython_multipy PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 # Build the interpreter lib, designed to be standalone and dlopened
 # We bake the python and torch_python binding objs into libinterpreter
@@ -73,7 +74,7 @@ set(INTERPRETER_LIB_SOURCES
   ${LINKER_SCRIPT}
 )
 add_library(torch_deployinterpreter SHARED ${INTERPRETER_LIB_SOURCES} ${LINKER_SCRIPT})
-target_compile_options(torch_deployinterpreter PRIVATE -fpic -fpie)
+target_compile_options(torch_deployinterpreter PUBLIC -fpic -fpie)
 
 add_library(multipy_torch SHARED plugin_torch.cpp)
 target_compile_options(multipy_torch PUBLIC -fpic -fpie)
@@ -87,7 +88,7 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   target_compile_options(torch_deployinterpreter PRIVATE -fno-gnu-unique)
 endif()
 
-target_compile_options(torch_deployinterpreter PRIVATE -fpic -fpie)
+target_compile_options(torch_deployinterpreter PUBLIC -fpic -fpie)
 
 target_include_directories(torch_deployinterpreter PRIVATE ${INTERPRETER_DIR})
 target_include_directories(torch_deployinterpreter BEFORE PUBLIC ${Python3_INCLUDE_DIRS})
@@ -96,7 +97,6 @@ target_link_libraries(torch_deployinterpreter PRIVATE fmt::fmt-header-only)
 target_link_libraries(torch_deployinterpreter PRIVATE torch_python)
 target_link_libraries(torch_deployinterpreter PRIVATE gtest)
 target_link_libraries(torch_deployinterpreter PRIVATE multipy_torch)
-
-target_compile_options(torch_deployinterpreter PRIVATE -fpic -fpie)
+target_compile_options(torch_deployinterpreter PUBLIC -fpic -fpie)
 
 unset(LEGACY_PYTHON_PRE_3_8)
