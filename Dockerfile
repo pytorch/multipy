@@ -108,9 +108,9 @@ RUN source ~/venvs/multipy_3_7_10/bin/activate && \
    cd multipy/runtime/build && \
    export CFLAGS="-fPIC -g" && \
    if [[ ${PY_MINOR} -lt 8 ]]; then \
-   cmake -DLEGACY_PYTHON_PRE_3_8=ON .. && \
+   cmake -DLEGACY_PYTHON_PRE_3_8=ON ..; \
    else \
-   cmake -DLEGACY_PYTHON_PRE_3_8=OFF .. && \
+   cmake -DLEGACY_PYTHON_PRE_3_8=OFF ..; \
    fi && \
    # cmake -DLEGACY_PYTHON_PRE_3_8=${FLAG} .. && \
    cmake --build . --config Release && \
