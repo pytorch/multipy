@@ -40,6 +40,8 @@ if (${LEGACY_PYTHON_PRE_3_8})
   add_compile_definitions(LEGACY_PYTHON_PRE_3_8)
 endif()
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 # add gtest dependency
 include(FetchContent)
 FetchContent_Declare(
