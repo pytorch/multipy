@@ -8,7 +8,6 @@ RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
         build-essential \
         ca-certificates \
         ccache \
-        cmake \
         curl \
         wget \
         git \
@@ -33,10 +32,19 @@ RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
         tix-dev \
         libgtest-dev \
         tk-dev \
-        libsqlite3-dev && \
+        libsqlite3-dev \
+        zlib1g-dev \
+        llvm \
+        python-openssl \
+        apt-transport-https \
+        ca-certificates \
+        gnupg \
+        software-properties-common && \
+        wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add - && \
+        apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main' && \
         echo "deb http://security.ubuntu.com/ubuntu focal-security main" >> /etc/apt/sources.list && \
         apt update && \
-        apt install -y binutils && \
+        apt install -y binutils cmake && \
     rm -rf /var/lib/apt/lists/*
 RUN /usr/sbin/update-ccache-symlinks
 RUN mkdir /opt/ccache && ccache --set-config=cache_dir=/opt/ccache
@@ -48,6 +56,14 @@ WORKDIR /opt/multipy
 COPY . .
 RUN git submodule update --init --recursive --jobs 0
 
+# install pyenv
+FROM dev-base as pyenv-install
+RUN git clone https://github.com/pyenv/pyenv.git ~/.pyenv && \
+    export PYENV_ROOT="~/.pyenv" && \
+    export PATH="$PYENV_ROOT/bin:$PATH"
+# dummy cmd to verify installation.
+RUN pyenv install --list
+
 # Install conda + neccessary python dependencies
 FROM dev-base as conda
 ARG PYTHON_VERSION=3.8
@@ -55,10 +71,11 @@ RUN curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Mini
     chmod +x ~/miniconda.sh && \
     ~/miniconda.sh -b -p /opt/conda && \
     rm ~/miniconda.sh && \
-    /opt/conda/bin/conda install -y python=${PYTHON_VERSION} cmake mkl mkl-include conda-build pyyaml numpy ipython && \
+    /opt/conda/bin/conda install -y python=${PYTHON_VERSION} mkl mkl-include conda-build pyyaml numpy ipython && \
     /opt/conda/bin/conda install -y -c conda-forge libpython-static=${PYTHON_VERSION} && \
     /opt/conda/bin/conda install -y pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly && \
     /opt/conda/bin/conda clean -ya
+
 
 # Build/Install pytorch with post-cxx11 ABI
 FROM conda as build
@@ -78,4 +95,4 @@ RUN mkdir multipy/runtime/build && \
 RUN cd multipy/runtime/example && python generate_examples.py
 ENV PYTHONPATH=. LIBTEST_DEPLOY_LIB=multipy/runtime/build/libtest_deploy_lib.so
 
-RUN mkdir /opt/dist && cp -r multipy/runtime/build/dist /opt/dist/
+RUN mkdir /opt/dist && cp -r multipy/runtime/build/dist/* /opt/dist/

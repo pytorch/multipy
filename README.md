@@ -3,7 +3,7 @@
 
 # \[experimental\] MultiPy
 
-> :warning: **This is project is still a prototype.** Only Linux x86 is supported, and the API may change without warning. Furthermore, please **USE PYTORCH RELEASE 1.12** when using `multipy::runtime`!
+> :warning: **This is project is still a prototype.** Only Linux x86 is supported, and the API may change without warning. Furthermore, please **USE PYTORCH NIGHTLY** when using `multipy::runtime`!
 
 `MultiPy` (formerly `torch::deploy` and `torch.package`) is a system that allows you to run multi-threaded python code in C++. It offers `multipy.package` (formerly `torch.package`) in order to package code into a mostly hermetic format to deliver to `multipy::runtime` (formerly `torch::deploy`) which is a runtime which takes packaged
 code and runs it using multiple embedded Python interpreters in a C++ process without a shared global interpreter lock (GIL). For more information on how `MultiPy` works

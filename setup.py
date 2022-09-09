@@ -71,6 +71,10 @@ if __name__ == "__main__":
         packages=find_packages(exclude=()),
         extras_require={
             "dev": dev_reqs,
+            ':python_version < "3.8"': [
+                # latest numpy doesn't support 3.7
+                "numpy<=1.21.6",
+            ],
         },
         # PyPI package information.
         classifiers=[

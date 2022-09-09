@@ -19,8 +19,8 @@ int main(int argc, char* argv[]) {
   return rc;
 }
 
-const char* simple = "torch/csrc/deploy/example/generated/simple";
-const char* simple_jit = "torch/csrc/deploy/example/generated/simple_jit";
+const char* simple = "multipy/runtime/example/generated/simple";
+const char* simple_jit = "multipy/runtime/example/generated/simple_jit";
 
 const char* path(const char* envname, const char* path) {
   const char* e = getenv(envname);
@@ -63,8 +63,7 @@ TEST(TorchDeployGPUTest, SimpleModel) {
 
 TEST(TorchDeployGPUTest, UsesDistributed) {
   const auto model_filename = path(
-      "USES_DISTRIBUTED",
-      "torch/csrc/deploy/example/generated/uses_distributed");
+      "USES_DISTRIBUTED", "multipy/runtime/example/generated/uses_distributed");
   torch::deploy::InterpreterManager m(1);
   torch::deploy::Package p = m.loadPackage(model_filename);
   {
@@ -81,7 +80,7 @@ TEST(TorchDeployGPUTest, UsesCuda) {
 #endif
 
   const auto model_filename =
-      path("USES_CUDA", "torch/csrc/deploy/example/generated/uses_cuda");
+      path("USES_CUDA", "multipy/runtime/example/generated/uses_cuda");
   torch::deploy::InterpreterManager m(1);
   torch::deploy::Package p = m.loadPackage(model_filename);
   {
@@ -96,7 +95,7 @@ TEST(TorchDeployGPUTest, TensorRT) {
     GTEST_SKIP();
   }
   auto packagePath = path(
-      "MAKE_TRT_MODULE", "torch/csrc/deploy/example/generated/make_trt_module");
+      "MAKE_TRT_MODULE", "multipy/runtime/example/generated/make_trt_module");
   torch::deploy::InterpreterManager m(1);
   torch::deploy::Package p = m.loadPackage(packagePath);
   auto makeModel = p.loadPickle("make_trt_module", "model.pkl");

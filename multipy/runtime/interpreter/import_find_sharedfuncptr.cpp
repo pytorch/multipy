@@ -53,6 +53,7 @@ extern "C" dl_funcptr _PyImport_FindSharedFuncptr(
   // that itself gets unloaded.
   loaded_files_.emplace_back(CustomLibrary::create(pathname, 1, args));
   CustomLibrary& lib = *loaded_files_.back();
+  assert(deploy_self);
   lib.add_search_library(SystemLibrary::create(deploy_self));
   lib.add_search_library(SystemLibrary::create());
   for (auto f : search_files_) {

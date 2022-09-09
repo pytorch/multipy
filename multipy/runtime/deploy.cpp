@@ -5,7 +5,6 @@
 // LICENSE file in the root directory of this source tree.
 
 #include <dlfcn.h>
-#include <libgen.h>
 #include <multipy/runtime/Exception.h>
 #include <multipy/runtime/deploy.h>
 #include <unistd.h>
@@ -26,6 +25,7 @@ const std::initializer_list<ExeSection> pythonInterpreterSections = {
     {".torch_deploy_payload.interpreter_all", true},
     {".torch_deploy_payload.interpreter_cuda", false},
     {".torch_deploy_payload.interpreter_cpu", false},
+    {".torch_deploy_payload.interpreter_hip", false},
 };
 
 const std::initializer_list<InterpreterSymbol> pythonInterpreterSymbols = {
@@ -38,6 +38,9 @@ const std::initializer_list<InterpreterSymbol> pythonInterpreterSymbols = {
     {"_binary_libtorch_deployinterpreter_cpu_so_start",
      "_binary_libtorch_deployinterpreter_cpu_so_end",
      false},
+    {"_binary_libtorch_deployinterpreter_hip_so_start",
+     "_binary_libtorch_deployinterpreter_hip_so_end",
+     false},
 };
 const std::initializer_list<ExeSection> multipyTorchSections = {
     {".torch_deploy_payload.multipy_torch", false},
@@ -48,7 +51,6 @@ InterpreterManager::InterpreterManager(
     size_t nInterp,
     std::shared_ptr<Environment> env)
     : resources_(nInterp) {
-  TORCH_DEPLOY_TRY
   // disable GIL deadlock detection if it's not set already
   setenv("TORCH_DISABLE_DEADLOCK_DETECTION", "1", /*overwrite*/ 0);
 
@@ -82,31 +84,23 @@ InterpreterManager::InterpreterManager(
       "    if len(names) == 0:\n"
       "        return None\n"
       "    return names\n");
-  TORCH_DEPLOY_SAFE_CATCH_RETHROW
 }
 
 Package InterpreterManager::loadPackage(const std::string& uri) {
-  TORCH_DEPLOY_TRY
   return Package(uri, this);
-  TORCH_DEPLOY_SAFE_CATCH_RETHROW
 }
 
 Package InterpreterManager::loadPackage(
     std::shared_ptr<caffe2::serialize::ReadAdapterInterface> reader) {
-  TORCH_DEPLOY_TRY
   return Package(reader, this);
-  TORCH_DEPLOY_SAFE_CATCH_RETHROW
 }
 
 Obj InterpreterSession::fromMovable(const ReplicatedObj& obj) {
-  TORCH_DEPLOY_TRY
   return impl_->unpickleOrGet(obj.pImpl_->objectId_, obj.pImpl_->data_);
-  TORCH_DEPLOY_SAFE_CATCH_RETHROW
 }
 
 InterpreterSession ReplicatedObj::acquireSession(
     const Interpreter* onThisInterpreter) const {
-  TORCH_DEPLOY_TRY
    MULTIPY_CHECK(
     (pImpl_->manager_ || onThisInterpreter),
     "ReplicatedObjImpl needs an interpreter or needs to be associated with an InterpreterManager (with ReplicatedObj::attachInterpreterManager) to create an InterpreterSession.");
@@ -114,7 +108,6 @@ InterpreterSession ReplicatedObj::acquireSession(
                                            : pImpl_->manager_->acquireOne();
   I.self = I.fromMovable(*this);
   return I;
-  TORCH_DEPLOY_SAFE_CATCH_RETHROW
 }
 
 void ReplicatedObj::attachInterpreterManager(InterpreterManager* manager){
@@ -142,7 +135,6 @@ InterpreterSession::~InterpreterSession() {
 }
 
 void ReplicatedObjImpl::unload(const Interpreter* onThisInterpreter) {
-  TORCH_DEPLOY_TRY
   if (!onThisInterpreter) {
     // NOLINTNEXTLINE(clang-analyzer-core.NullDereference)
     MULTIPY_CHECK(
@@ -156,7 +148,6 @@ void ReplicatedObjImpl::unload(const Interpreter* onThisInterpreter) {
 
   InterpreterSession I = onThisInterpreter->acquireSession();
   I.impl_->unload(objectId_);
-  TORCH_DEPLOY_SAFE_CATCH_RETHROW
 }
 
 // NOLINTNEXTLINE(bugprone-exception-escape)
@@ -165,13 +156,10 @@ ReplicatedObjImpl::~ReplicatedObjImpl() {
 }
 
 void ReplicatedObj::unload(const Interpreter* onThisInterpreter) {
-  TORCH_DEPLOY_TRY
   pImpl_->unload(onThisInterpreter);
-  TORCH_DEPLOY_SAFE_CATCH_RETHROW
 }
 
 ReplicatedObj InterpreterSession::createMovable(Obj obj) {
-  TORCH_DEPLOY_TRY
   MULTIPY_CHECK(
       manager_,
       "Can only create a movable object when the session was created "
@@ -191,20 +179,15 @@ ReplicatedObj InterpreterSession::createMovable(Obj obj) {
   auto pickled = impl_->pickle(self, obj);
   return ReplicatedObj(std::make_shared<ReplicatedObjImpl>(
     nextObjectId_++, std::move(pickled)));
-
-
-  TORCH_DEPLOY_SAFE_CATCH_RETHROW
 }
 
 ReplicatedObj InterpreterManager::createMovable(Obj obj, InterpreterSession* I) {
-  TORCH_DEPLOY_TRY
   MULTIPY_CHECK(
       I->isOwner(obj),
       "Cannot create movable from an object that lives in different session");
   PickledObject pickled = I->pickleObj(obj);
   return ReplicatedObj(std::make_shared<ReplicatedObjImpl>(
     I->nextObjectId_++, std::move(pickled), this));
-  TORCH_DEPLOY_SAFE_CATCH_RETHROW
 }
 
 PickledObject InterpreterSession::pickleObj(Obj obj){
@@ -318,7 +301,6 @@ Interpreter::~Interpreter() {
 }
 
 int LoadBalancer::acquire() {
-  TORCH_DEPLOY_TRY
   thread_local int last = 0;
   size_t minusers = SIZE_MAX;
   int minIdx = 0;
@@ -351,14 +333,11 @@ int LoadBalancer::acquire() {
   // then, so this is only a heuristic).
   __atomic_fetch_add(&uses_[8 * minIdx], 1ULL, __ATOMIC_SEQ_CST);
   return minIdx;
-  TORCH_DEPLOY_SAFE_CATCH_RETHROW
 }
 
 void LoadBalancer::free(int where) {
-  TORCH_DEPLOY_TRY
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers)
   __atomic_fetch_sub(&uses_[8 * where], 1ULL, __ATOMIC_SEQ_CST);
-  TORCH_DEPLOY_SAFE_CATCH_RETHROW
 }
 
 void PythonMethodWrapper::setArgumentNames(
