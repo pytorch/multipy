@@ -48,8 +48,8 @@ RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
         echo "deb http://security.ubuntu.com/ubuntu focal-security main" >> /etc/apt/sources.list && \
         apt-add-repository ppa:ubuntu-toolchain-r/test && \
         apt update && \
-        apt install -y binutils cmake gcc-8 g++-8 && \
-        update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 80 --slave /usr/bin/g++ g++ /usr/bin/g++-8 && \
+        apt install -y binutils cmake gcc-9 g++-9 && \
+        update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 90 --slave /usr/bin/g++ g++ /usr/bin/g++-9 && \
     rm -rf /var/lib/apt/lists/*
 RUN /usr/sbin/update-ccache-symlinks
 RUN mkdir /opt/ccache && ccache --set-config=cache_dir=/opt/ccache
