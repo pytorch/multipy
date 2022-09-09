@@ -106,11 +106,11 @@ RUN source ~/venvs/multipy_3_7_10/bin/activate && \
    pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cu113 && \
    mkdir multipy/runtime/build && \
    cd multipy/runtime/build && \
-   export CFLAGS="-fPIC -g" && \
+   # export CFLAGS="-fPIC -g" && \
    if [[ ${PY_MINOR} -lt 8 ]]; then \
-   cmake -DCMAKE_CXX_FLAGS=${CFLAGS} -DCMAKE_C_FLAGS=${CFLAGS} -DLEGACY_PYTHON_PRE_3_8=ON ..; \
+   cmake -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DLEGACY_PYTHON_PRE_3_8=ON ..; \
    else \
-   cmake -DCMAKE_CXX_FLAGS=${CFLAGS} -DCMAKE_C_FLAGS=${CFLAGS} -DLEGACY_PYTHON_PRE_3_8=OFF ..; \
+   cmake -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DLEGACY_PYTHON_PRE_3_8=OFF ..; \
    fi && \
    # cmake -DLEGACY_PYTHON_PRE_3_8=${FLAG} .. && \
    cmake --build . --config Release && \
