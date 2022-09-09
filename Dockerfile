@@ -46,8 +46,9 @@ RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
         wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add - && \
         apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main' && \
         echo "deb http://security.ubuntu.com/ubuntu focal-security main" >> /etc/apt/sources.list && \
+        apt-add-repository ppa:ubuntu-toolchain-r/test && \
         apt update && \
-        apt install -y binutils cmake && \
+        apt install -y binutils cmake gcc-8 && \
     rm -rf /var/lib/apt/lists/*
 RUN /usr/sbin/update-ccache-symlinks
 RUN mkdir /opt/ccache && ccache --set-config=cache_dir=/opt/ccache

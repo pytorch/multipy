@@ -245,7 +245,7 @@ ConcreteInterpreterImplConstructorCommon(
     const std::vector<std::string>& plugin_paths) {
   BuiltinRegistry::runPreInitialization();
 
-  #ifndef LEGACY_PYTHON_PRE_3_8
+#ifndef LEGACY_PYTHON_PRE_3_8
   PyPreConfig preconfig;
   PyPreConfig_InitIsolatedConfig(&preconfig);
   PyStatus status = Py_PreInitialize(&preconfig);

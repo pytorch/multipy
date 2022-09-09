@@ -12,6 +12,8 @@ project(MultipyRuntime)
 option(ABI_EQUALS_1 "Set ABI value to 1, by default it is set to 0. Pytorch by default builds with ABI set to 1." OFF)
 option(BUILD_CUDA_TESTS "Set to ON in order to build cuda tests. By default we do not" OFF)
 
+OPTION(LEGACY_PYTHON_PRE_3_8 "fancy description" OFF)
+
 if(ABI_EQUALS_1)
   set(ABI_VALUE 1)
 else()
@@ -105,7 +107,11 @@ set(INTERPRETER_TEST_SOURCES_GPU
 
 LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
 add_executable(test_deploy ${INTERPRETER_TEST_SOURCES})
-target_compile_definitions(test_deploy PUBLIC TEST_CUSTOM_LIBRARY)
+# target_compile_definitions(test_deploy PUBLIC TEST_CUSTOM_LIBRARY)
+if (${LEGACY_PYTHON_PRE_3_8})
+  message(STATUS "LEGACY_PYTHON_PRE_3_8 set in parent cmakefile.")
+  target_compile_definitions(test_deploy PUBLIC LEGACY_PYTHON_PRE_3_8)
+endif()
 target_include_directories(test_deploy PRIVATE ${PYTORCH_ROOT}/torch)
 target_link_libraries(test_deploy
   PUBLIC "-Wl,--no-as-needed -rdynamic" gtest dl torch_deploy_interface c10 torch_cpu
