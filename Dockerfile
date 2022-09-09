@@ -42,6 +42,7 @@ RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
         ca-certificates \
         gnupg \
         software-properties-common \
+        python-pip \
         python3-pip && \
         wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add - && \
         apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main' && \
