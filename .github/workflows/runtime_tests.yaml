@@ -11,7 +11,10 @@ jobs:
     strategy:
       matrix:
         python-major-version: [3]
-        python-minor-version: [7,8,9,10]
+        python-minor-version: [8,9,10]
+        # 3.7 works on devserver (dependent on gcc/g++/ld and friends),
+        # but not on nvidia/cuda:11.3.1-devel-ubuntu18.04 docker image.
+        # python-minor-version: [7,8,9,10]
         platform: [ubuntu-18.04]
       fail-fast: false
     runs-on: ${{ matrix.platform }}
