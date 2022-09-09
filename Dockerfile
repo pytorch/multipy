@@ -118,9 +118,9 @@ RUN source ~/venvs/multipy_3_7_10/bin/activate && \
    fi && \
    # cmake -DLEGACY_PYTHON_PRE_3_8=${FLAG} .. && \
    cmake --build . --config Release && \
-   cmake --install . --prefix "."
+   cmake --install . --prefix "." && \
+   cd multipy/runtime/example && python generate_examples.py
 
-RUN cd multipy/runtime/example && python generate_examples.py
 ENV PYTHONPATH=. LIBTEST_DEPLOY_LIB=multipy/runtime/build/libtest_deploy_lib.so
 
 RUN mkdir /opt/dist && cp -r multipy/runtime/build/dist/* /opt/dist/
