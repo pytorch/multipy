@@ -7,6 +7,8 @@
 cmake_minimum_required(VERSION 3.19)
 project(MultipyRuntime)
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 # set ABI by default to 0
 
 option(ABI_EQUALS_1 "Set ABI value to 1, by default it is set to 0. Pytorch by default builds with ABI set to 1." OFF)
@@ -87,7 +89,7 @@ add_library(torch_deploy STATIC
   ${DEPLOY_DIR}/path_environment.cpp
   ${DEPLOY_DIR}/elf_file.cpp
 )
-target_compile_options(torch_deploy PUBLIC -fpic -fpie)
+# target_compile_options(torch_deploy PUBLIC -fpic -fpie)
 target_link_libraries(torch_deploy PRIVATE crypt pthread dl util m z ffi lzma readline nsl ncursesw panelw) # for python builtins
 target_link_libraries(torch_deploy PUBLIC  shm torch fmt::fmt-header-only)
 target_include_directories(torch_deploy PRIVATE ${CMAKE_SOURCE_DIR}/../..)
