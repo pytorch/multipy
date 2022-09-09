@@ -87,14 +87,14 @@ RUN pip3 install virtualenv && \
     git clone https://github.com/pyenv/pyenv.git ~/.pyenv && \
     export CFLAGS="-fPIC -g" && \
     ~/.pyenv/bin/pyenv install --force 3.7.10 && \
-    virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy_3_7_10
+    virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy
     # export PYENV_ROOT="~/.pyenv" && \
     # export PATH="$PYENV_ROOT/bin:$PATH"
     # exec shell ?
 #ENV PATH ~/.pyenv/bin:$PATH
 # RUN export CFLAGS="-fPIC -g" && \
 #     pyenv install --force 3.7.10 && \
-#     virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy_3_7_10
+#     virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy
 
 
 # Build/Install pytorch with post-cxx11 ABI
@@ -106,20 +106,18 @@ COPY --from=submodule-update /opt/multipy /opt/multipy
 WORKDIR /opt/multipy
 
 # Build Multipy
-RUN source ~/venvs/multipy_3_7_10/bin/activate && \
+RUN source ~/venvs/multipy/bin/activate && \
    pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cu113 && \
    mkdir multipy/runtime/build && \
    cd multipy/runtime/build && \
-   # export CFLAGS="-fPIC" && \
    if [[ ${PY_MINOR} -lt 8 ]]; then \
    cmake -DLEGACY_PYTHON_PRE_3_8=ON ..; \
    else \
    cmake -DLEGACY_PYTHON_PRE_3_8=OFF ..; \
    fi && \
-   # cmake -DLEGACY_PYTHON_PRE_3_8=${FLAG} .. && \
    cmake --build . --config Release && \
    cmake --install . --prefix "." && \
-   cd multipy/runtime/example && python generate_examples.py
+   cd ../example && python generate_examples.py
 
 ENV PYTHONPATH=. LIBTEST_DEPLOY_LIB=multipy/runtime/build/libtest_deploy_lib.so
 
