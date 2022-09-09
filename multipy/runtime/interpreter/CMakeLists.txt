@@ -4,7 +4,7 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-# set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 
