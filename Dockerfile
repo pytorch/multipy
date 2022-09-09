@@ -70,6 +70,8 @@ RUN git submodule update --init --recursive --jobs 0
 # Install conda + neccessary python dependencies
 FROM dev-base as conda
 ARG PYTHON_VERSION=3.8
+ARG PY_MINOR=7
+ENV PY_MINOR=${PY_MINOR}
 # RUN curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
 #     chmod +x ~/miniconda.sh && \
 #     ~/miniconda.sh -b -p /opt/conda && \
@@ -105,7 +107,12 @@ RUN source ~/venvs/multipy_3_7_10/bin/activate && \
    mkdir multipy/runtime/build && \
    cd multipy/runtime/build && \
    export CFLAGS="-fPIC -g" && \
-   cmake .. && \
+   if [[ ${PYTHON_MINOR_VERSION} -lt 8 ]]; then \
+   export FLAG=1; \
+   else \
+   export FLAG=0; \
+   fi && \
+   cmake .. -DLEGACY_PYTHON_PRE_3_8=${FLAG} && \
    cmake --build . --config Release && \
    cmake --install . --prefix "."
 
