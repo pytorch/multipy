@@ -85,6 +85,7 @@ ENV PY_MINOR=${PY_MINOR}
 #     /opt/conda/bin/conda clean -ya && \
 RUN pip3 install virtualenv && \
     git clone https://github.com/pyenv/pyenv.git ~/.pyenv && \
+    export CFLAGS="-fPIC -g" && \
     ~/.pyenv/bin/pyenv install --force 3.7.10 && \
     virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy_3_7_10
     # export PYENV_ROOT="~/.pyenv" && \
