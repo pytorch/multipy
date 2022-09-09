@@ -14,7 +14,7 @@ include_directories(BEFORE "${PYTORCH_ROOT}/torch/include")
 include_directories(BEFORE "${PYTORCH_ROOT}/torch/include/torch/csrc/api/include/")
 SET(MULTIPY_UTILS "${CMAKE_CURRENT_SOURCE_DIR}/../../utils")
 
-OPTION(LEGACY_PYTHON_PRE_3_8 "fancy description" OFF)
+OPTION(LEGACY_PYTHON_PRE_3_8 "Whether to use Python 3.7 codepaths." OFF)
 
 find_package (Python3 COMPONENTS Interpreter Development)
 
