@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=nvidia/cuda:11.3.1-devel-ubuntu18.04
+ARG BASE_IMAGE=nvidia/cuda:11.7.1-devel-ubuntu22.04
 
 FROM ${BASE_IMAGE} as dev-base
 
@@ -48,8 +48,9 @@ RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
         echo "deb http://security.ubuntu.com/ubuntu focal-security main" >> /etc/apt/sources.list && \
         apt-add-repository ppa:ubuntu-toolchain-r/test && \
         apt update && \
-        apt install -y binutils cmake gcc-8.5 g++-8.5 && \
-        update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8.5 80 --slave /usr/bin/g++ g++ /usr/bin/g++-8.5 && \
+        apt install -y binutils cmake && \
+        # apt install -y binutils cmake gcc-8 g++-8 && \
+        # update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 80 --slave /usr/bin/g++ g++ /usr/bin/g++-8 && \
     rm -rf /var/lib/apt/lists/*
 RUN /usr/sbin/update-ccache-symlinks
 RUN mkdir /opt/ccache && ccache --set-config=cache_dir=/opt/ccache
