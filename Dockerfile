@@ -37,15 +37,15 @@ RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
         libsqlite3-dev \
         zlib1g-dev \
         llvm \
-        python-openssl \
-        apt-transport-https \
-        ca-certificates \
-        gnupg \
+        # python-openssl \
+        # apt-transport-https \
+        # ca-certificates \
+        # gnupg \
         software-properties-common \
         python3-pip && \
-        wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add - && \
-        apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main' && \
-        echo "deb http://security.ubuntu.com/ubuntu focal-security main" >> /etc/apt/sources.list && \
+        # wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add - && \
+        # apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main' && \
+        # echo "deb http://security.ubuntu.com/ubuntu focal-security main" >> /etc/apt/sources.list && \
         apt-add-repository ppa:ubuntu-toolchain-r/test && \
         apt update && \
         apt install -y binutils cmake && \
