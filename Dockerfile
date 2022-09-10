@@ -80,7 +80,7 @@ RUN if [[ ${PYTHON_MINOR_VERSION} -gt 7 ]]; then \
     git clone https://github.com/pyenv/pyenv.git ~/.pyenv && \
     export CFLAGS="-fPIC -g" && \
     ~/.pyenv/bin/pyenv install --force 3.7.10 && \
-    virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy_3_7_10; \
+    virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy; \
     fi
 
 # Build/Install pytorch with post-cxx11 ABI
@@ -95,7 +95,7 @@ WORKDIR /opt/multipy
 RUN mkdir multipy/runtime/build && \
     cd multipy/runtime/build && \
     if [[ ${PYTHON_MINOR_VERSION} -lt 8 ]]; then \
-    source ~/venvs/multipy_3_7_10/bin/activate && \
+    source ~/venvs/multipy/bin/activate && \
     pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cu113 && \
     cmake -DLEGACY_PYTHON_PRE_3_8=ON ..; \
     else \
