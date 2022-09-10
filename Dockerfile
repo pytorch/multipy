@@ -42,6 +42,7 @@ RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
         ca-certificates \
         gnupg \
         software-properties-common \
+        python-pip \
         python3-pip && \
         wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add - && \
         apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main' && \
@@ -77,6 +78,7 @@ RUN if [[ ${PYTHON_MINOR_VERSION} -gt 7 ]]; then \
     else \
     pip3 install virtualenv && \
     git clone https://github.com/pyenv/pyenv.git ~/.pyenv && \
+    export CFLAGS="-fPIC -g" && \
     ~/.pyenv/bin/pyenv install --force 3.7.10 && \
     virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy_3_7_10; \
     fi
@@ -95,14 +97,14 @@ RUN mkdir multipy/runtime/build && \
     if [[ ${PYTHON_MINOR_VERSION} -lt 8 ]]; then \
     source ~/venvs/multipy_3_7_10/bin/activate && \
     pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cu113 && \
-    cmake -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DLEGACY_PYTHON_PRE_3_8=ON ..; \
+    cmake -DLEGACY_PYTHON_PRE_3_8=ON ..; \
     else \
-    cmake -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DLEGACY_PYTHON_PRE_3_8=OFF ..; \
+    cmake -DLEGACY_PYTHON_PRE_3_8=OFF ..; \
     fi && \
     cmake --build . --config Release && \
-    cmake --install . --prefix "."
+    cmake --install . --prefix "." && \
+    cd ../example && python generate_examples.py
 
-RUN cd multipy/runtime/example && python generate_examples.py
 ENV PYTHONPATH=. LIBTEST_DEPLOY_LIB=multipy/runtime/build/libtest_deploy_lib.so
 
 RUN mkdir /opt/dist && cp -r multipy/runtime/build/dist/* /opt/dist/

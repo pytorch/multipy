@@ -11,10 +11,7 @@ jobs:
     strategy:
       matrix:
         python-major-version: [3]
-        python-minor-version: [8,9,10]
-        # 3.7 works on devserver (dependent on gcc/g++/ld and friends),
-        # but not on nvidia/cuda:11.3.1-devel-ubuntu18.04 docker image.
-        # python-minor-version: [7,8,9,10]
+        python-minor-version: [7,8,9,10]
         platform: [ubuntu-18.04]
       fail-fast: false
     runs-on: ${{ matrix.platform }}
@@ -36,8 +33,8 @@ jobs:
 
       - name: Test
         run: |
-          docker run --rm multipy multipy/runtime/build/test_deploy
+          docker run --rm multipy bash -c "if [[ ${{ matrix.python-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && multipy/runtime/build/test_deploy"
 
       - name: Compat Tests
         run: |
-          docker run --rm multipy bash -c "pip install -r compat-requirements.txt && multipy/runtime/build/interactive_embedded_interpreter --pyscript multipy/runtime/test_compat.py"
+          docker run --rm multipy bash -c "if [[ ${{ matrix.python-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && pip install -r compat-requirements.txt && multipy/runtime/build/interactive_embedded_interpreter --pyscript multipy/runtime/test_compat.py"
