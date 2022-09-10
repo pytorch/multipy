@@ -9,6 +9,8 @@
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
+#include <fmt/format.h>
+#include <multipy/runtime/Exception.h>
 #include <multipy/runtime/interpreter/builtin_registry.h>
 #include <multipy/runtime/interpreter/import_find_sharedfuncptr.h>
 #include <multipy/runtime/interpreter/plugin_registry.h>
@@ -27,6 +29,7 @@
 #include <thread>
 
 namespace py = pybind11;
+using namespace py::literals;
 
 // TODO this should come from cmake
 #define DEBUG 1
@@ -122,8 +125,7 @@ import importlib.abc
 import linecache
 from zipfile import ZipFile
 
-# Disable Python library registration since it's not compatible with multipy.
-sys.modules["torch._meta_registrations"] = object
+sys.executable = 'torch_deploy'
 
 class RegisterModuleImporter(importlib.abc.InspectLoader):
     def __init__(self, find_module_source):
@@ -239,84 +241,204 @@ bool file_exists(const std::string& path) {
   return (stat(path.c_str(), &buf) == 0);
 }
 
-extern "C" __attribute__((visibility("default"))) void
-ConcreteInterpreterImplConstructorCommon(
-    const std::vector<std::string>& extra_python_paths,
-    const std::vector<std::string>& plugin_paths) {
-  BuiltinRegistry::runPreInitialization();
-  PyPreConfig preconfig;
-  PyPreConfig_InitIsolatedConfig(&preconfig);
-  PyStatus status = Py_PreInitialize(&preconfig);
-  TORCH_INTERNAL_ASSERT(!PyStatus_Exception(status))
+struct __attribute__((visibility("hidden"))) ConcreteInterpreterObj
+    : public torch::deploy::InterpreterObj {
 
-  PyConfig config;
-
-#ifdef FBCODE_CAFFE2
-  PyConfig_InitIsolatedConfig(&config);
-
-  // Completely blank out the path configuration. This ensures we have
-  // complete control of how our embedded Python searches for modules, and we
-  // will never consult the external filesystem. See:
-  // https://docs.python.org/3/c-api/init_config.html#path-configuration
-  config.site_import = 0;
-  status = PyConfig_SetString(&config, &config.base_exec_prefix, L"");
-  status =
-      PyConfig_SetString(&config, &config.base_executable, L"torch_deploy");
-  status = PyConfig_SetString(&config, &config.base_prefix, L"");
-  status = PyConfig_SetString(&config, &config.exec_prefix, L"");
-  status = PyConfig_SetString(&config, &config.executable, L"torch_deploy");
-  status = PyConfig_SetString(&config, &config.prefix, L"");
-  config.module_search_paths_set = 1;
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
-  wchar_t* module_search_paths[0] = {};
-  status = PyConfig_SetWideStringList(
-      &config, &config.module_search_paths, 0, module_search_paths);
-#else
-  // dynamic linking path
-  PyConfig_InitPythonConfig(&config);
-
-#endif
-
-  status = Py_InitializeFromConfig(&config);
-  PyConfig_Clear(&config);
-  TORCH_INTERNAL_ASSERT(!PyStatus_Exception(status))
-#ifdef FBCODE_CAFFE2
-  auto sys_path = global_impl("sys", "path");
-  for (const auto& entry : extra_python_paths) {
-    sys_path.attr("insert")(0, entry);
+  ConcreteInterpreterObj(py::object* pyObject)
+      : pyObject_(pyObject) {}
+  ConcreteInterpreterObj(Obj obj){
+    ConcreteInterpreterObj* iObj = (ConcreteInterpreterObj*) (obj.getBaseObj());
+    py::object pyObj = iObj->getPyObject();
+    pyObject_ = &pyObj;
   }
-#endif
+  ConcreteInterpreterObj()
+      : pyObject_(nullptr) {}
+  ConcreteInterpreterObj(const ConcreteInterpreterObj& obj) = default;
+  ConcreteInterpreterObj(ConcreteInterpreterObj&& obj) = default;
+  ConcreteInterpreterObj(ConcreteInterpreterObj& obj) = default;
 
-  if (plugin_paths.size() > 0) {
-    auto sys_path = global_impl("sys", "path").cast<std::vector<std::string>>();
-    std::string libtorch_python_path;
-    for (auto path : sys_path) {
-      auto file = path + "/torch/lib/libtorch_python.so";
-      if (file_exists(file)) {
-        libtorch_python_path = file;
-        break;
+  py::object getPyObject() const {
+    MULTIPY_CHECK(pyObject_, "pyObject has already been freed");
+    return *pyObject_;
+  }
+
+  at::IValue toIValue() const override {
+    MULTIPY_SAFE_RETHROW {
+    py::handle pyObj = getPyObject();
+    return multipy::toTypeInferredIValue(pyObj);
+    };
+  }
+
+  py::object call(py::handle args, py::handle kwargs = nullptr) {
+    MULTIPY_SAFE_RETHROW {
+    PyObject* result = PyObject_Call((*getPyObject()).ptr(), args.ptr(), kwargs.ptr());
+    if (!result) {
+      throw py::error_already_set();
+    }
+    return py::reinterpret_steal<py::object>(result);
+    };
+  }
+
+  torch::deploy::Obj call(at::ArrayRef<Obj> args) override {
+    MULTIPY_SAFE_RETHROW {
+    py::tuple m_args(args.size());
+    for (size_t i = 0, N = args.size(); i != N; ++i) {
+      Obj obj = args[i];
+      InterpreterObj* iObj = obj.getBaseObj();
+      m_args[i] = ((ConcreteInterpreterObj*)iObj)->getPyObject();
+    }
+    py::object pyObj = call(m_args);
+    ConcreteInterpreterObj iObj = ConcreteInterpreterObj(&pyObj);
+    return Obj(&iObj);
+    };
+  }
+
+torch::deploy::Obj call(at::ArrayRef<at::IValue> args) override {
+      MULTIPY_SAFE_RETHROW {
+      py::tuple m_args(args.size());
+      for (size_t i = 0, N = args.size(); i != N; ++i) {
+        m_args[i] = multipy::toPyObject(args[i]);
       }
-    }
-    loadSearchFile(libtorch_python_path.c_str());
-    for (auto path : plugin_paths) {
-      loadSearchFile(path.c_str());
-    }
+      py::object pyObj = call(m_args);
+      ConcreteInterpreterObj iObj = ConcreteInterpreterObj(&pyObj);
+      return Obj(&iObj);
+      };
   }
 
-  BuiltinRegistry::runPostInitialization();
+torch::deploy::Obj callKwargs(
+      std::vector<at::IValue> args,
+      std::unordered_map<std::string, c10::IValue> kwargs) override {
+
+    MULTIPY_SAFE_RETHROW {
+    py::tuple py_args(args.size());
+    for (size_t i = 0, N = args.size(); i != N; ++i) {
+      py_args[i] = multipy::toPyObject(args[i]);
+    }
+
+    py::dict py_kwargs;
+    for (auto kv : kwargs) {
+      py_kwargs[py::cast(std::get<0>(kv))] =
+          multipy::toPyObject(std::get<1>(kv));
+    }
+    py::object pyObj = call(py_args, py_kwargs);
+    ConcreteInterpreterObj iObj = ConcreteInterpreterObj(&pyObj);
+    return Obj(&iObj);
+    };
+  }
+
+torch::deploy::Obj callKwargs(std::unordered_map<std::string, c10::IValue> kwargs) override {
+    return callKwargs({}, kwargs);
 }
+
+bool hasattr(const char* attr) override {
+  MULTIPY_SAFE_RETHROW {
+  return py::hasattr(getPyObject(), attr);
+  };
+}
+
+torch::deploy::Obj attr(const char* attr) override {
+  MULTIPY_SAFE_RETHROW {
+  py::object pyObj = getPyObject().attr(attr);
+  ConcreteInterpreterObj iObj = ConcreteInterpreterObj(&pyObj);
+  return Obj(&iObj);
+  };
+}
+
+void unload() {
+  MULTIPY_SAFE_RETHROW {
+  MULTIPY_CHECK(pyObject_, "pyObject has already been freed");
+  free(pyObject_);
+  pyObject_ = nullptr;
+  };
+}
+
+~ConcreteInterpreterObj(){
+  unload();
+}
+  py::object* pyObject_;
+};
+
 
 struct __attribute__((visibility("hidden"))) ConcreteInterpreterImpl
     : public torch::deploy::InterpreterImpl {
   explicit ConcreteInterpreterImpl(
-      py::object saveStorageArg,
-      py::object loadStorageArg,
-      py::object getPackageArg,
-      py::dict objectsArg)
-      : saveStorage(saveStorageArg),
-        loadStorage(loadStorageArg),
-        getPackage(getPackageArg),
-        objects(objectsArg) {}
+      const std::vector<std::string>& extra_python_paths,
+      const std::vector<std::string>& plugin_paths) {
+    BuiltinRegistry::runPreInitialization();
+    PyPreConfig preconfig;
+    PyPreConfig_InitIsolatedConfig(&preconfig);
+    PyStatus status = Py_PreInitialize(&preconfig);
+    TORCH_INTERNAL_ASSERT(!PyStatus_Exception(status))
+
+    PyConfig config;
+
+#ifdef FBCODE_CAFFE2
+    PyConfig_InitIsolatedConfig(&config);
+
+    // Completely blank out the path configuration. This ensures we have
+    // complete control of how our embedded Python searches for modules, and we
+    // will never consult the external filesystem. See:
+    // https://docs.python.org/3/c-api/init_config.html#path-configuration
+    config.site_import = 0;
+    status = PyConfig_SetString(&config, &config.base_exec_prefix, L"");
+    status =
+        PyConfig_SetString(&config, &config.base_executable, L"torch_deploy");
+    status = PyConfig_SetString(&config, &config.base_prefix, L"");
+    status = PyConfig_SetString(&config, &config.exec_prefix, L"");
+    status = PyConfig_SetString(&config, &config.executable, L"torch_deploy");
+    status = PyConfig_SetString(&config, &config.prefix, L"");
+    config.module_search_paths_set = 1;
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
+    wchar_t* module_search_paths[0] = {};
+    status = PyConfig_SetWideStringList(
+        &config, &config.module_search_paths, 0, module_search_paths);
+#else
+    // dynamic linking path
+    PyConfig_InitPythonConfig(&config);
+
+#endif
+
+    status = Py_InitializeFromConfig(&config);
+    PyConfig_Clear(&config);
+    TORCH_INTERNAL_ASSERT(!PyStatus_Exception(status))
+#ifdef FBCODE_CAFFE2
+    auto sys_path = global_impl("sys", "path");
+    for (const auto& entry : extra_python_paths) {
+      sys_path.attr("insert")(0, entry);
+    }
+#endif
+
+    if (plugin_paths.size() > 0) {
+      auto sys_path =
+          global_impl("sys", "path").cast<std::vector<std::string>>();
+      std::string libtorch_python_path;
+      for (auto path : sys_path) {
+        auto file = path + "/torch/lib/libtorch_python.so";
+        if (file_exists(file)) {
+          libtorch_python_path = file;
+          break;
+        }
+      }
+      loadSearchFile(libtorch_python_path.c_str());
+      for (auto path : plugin_paths) {
+        loadSearchFile(path.c_str());
+      }
+    }
+
+    BuiltinRegistry::runPostInitialization();
+
+    int r = PyRun_SimpleString(start);
+    TORCH_INTERNAL_ASSERT(r == 0);
+
+    // we cache these so we don't have to repeat the conversion of strings into
+    // Python and hash table lookups to get to these object
+    saveStorage = global_impl("multipy.utils._deploy", "_save_storages");
+    loadStorage = global_impl("multipy.utils._deploy", "_load_storages");
+    getPackage = global_impl("multipy.utils._deploy", "_get_package");
+    objects = global_impl("multipy.utils._deploy", "_deploy_objects");
+    // Release the GIL that PyInitialize acquires
+    PyEval_SaveThread();
+  }
 
   ~ConcreteInterpreterImpl() override {
     PyGILState_Ensure();
@@ -361,175 +483,131 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
     : public torch::deploy::InterpreterSessionImpl {
   ConcreteInterpreterSessionImpl(ConcreteInterpreterImpl* interp)
       : interp_(interp) {}
+  Obj createObj(py::object* pyObj){
+    ConcreteInterpreterObj concreteObj = ConcreteInterpreterObj(pyObj);
+    Obj obj = Obj(&concreteObj);
+    createdObjs_.insert(pyObj);
+    return obj;
+  }
   Obj global(const char* module, const char* name) override {
-    MULTIPY_SAFE_RETHROW {
-      return wrap(global_impl(module, name));
-    };
+    py::object globalObj = global_impl(module, name);
+    return createObj(&globalObj);
   }
 
   Obj fromIValue(IValue value) override {
-    MULTIPY_SAFE_RETHROW {
-      return wrap(multipy::toPyObject(value));
-    };
+    py::object pyObj = multipy::toPyObject(value);
+    return createObj(&pyObj);
   }
   Obj createOrGetPackageImporterFromContainerFile(
       const std::shared_ptr<caffe2::serialize::PyTorchStreamReader>&
           containerFile_) override {
-    MULTIPY_SAFE_RETHROW {
-      InitLockAcquire guard(interp_->init_lock_);
-      py::object pet =
-          (py::object)py::module_::import("torch._C").attr("PyTorchFileReader");
-      return wrap(interp_->getPackage(containerFile_));
-    };
+    InitLockAcquire guard(interp_->init_lock_);
+    py::object pet =
+        (py::object)py::module_::import("torch._C").attr("PyTorchFileReader");
+    py::object pyObj =  interp_->getPackage(containerFile_);
+    return createObj(&pyObj);
   }
-
+  // optoin 1) for this we stil have to enforce a hashtable relationship between objects and py::objects in the interpretersession.
+  // option 2) another option is to embedded saveStorages into objects which are created from this interpreter
+  // we can track if something is which is not too difficult
+  // Regardless we probably have to do an isOwnerCheck :(
   PickledObject pickle(Obj container, Obj obj) override {
-    MULTIPY_SAFE_RETHROW {
-      py::tuple result = interp_->saveStorage(unwrap(container), unwrap(obj));
-      py::bytes bytes = py::cast<py::bytes>(result[0]);
-      py::list storages = py::cast<py::list>(result[1]);
-      py::list dtypes = py::cast<py::list>(result[2]);
-      auto container_file =
-          py::cast<std::shared_ptr<caffe2::serialize::PyTorchStreamReader>>(
-              result[3]);
+    ConcreteInterpreterObj* containerIObj = (ConcreteInterpreterObj*) (container.getBaseObj());
+    ConcreteInterpreterObj* iObj = (ConcreteInterpreterObj*) obj.getBaseObj();
+    py::object containerPyObject = containerIObj->getPyObject();
+    py::object objPyObject = iObj->getPyObject();
+    py::tuple result = interp_->saveStorage(containerPyObject, objPyObject);
+    py::bytes bytes = py::cast<py::bytes>(result[0]);
+    py::list storages = py::cast<py::list>(result[1]);
+    py::list dtypes = py::cast<py::list>(result[2]);
+    auto container_file =
+        py::cast<std::shared_ptr<caffe2::serialize::PyTorchStreamReader>>(
+            result[3]);
 
-      std::vector<at::Storage> storages_c;
-      std::vector<at::ScalarType> dtypes_c;
+    std::vector<at::Storage> storages_c;
+    std::vector<at::ScalarType> dtypes_c;
 
-      for (size_t i = 0, N = storages.size(); i < N; ++i) {
-        storages_c.push_back(multipy::createStorage(storages[i].ptr()));
-        dtypes_c.push_back(
-            reinterpret_cast<THPDtype*>(dtypes[i].ptr())->scalar_type);
-      }
-      return PickledObject{
-          bytes,
-          std::move(storages_c),
-          std::move(dtypes_c),
-          std::move(container_file)};
-    };
+    for (size_t i = 0, N = storages.size(); i < N; ++i) {
+      storages_c.push_back(multipy::createStorage(storages[i].ptr()));
+      dtypes_c.push_back(
+          reinterpret_cast<THPDtype*>(dtypes[i].ptr())->scalar_type);
+    }
+    return PickledObject{
+        bytes,
+        std::move(storages_c),
+        std::move(dtypes_c),
+        std::move(container_file)};
   }
   Obj unpickleOrGet(int64_t id, const PickledObject& obj) override {
-    MULTIPY_SAFE_RETHROW {
-      py::dict objects = interp_->objects;
-      py::object id_p = py::cast(id);
-      if (objects.contains(id_p)) {
-        return wrap(objects[id_p]);
-      }
+    if (unpickled_objects.find(id) != unpickled_objects.end()){
+      return createObj(unpickled_objects[id]);
+    }
 
-      InitLockAcquire guard(interp_->init_lock_);
-      // re-check if something else loaded this before we acquired the
-      // init_lock_
-      if (objects.contains(id_p)) {
-        return wrap(objects[id_p]);
-      }
+    InitLockAcquire guard(interp_->init_lock_);
+    // re-check if something else loaded this before we acquired the
+    // init_lock_
+    if (unpickled_objects.find(id) != unpickled_objects.end()){
+      return createObj(unpickled_objects[id]);
+    }
 
-      py::tuple storages(obj.storages_.size());
-      for (size_t i = 0, N = obj.storages_.size(); i < N; ++i) {
-        py::object new_storage = py::reinterpret_steal<py::object>(
-            multipy::createPyObject(obj.storages_[i]));
-        storages[i] = std::move(new_storage);
-      }
-      py::tuple dtypes(obj.types_.size());
-      for (size_t i = 0, N = obj.types_.size(); i < N; ++i) {
-        auto dtype = (PyObject*)multipy::getTHPDtype(obj.types_[i]);
-        Py_INCREF(dtype);
-        dtypes[i] = dtype;
-      }
-      py::object result = interp_->loadStorage(
-          id, obj.containerFile_, py::bytes(obj.data_), storages, dtypes);
-      return wrap(result);
-    };
+    py::tuple storages(obj.storages_.size());
+    for (size_t i = 0, N = obj.storages_.size(); i < N; ++i) {
+      py::object new_storage = py::reinterpret_steal<py::object>(
+          multipy::createPyObject(obj.storages_[i]));
+      storages[i] = std::move(new_storage);
+    }
+    py::tuple dtypes(obj.types_.size());
+    for (size_t i = 0, N = obj.types_.size(); i < N; ++i) {
+      auto dtype = (PyObject*)multipy::getTHPDtype(obj.types_[i]);
+      Py_INCREF(dtype);
+      dtypes[i] = dtype;
+    }
+    py::object result = interp_->loadStorage(
+        id, obj.containerFile_, py::bytes(obj.data_), storages, dtypes);
+    unpickled_objects[id] = &result;
+    return createObj(&result);
   }
   void unload(int64_t id) override {
-    MULTIPY_SAFE_RETHROW {
-      py::dict objects = interp_->objects;
-      py::object id_p = py::cast(id);
-      if (objects.contains(id_p)) {
-        objects.attr("__delitem__")(id_p);
-      }
-    };
+    ConcreteInterpreterObj obj = unpickled_objects[id];
+    obj.unload();
   }
 
-  IValue toIValue(Obj obj) const override {
-    MULTIPY_SAFE_RETHROW {
-      return multipy::toTypeInferredIValue(unwrap(obj));
-    };
+  at::IValue toIValue(Obj obj) const override {
+    return obj.toIValue();
   }
 
   Obj call(Obj obj, at::ArrayRef<Obj> args) override {
-    MULTIPY_SAFE_RETHROW {
-      py::tuple m_args(args.size());
-      for (size_t i = 0, N = args.size(); i != N; ++i) {
-        m_args[i] = unwrap(args[i]);
-      }
-      return wrap(call(unwrap(obj), m_args));
-    };
+    return obj(args);
   }
 
-  Obj call(Obj obj, at::ArrayRef<IValue> args) override {
-    MULTIPY_SAFE_RETHROW {
-      py::tuple m_args(args.size());
-      for (size_t i = 0, N = args.size(); i != N; ++i) {
-        m_args[i] = multipy::toPyObject(args[i]);
-      }
-      return wrap(call(unwrap(obj), m_args));
-    };
+  Obj call(Obj obj, at::ArrayRef<at::IValue> args) override {
+    return obj(args);
   }
 
   Obj callKwargs(
       Obj obj,
       std::vector<at::IValue> args,
       std::unordered_map<std::string, c10::IValue> kwargs) override {
-    MULTIPY_SAFE_RETHROW {
-      py::tuple py_args(args.size());
-      for (size_t i = 0, N = args.size(); i != N; ++i) {
-        py_args[i] = multipy::toPyObject(args[i]);
-      }
-
-      py::dict py_kwargs;
-      for (auto kv : kwargs) {
-        py_kwargs[py::cast(std::get<0>(kv))] =
-            multipy::toPyObject(std::get<1>(kv));
-      }
-      return wrap(call(unwrap(obj), py_args, py_kwargs));
-    };
+    return obj.callKwargs(args, kwargs);
   }
 
   Obj callKwargs(Obj obj, std::unordered_map<std::string, c10::IValue> kwargs)
       override {
-    return callKwargs(obj, {}, kwargs);
+    return obj.callKwargs(kwargs);
   }
 
   bool hasattr(Obj obj, const char* attr) override {
-    MULTIPY_SAFE_RETHROW {
-      return py::hasattr(unwrap(obj), attr);
-    };
+    return obj.hasattr(attr);
   }
 
   Obj attr(Obj obj, const char* attr) override {
-    MULTIPY_SAFE_RETHROW {
-      return wrap(unwrap(obj).attr(attr));
-    };
+    return obj.attr(attr);
   }
 
-  static py::object
-  call(py::handle object, py::handle args, py::handle kwargs = nullptr) {
-    MULTIPY_SAFE_RETHROW {
-      PyObject* result = PyObject_Call(object.ptr(), args.ptr(), kwargs.ptr());
-      if (!result) {
-        throw py::error_already_set();
-      }
-      return py::reinterpret_steal<py::object>(result);
-    };
-  }
-
-  py::handle unwrap(Obj obj) const {
-    return objects_.at(ID(obj));
-  }
-
-  Obj wrap(py::object obj) {
-    objects_.emplace_back(std::move(obj));
-    return Obj(this, objects_.size() - 1);
+  bool isOwner(Obj obj){
+    ConcreteInterpreterObj* iObj = (ConcreteInterpreterObj*) obj.getBaseObj();
+    py::object pyObj = iObj->getPyObject();
+    return createdObjs_.find(&pyObj) != createdObjs_.end();
   }
 
   ~ConcreteInterpreterSessionImpl() override {
@@ -538,6 +616,8 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
   ConcreteInterpreterImpl* interp_;
   ScopedAcquire acquire_;
   std::vector<py::object> objects_;
+  std::unordered_map<int64_t, py::object*> unpickled_objects;
+  std::unordered_set<py::object*> createdObjs_;
 };
 
 torch::deploy::InterpreterSessionImpl*
@@ -545,28 +625,11 @@ ConcreteInterpreterImpl::acquireSession() {
   return new ConcreteInterpreterSessionImpl(this);
 }
 
+
 extern "C" __attribute__((visibility("default")))
 torch::deploy::InterpreterImpl*
 newInterpreterImpl(
     const std::vector<std::string>& extra_python_paths,
     const std::vector<std::string>& plugin_paths) {
-  ConcreteInterpreterImplConstructorCommon(extra_python_paths, plugin_paths);
-
-  int r = PyRun_SimpleString(start);
-  TORCH_INTERNAL_ASSERT(r == 0);
-
-  // disable python callstack for jit tracer
-  ::torch::jit::tracer::setPythonCallstack(&noPythonCallstack);
-
-  py::object saveStorage =
-      global_impl("multipy.utils._deploy", "_save_storages");
-  py::object loadStorage =
-      global_impl("multipy.utils._deploy", "_load_storages");
-  py::object getPackage = global_impl("multipy.utils._deploy", "_get_package");
-  py::dict objects = global_impl("multipy.utils._deploy", "_deploy_objects");
-
-  PyEval_SaveThread();
-
-  return new ConcreteInterpreterImpl(
-      saveStorage, loadStorage, getPackage, objects);
+  return new ConcreteInterpreterImpl(extra_python_paths, plugin_paths);
 }

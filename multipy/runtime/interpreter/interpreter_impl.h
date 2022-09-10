@@ -5,17 +5,16 @@
 // LICENSE file in the root directory of this source tree.
 
 #pragma once
-// multi-python abstract code
 #include <ATen/ATen.h>
 #include <ATen/core/ivalue.h>
 #include <caffe2/serialize/inline_container.h>
-
 #include <multipy/runtime/interpreter/Optional.hpp>
+#include <unordered_map>
+#include <set>
 
 namespace torch {
 namespace deploy {
-
-struct InterpreterSessionImpl;
+struct Obj;
 
 struct PickledObject {
   std::string data_;
@@ -26,37 +25,54 @@ struct PickledObject {
   std::shared_ptr<caffe2::serialize::PyTorchStreamReader> containerFile_;
 };
 
-// this is a wrapper class that refers to a PyObject* instance in a particular
-// interpreter. We can't use normal PyObject or pybind11 objects here
-// because these objects get used in a user application which will not directly
-// link against libpython. Instead all interaction with the Python state in each
-// interpreter is done via this wrapper class, and methods on
-// InterpreterSession.
+struct InterpreterObj {
+  friend struct InterpreterSessionImpl;
+  friend struct Obj;
+  friend struct ReplicatedObjImpl;
+  public:
+    InterpreterObj() = default;
+    InterpreterObj(const InterpreterObj& obj) = default;
+    InterpreterObj(InterpreterObj&& obj) = default;
+    // virtual ~InterpreterObj() = default;
+  private:
+
+    virtual at::IValue toIValue() const = 0;
+    virtual Obj call(at::ArrayRef<Obj> args) = 0;
+    virtual Obj call(at::ArrayRef<at::IValue> args) = 0;
+    virtual Obj callKwargs(
+        std::vector<at::IValue> args,
+        std::unordered_map<std::string, c10::IValue> kwargs) = 0;
+    virtual Obj callKwargs(std::unordered_map<std::string, c10::IValue> kwargs) = 0;
+    virtual bool hasattr(const char* attr) = 0;
+    virtual Obj attr(const char* attr) = 0;
+};
+
 struct Obj {
   friend struct InterpreterSessionImpl;
-  Obj() : interaction_(nullptr), id_(0) {}
-  Obj(InterpreterSessionImpl* interaction, int64_t id)
-      : interaction_(interaction), id_(id) {}
+  friend struct InterpreterObj;
+  Obj(InterpreterObj* baseObj)
+      : baseObj_(baseObj){}
+  Obj() : baseObj_(nullptr) {}
 
   at::IValue toIValue() const;
   Obj operator()(at::ArrayRef<Obj> args);
   Obj operator()(at::ArrayRef<at::IValue> args);
   Obj callKwargs(
       std::vector<at::IValue> args,
-      std::unordered_map<std::string, c10::IValue> kwargs);
-  Obj callKwargs(std::unordered_map<std::string, c10::IValue> kwargs);
+      std::unordered_map<std::string, at::IValue> kwargs);
+  Obj callKwargs(std::unordered_map<std::string, at::IValue> kwargs);
   bool hasattr(const char* attr);
   Obj attr(const char* attr);
-
- private:
-  InterpreterSessionImpl* interaction_;
-  int64_t id_;
+  InterpreterObj* getBaseObj();
+private:
+  InterpreterObj* baseObj_;
 };
 
 struct InterpreterSessionImpl {
   friend struct Package;
   friend struct ReplicatedObj;
   friend struct Obj;
+  friend struct InterpreterObj;
   friend struct InterpreterSession;
   friend struct ReplicatedObjImpl;
 
@@ -70,12 +86,12 @@ struct InterpreterSessionImpl {
           containerFile_) = 0;
   virtual PickledObject pickle(Obj container, Obj obj) = 0;
   virtual Obj unpickleOrGet(int64_t id, const PickledObject& obj) = 0;
-  virtual void unload(int64_t id) = 0;
 
   virtual at::IValue toIValue(Obj obj) const = 0;
 
   virtual Obj call(Obj obj, at::ArrayRef<Obj> args) = 0;
   virtual Obj call(Obj obj, at::ArrayRef<at::IValue> args) = 0;
+  virtual void unload(int64_t id);
   virtual Obj callKwargs(
       Obj obj,
       std::vector<at::IValue> args,
@@ -85,15 +101,7 @@ struct InterpreterSessionImpl {
       std::unordered_map<std::string, c10::IValue> kwargs) = 0;
   virtual Obj attr(Obj obj, const char* attr) = 0;
   virtual bool hasattr(Obj obj, const char* attr) = 0;
-
- protected:
-  int64_t ID(Obj obj) const {
-    return obj.id_;
-  }
-
-  bool isOwner(Obj obj) const {
-    return this == obj.interaction_;
-  }
+  virtual bool isOwner(Obj obj) = 0;
 };
 
 struct InterpreterImpl {
@@ -104,36 +112,47 @@ struct InterpreterImpl {
   virtual ~InterpreterImpl() = default; // this will uninitialize python
 };
 
+
 // inline definitions for Objs are necessary to avoid introducing a
 // source file that would need to exist it both the libinterpreter.so and then
 // the libtorchpy library.
 inline at::IValue Obj::toIValue() const {
-  return interaction_->toIValue(*this);
+  return baseObj_->toIValue();
 }
 
 inline Obj Obj::operator()(at::ArrayRef<Obj> args) {
-  return interaction_->call(*this, args);
+  // at::ArrayRef<InterpreterObj> iArgs;
+  // for (size_t i = 0, N = args.size(); i != N; ++i) {
+  //   InterpreterObj* baseObj = args[i].baseObj_;
+  //   iArgs.emplace_back(std::move(baseObj));
+  // }
+  // InterpreterObj* iObj =  baseObj_->call(iArgs);
+  return baseObj_->call(args);
 }
 
 inline Obj Obj::operator()(at::ArrayRef<at::IValue> args) {
-  return interaction_->call(*this, args);
+  return baseObj_->call(args);
 }
 
 inline Obj Obj::callKwargs(
     std::vector<at::IValue> args,
-    std::unordered_map<std::string, c10::IValue> kwargs) {
-  return interaction_->callKwargs(*this, std::move(args), std::move(kwargs));
+    std::unordered_map<std::string, at::IValue> kwargs) {
+  return baseObj_->callKwargs(std::move(args), std::move(kwargs));
 }
 inline Obj Obj::callKwargs(
-    std::unordered_map<std::string, c10::IValue> kwargs) {
-  return interaction_->callKwargs(*this, std::move(kwargs));
+    std::unordered_map<std::string, at::IValue> kwargs) {
+  return  baseObj_->callKwargs(std::move(kwargs));
 }
 inline bool Obj::hasattr(const char* attr) {
-  return interaction_->hasattr(*this, attr);
+  return baseObj_->hasattr(attr);
 }
 
 inline Obj Obj::attr(const char* attr) {
-  return interaction_->attr(*this, attr);
+  return baseObj_->attr(attr);
+}
+
+inline InterpreterObj* Obj::getBaseObj() {
+  return baseObj_;
 }
 
 } // namespace deploy
