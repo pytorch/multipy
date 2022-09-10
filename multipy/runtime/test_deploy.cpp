@@ -7,6 +7,7 @@
 #include <ATen/Parallel.h>
 #include <gtest/gtest.h>
 #include <cstring>
+#include <libgen.h>
 
 #include <c10/util/irange.h>
 #include <multipy/runtime/deploy.h>
@@ -99,7 +100,7 @@ TEST(TorchpyTest, Movable) {
     auto I = m.acquireOne();
     auto model =
         I.global("torch.nn", "Module")(std::vector<torch::deploy::Obj>());
-    obj = I.createMovable(model);
+    obj = m.createMovable(model, &I);
   }
   obj.acquireSession();
 }
@@ -194,9 +195,9 @@ TEST(TorchpyTest, ErrorsReplicatingObj) {
   auto obj = session1.fromMovable(replicatedObj);
   // should throw an error when trying to access obj from different session
   // NOLINTNEXTLINE(hicpp-avoid-goto,cppcoreguidelines-avoid-goto)
-  EXPECT_THROW(session2.createMovable(obj), std::runtime_error);
+EXPECT_THROW(p.createMovable(obj,&session2), std::runtime_error);
   try {
-    session2.createMovable(obj);
+    p.createMovable(obj,&session2);
   } catch (std::runtime_error& error) {
     EXPECT_TRUE(
         std::string(error.what())
@@ -344,7 +345,7 @@ def get_tensor():
 
   auto objOnI =
       I.global("test_module", "get_tensor")(at::ArrayRef<at::IValue>{});
-  auto replicated = I.createMovable(objOnI);
+  auto replicated = manager.createMovable(objOnI, &I);
   auto objOnI2 = I2.fromMovable(replicated);
 
   auto tensorOnI = objOnI.toIValue().toTensor();

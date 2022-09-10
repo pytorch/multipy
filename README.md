@@ -89,6 +89,7 @@ pip3 install --pre torch torchvision torchaudio --extra-index-url https://downlo
 git checkout https://github.com/pytorch/multipy.git
 git submodule sync && git submodule update --init --recursive
 
+python setup.py install # install multipy.package
 cd multipy/multipy/runtime
 
 # build runtime
