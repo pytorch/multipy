@@ -15,6 +15,8 @@
 namespace torch {
 namespace deploy {
 struct Obj;
+struct InterpreterSessionImpl;
+struct InterpreterSession;
 
 struct PickledObject {
   std::string data_;
