@@ -28,7 +28,6 @@ struct PickledObject {
 };
 
 struct InterpreterObj {
-  friend struct InterpreterSessionImpl;
   friend struct Obj;
   friend struct ReplicatedObjImpl;
   public:
@@ -50,7 +49,6 @@ struct InterpreterObj {
 };
 
 struct Obj {
-  friend struct InterpreterSessionImpl;
   friend struct InterpreterObj;
   Obj(InterpreterObj* baseObj)
       : baseObj_(baseObj){}
