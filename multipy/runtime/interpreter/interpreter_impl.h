@@ -91,7 +91,7 @@ struct InterpreterSessionImpl {
 
   virtual Obj call(Obj obj, at::ArrayRef<Obj> args) = 0;
   virtual Obj call(Obj obj, at::ArrayRef<at::IValue> args) = 0;
-  virtual void unload(int64_t id);
+  virtual void unload(int64_t id) = 0;
   virtual Obj callKwargs(
       Obj obj,
       std::vector<at::IValue> args,

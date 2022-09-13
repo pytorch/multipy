@@ -490,24 +490,27 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
     return createObj(&globalObj);
   }
 
-  Obj fromIValue(IValue value) override {
+  Obj fromIValue(at::IValue value) override {
     py::object pyObj = multipy::toPyObject(value);
     return createObj(&pyObj);
   }
   Obj createOrGetPackageImporterFromContainerFile(
       const std::shared_ptr<caffe2::serialize::PyTorchStreamReader>&
           containerFile_) override {
+    MULTIPY_SAFE_RETHROW {
     InitLockAcquire guard(interp_->init_lock_);
     py::object pet =
         (py::object)py::module_::import("torch._C").attr("PyTorchFileReader");
     py::object pyObj =  interp_->getPackage(containerFile_);
     return createObj(&pyObj);
+    };
   }
   // optoin 1) for this we stil have to enforce a hashtable relationship between objects and py::objects in the interpretersession.
   // option 2) another option is to embedded saveStorages into objects which are created from this interpreter
   // we can track if something is which is not too difficult
   // Regardless we probably have to do an isOwnerCheck :(
   PickledObject pickle(Obj container, Obj obj) override {
+    MULTIPY_SAFE_RETHROW {
     ConcreteInterpreterObj* containerIObj = (ConcreteInterpreterObj*) (container.getBaseObj());
     ConcreteInterpreterObj* iObj = (ConcreteInterpreterObj*) obj.getBaseObj();
     py::object containerPyObject = containerIObj->getPyObject();
@@ -533,8 +536,10 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
         std::move(storages_c),
         std::move(dtypes_c),
         std::move(container_file)};
+    };
   }
   Obj unpickleOrGet(int64_t id, const PickledObject& obj) override {
+    MULTIPY_SAFE_RETHROW{
     if (unpickled_objects.find(id) != unpickled_objects.end()){
       return createObj(unpickled_objects[id]);
     }
@@ -562,6 +567,7 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
         id, obj.containerFile_, py::bytes(obj.data_), storages, dtypes);
     unpickled_objects[id] = &result;
     return createObj(&result);
+    };
   }
   void unload(int64_t id) override {
     ConcreteInterpreterObj obj = unpickled_objects[id];
