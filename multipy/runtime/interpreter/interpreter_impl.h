@@ -121,12 +121,6 @@ inline at::IValue Obj::toIValue() const {
 }
 
 inline Obj Obj::operator()(at::ArrayRef<Obj> args) {
-  // at::ArrayRef<InterpreterObj> iArgs;
-  // for (size_t i = 0, N = args.size(); i != N; ++i) {
-  //   InterpreterObj* baseObj = args[i].baseObj_;
-  //   iArgs.emplace_back(std::move(baseObj));
-  // }
-  // InterpreterObj* iObj =  baseObj_->call(iArgs);
   return baseObj_->call(args);
 }
 
