@@ -1,2 +1,2 @@
-git+https://github.com/pytorch/functorch.git@074592e307519a6cc49f7ebef6706a1a481f7d7a
+git+https://github.com/pytorch/functorch.git@7a4f00945706293d6ea997e832a5c32139ea552e
 git+https://github.com/pytorch/torchdynamo.git

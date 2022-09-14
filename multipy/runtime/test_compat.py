@@ -10,17 +10,17 @@ import torch
 
 
 class TestCompat(unittest.TestCase):
-    def test_torchvision(self):
-        import torchvision  # noqa: F401
+    # def test_torchvision(self):
+    #     import torchvision  # noqa: F401
 
-    def test_torchaudio(self):
-        import torchaudio  # noqa: F401
+    # def test_torchaudio(self):
+    #     import torchaudio  # noqa: F401
 
-    def test_pytorch3d(self):
-        import pytorch3d  # noqa: F401
+    # def test_pytorch3d(self):
+    #     import pytorch3d  # noqa: F401
 
-    def test_hf_tokenizers(self):
-        import tokenizers  # noqa: F401
+    # def test_hf_tokenizers(self):
+    #     import tokenizers  # noqa: F401
 
     def test_torchdynamo_eager(self):
         import torchdynamo
