@@ -247,6 +247,8 @@ ConcreteInterpreterImplConstructorCommon(
     const std::vector<std::string>& extra_python_paths,
     const std::vector<std::string>& plugin_paths) {
   BuiltinRegistry::runPreInitialization();
+
+#ifndef LEGACY_PYTHON_PRE_3_8
   PyPreConfig preconfig;
   PyPreConfig_InitIsolatedConfig(&preconfig);
   PyStatus status = Py_PreInitialize(&preconfig);
@@ -283,6 +285,12 @@ ConcreteInterpreterImplConstructorCommon(
   status = Py_InitializeFromConfig(&config);
   PyConfig_Clear(&config);
   TORCH_INTERNAL_ASSERT(!PyStatus_Exception(status))
+
+#else
+  Py_InitializeEx(1);
+  TORCH_INTERNAL_ASSERT(Py_IsInitialized);
+#endif
+
 #ifdef FBCODE_CAFFE2
   auto sys_path = global_impl("sys", "path");
   for (const auto& entry : extra_python_paths) {
