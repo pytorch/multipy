@@ -1,6 +1,2 @@
-tokenizers
-torchaudio
-torchvision
-git+https://github.com/facebookresearch/pytorch3d.git
+git+https://github.com/pytorch/functorch.git@074592e307519a6cc49f7ebef6706a1a481f7d7a
 git+https://github.com/pytorch/torchdynamo.git
-git+https://github.com/pytorch/functorch.git
