@@ -33,7 +33,3 @@ jobs:
       - name: Test
         run: |
           docker run --rm multipy multipy/runtime/build/test_deploy
-
-      - name: Compat Tests
-        run: |
-          docker run --rm multipy bash -c "pip install -r compat-requirements.txt && multipy/runtime/build/interactive_embedded_interpreter --pyscript multipy/runtime/test_compat.py"
