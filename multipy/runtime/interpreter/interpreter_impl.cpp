@@ -643,8 +643,15 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
   }
 
   py::handle unwrap(Obj obj) const {
-    // return ((ConcreteInterpreterObj*)obj.baseObj_)->getPyObject();
-    return objects_.at(ID(obj)).getPyObject();
+    // create a breakpoint here and check if h1 and h2 are the same.
+    torch::deploy::InterpreterObj* iObj = obj.baseObj_;
+    ConcreteInterpreterObj* cObj = (ConcreteInterpreterObj*) iObj;
+    py::handle h = cObj->getPyObject();
+    ConcreteInterpreterObj cObj2 = objects_.at(ID(obj));
+    py::handle h2 = objects_.at(ID(obj)).getPyObject();
+    // return h2;
+    return h;
+    // return objects_.at(ID(obj)).getPyObject();
   }
 
   Obj wrap(py::object obj) {
