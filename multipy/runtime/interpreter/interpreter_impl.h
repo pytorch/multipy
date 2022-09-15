@@ -16,6 +16,7 @@ namespace torch {
 namespace deploy {
 
 struct InterpreterSessionImpl;
+struct Obj;
 
 struct PickledObject {
   std::string data_;
@@ -26,6 +27,27 @@ struct PickledObject {
   std::shared_ptr<caffe2::serialize::PyTorchStreamReader> containerFile_;
 };
 
+struct InterpreterObj {
+  friend struct Obj;
+  friend struct ReplicatedObjImpl;
+  public:
+    InterpreterObj() = default;
+    InterpreterObj(const InterpreterObj& obj) = default;
+    InterpreterObj(InterpreterObj&& obj) = default;
+    // virtual ~InterpreterObj() = default;
+  private:
+
+    virtual at::IValue toIValue() const = 0;
+    virtual Obj call(at::ArrayRef<Obj> args) = 0;
+    virtual Obj call(at::ArrayRef<at::IValue> args) = 0;
+    virtual Obj callKwargs(
+        std::vector<at::IValue> args,
+        std::unordered_map<std::string, c10::IValue> kwargs) = 0;
+    virtual Obj callKwargs(std::unordered_map<std::string, c10::IValue> kwargs) = 0;
+    virtual bool hasattr(const char* attr) = 0;
+    virtual Obj attr(const char* attr) = 0;
+};
+
 // this is a wrapper class that refers to a PyObject* instance in a particular
 // interpreter. We can't use normal PyObject or pybind11 objects here
 // because these objects get used in a user application which will not directly
@@ -34,9 +56,15 @@ struct PickledObject {
 // InterpreterSession.
 struct Obj {
   friend struct InterpreterSessionImpl;
-  Obj() : interaction_(nullptr), id_(0) {}
+  friend struct InterpreterObj;
+  Obj(InterpreterObj* baseObj)
+      : baseObj_(baseObj){}
+  Obj() : interaction_(nullptr), baseObj_(nullptr), id_(0) {}
   Obj(InterpreterSessionImpl* interaction, int64_t id)
-      : interaction_(interaction), id_(id) {}
+      : interaction_(interaction), id_(id), baseObj_(nullptr) {}
+  Obj(InterpreterSessionImpl* interaction, int64_t id, InterpreterObj* baseObj)
+      : interaction_(interaction), id_(id), baseObj_(baseObj) {}
+
 
   at::IValue toIValue() const;
   Obj operator()(at::ArrayRef<Obj> args);
@@ -47,6 +75,7 @@ struct Obj {
   Obj callKwargs(std::unordered_map<std::string, c10::IValue> kwargs);
   bool hasattr(const char* attr);
   Obj attr(const char* attr);
+  InterpreterObj* baseObj_;
 
  private:
   InterpreterSessionImpl* interaction_;
