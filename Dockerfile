@@ -63,62 +63,50 @@ WORKDIR /opt/multipy
 COPY . .
 RUN git submodule update --init --recursive --jobs 0
 
-# install pyenv
-# FROM dev-base as pyenv-install
-# RUN git clone https://github.com/pyenv/pyenv.git ~/.pyenv && \
-#     export PYENV_ROOT="~/.pyenv" && \
-#     export PATH="$PYENV_ROOT/bin:$PATH"
-# # dummy cmd to verify installation.
-# RUN pyenv install --list
-
-# Install conda + neccessary python dependencies
-FROM dev-base as conda
-ARG PYTHON_VERSION=3.8
-ARG PY_MINOR=7
-ENV PY_MINOR=${PY_MINOR}
-# RUN curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
-#     chmod +x ~/miniconda.sh && \
-#     ~/miniconda.sh -b -p /opt/conda && \
-#     rm ~/miniconda.sh && \
-#     /opt/conda/bin/conda install -y python=${PYTHON_VERSION} mkl mkl-include conda-build pyyaml numpy ipython && \
-#     /opt/conda/bin/conda install -y -c conda-forge libpython-static=${PYTHON_VERSION} && \
-#     /opt/conda/bin/conda install -y pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly && \
-#     /opt/conda/bin/conda clean -ya && \
-RUN pip3 install virtualenv && \
+# Install conda/pyenv + necessary python dependencies
+FROM dev-base as conda-pyenv
+ARG PYTHON_MAJOR_VERSION=3
+ARG PYTHON_MINOR_VERSION=8
+ENV PYTHON_MINOR_VERSION=${PYTHON_MINOR_VERSION}
+ENV PYTHON_VERSION=${PYTHON_MAJOR_VERSION}.${PYTHON_MINOR_VERSION}
+RUN if [[ ${PYTHON_MINOR_VERSION} -gt 7 ]]; then \
+    curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
+    chmod +x ~/miniconda.sh && \
+    ~/miniconda.sh -b -p /opt/conda && \
+    rm ~/miniconda.sh && \
+    /opt/conda/bin/conda install -y python=${PYTHON_VERSION} mkl mkl-include conda-build pyyaml numpy ipython && \
+    /opt/conda/bin/conda install -y -c conda-forge libpython-static=${PYTHON_VERSION} && \
+    /opt/conda/bin/conda install -y pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly && \
+    /opt/conda/bin/conda clean -ya; \
+    else \
+    pip3 install virtualenv && \
     git clone https://github.com/pyenv/pyenv.git ~/.pyenv && \
     export CFLAGS="-fPIC -g" && \
     ~/.pyenv/bin/pyenv install --force 3.7.10 && \
-    virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy
-    # export PYENV_ROOT="~/.pyenv" && \
-    # export PATH="$PYENV_ROOT/bin:$PATH"
-    # exec shell ?
-#ENV PATH ~/.pyenv/bin:$PATH
-# RUN export CFLAGS="-fPIC -g" && \
-#     pyenv install --force 3.7.10 && \
-#     virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy
-
+    virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy; \
+    fi
 
 # Build/Install pytorch with post-cxx11 ABI
-FROM conda as build
+FROM conda-pyenv as build
 WORKDIR /opt/multipy/multipy/runtime/third-party/pytorch
-# COPY --from=conda /opt/conda /opt/conda
+COPY --from=conda-pyenv /opt/conda* /opt/conda
 COPY --from=submodule-update /opt/multipy /opt/multipy
 
 WORKDIR /opt/multipy
 
 # Build Multipy
-RUN source ~/venvs/multipy/bin/activate && \
-   pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cu113 && \
-   mkdir multipy/runtime/build && \
-   cd multipy/runtime/build && \
-   if [[ ${PY_MINOR} -lt 8 ]]; then \
-   cmake -DLEGACY_PYTHON_PRE_3_8=ON ..; \
-   else \
-   cmake -DLEGACY_PYTHON_PRE_3_8=OFF ..; \
-   fi && \
-   cmake --build . --config Release && \
-   cmake --install . --prefix "." && \
-   cd ../example && python generate_examples.py
+RUN mkdir multipy/runtime/build && \
+    cd multipy/runtime/build && \
+    if [[ ${PYTHON_MINOR_VERSION} -lt 8 ]]; then \
+    source ~/venvs/multipy/bin/activate && \
+    pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cu113 && \
+    cmake -DLEGACY_PYTHON_PRE_3_8=ON ..; \
+    else \
+    cmake -DLEGACY_PYTHON_PRE_3_8=OFF ..; \
+    fi && \
+    cmake --build . --config Release && \
+    cmake --install . --prefix "." && \
+    cd ../example && python generate_examples.py
 
 ENV PYTHONPATH=. LIBTEST_DEPLOY_LIB=multipy/runtime/build/libtest_deploy_lib.so
 

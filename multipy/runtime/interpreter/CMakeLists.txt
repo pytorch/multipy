@@ -5,8 +5,6 @@
 # LICENSE file in the root directory of this source tree.
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 
 SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" )
 SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" PARENT_SCOPE)
@@ -16,8 +14,7 @@ include_directories(BEFORE "${PYTORCH_ROOT}/torch/include")
 include_directories(BEFORE "${PYTORCH_ROOT}/torch/include/torch/csrc/api/include/")
 SET(MULTIPY_UTILS "${CMAKE_CURRENT_SOURCE_DIR}/../../utils")
 
-#SET(LEGACY_PYTHON_PRE_3_8 0)
-OPTION(LEGACY_PYTHON_PRE_3_8 "fancy description" OFF)
+OPTION(LEGACY_PYTHON_PRE_3_8 "Whether to use Python 3.7 codepaths." OFF)
 
 find_package (Python3 COMPONENTS Interpreter Development)
 
@@ -100,6 +97,5 @@ target_link_libraries(torch_deployinterpreter PRIVATE fmt::fmt-header-only)
 target_link_libraries(torch_deployinterpreter PRIVATE torch_python)
 target_link_libraries(torch_deployinterpreter PRIVATE gtest)
 target_link_libraries(torch_deployinterpreter PRIVATE multipy_torch)
-# target_compile_options(torch_deployinterpreter PUBLIC -fpic -fpie)
 
 unset(LEGACY_PYTHON_PRE_3_8)

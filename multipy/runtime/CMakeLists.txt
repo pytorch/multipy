@@ -14,7 +14,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 option(ABI_EQUALS_1 "Set ABI value to 1, by default it is set to 0. Pytorch by default builds with ABI set to 1." OFF)
 option(BUILD_CUDA_TESTS "Set to ON in order to build cuda tests. By default we do not" OFF)
 
-OPTION(LEGACY_PYTHON_PRE_3_8 "fancy description" OFF)
+OPTION(LEGACY_PYTHON_PRE_3_8 "Whether to use Python 3.7 codepaths." OFF)
 
 if(ABI_EQUALS_1)
   set(ABI_VALUE 1)

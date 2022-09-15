@@ -8,7 +8,8 @@ jobs:
   unittest:
     strategy:
       matrix:
-        python-version: [3.8, 3.9, '3.10']
+        python-major-version: [3]
+        python-minor-version: [7,8,9,10]
         platform: [ubuntu-18.04]
       fail-fast: false
     runs-on: ${{ matrix.platform }}
@@ -26,14 +27,15 @@ jobs:
       - name: Build
         env:
           DOCKER_BUILDKIT: 1
-        run: docker build -t multipy --progress=plain --build-arg PYTHON_VERSION=${{ matrix.python-version }} .
+        run: docker build -t multipy --progress=plain --build-arg PYTHON_MAJOR_VERSION=${{ matrix.python-major-version }} --build-arg PYTHON_MINOR_VERSION=${{ matrix.python-minor-version }} .
 
       - name: Test
         run: |
-          docker run --rm multipy multipy/runtime/build/test_deploy
+          docker run --rm multipy bash -c "if [[ ${{ matrix.python-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && multipy/runtime/build/test_deploy"
+
       - name: Compat Tests
         run: |
-          docker run --rm multipy bash -c "pip install -r compat-requirements.txt && multipy/runtime/build/interactive_embedded_interpreter --pyscript multipy/runtime/test_compat.py"
+          docker run --rm multipy bash -c "if [[ ${{ matrix.python-minor-version }} -gt 7 ]]; then pip install -r compat-requirements.txt && multipy/runtime/build/interactive_embedded_interpreter --pyscript multipy/runtime/test_compat.py; fi"
 
       - name: Create Tarball
         run: |

@@ -10,9 +10,8 @@ jobs:
   unittest:
     strategy:
       matrix:
-        python-version: [3.8, 3.9, '3.10']
-        py-major: [3]
-        py-minor: [7]
+        python-major-version: [3]
+        python-minor-version: [7,8,9,10]
         platform: [ubuntu-18.04]
       fail-fast: false
     runs-on: ${{ matrix.platform }}
@@ -30,20 +29,20 @@ jobs:
       - name: Build
         env:
           DOCKER_BUILDKIT: 1
-        run: docker build -t multipy --progress=plain --build-arg PYTHON_VERSION=${{ matrix.python-version }} .
+        run: docker build -t multipy --progress=plain --build-arg PYTHON_MAJOR_VERSION=${{ matrix.python-major-version }} --build-arg PYTHON_MINOR_VERSION=${{ matrix.python-minor-version }} .
 
       - name: Set Python Version
         run: |
-          echo "ppython-version=${{ matrix.py-major }}.${{ matrix.py-minor }}" >> $GITHUB_ENV
+          echo "python-version=${{ matrix.python-major-version }}.${{ matrix.python-minor-version }}" >> $GITHUB_ENV
 
       - name: Print Python version
         run: |
-          echo "ppython version = ${{ env.ppython-version }}"
+          echo "python version = ${{ env.python-version }}"
 
       - name: Test
         run: |
-          docker run --rm multipy bash -c "if [[ ${{ matrix.py-minor }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && multipy/runtime/build/test_deploy"
+          docker run --rm multipy bash -c "if [[ ${{ matrix.python-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && multipy/runtime/build/test_deploy"
 
       - name: Compat Tests
         run: |
-          docker run --rm multipy bash -c "if [[ ${{ matrix.py-minor }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && pip install -r compat-requirements.txt && multipy/runtime/build/interactive_embedded_interpreter --pyscript multipy/runtime/test_compat.py"
+          docker run --rm multipy bash -c "if [[ ${{ matrix.python-minor-version }} -gt 7 ]]; then pip install -r compat-requirements.txt && multipy/runtime/build/interactive_embedded_interpreter --pyscript multipy/runtime/test_compat.py; fi"
