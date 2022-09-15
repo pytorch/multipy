@@ -643,12 +643,14 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
   }
 
   py::handle unwrap(Obj obj) const {
+    // return ((ConcreteInterpreterObj*)obj.baseObj_)->getPyObject();
     return objects_.at(ID(obj)).getPyObject();
   }
 
   Obj wrap(py::object obj) {
-    objects_.emplace_back(std::move(ConcreteInterpreterObj(std::move(obj))));
-    return Obj(this, objects_.size() - 1);
+    ConcreteInterpreterObj concreteObj = ConcreteInterpreterObj(std::move(obj));
+    objects_.emplace_back(std::move(concreteObj));
+    return Obj(this, objects_.size() - 1, &concreteObj);
   }
 
   ~ConcreteInterpreterSessionImpl() override {
