@@ -243,14 +243,14 @@ bool file_exists(const std::string& path) {
 struct __attribute__((visibility("hidden"))) ConcreteInterpreterObj
     : public torch::deploy::InterpreterObj {
       friend struct Obj;
-  ConcreteInterpreterObj(py::handle pyObject)
+  ConcreteInterpreterObj(py::object pyObject)
       : pyObject_(pyObject) {}
   ConcreteInterpreterObj(Obj obj){
     ConcreteInterpreterObj* iObj = (ConcreteInterpreterObj*) (obj.baseObj_);
     pyObject_ = iObj->pyObject_;
   }
   ConcreteInterpreterObj()
-      : pyObject_(nullptr) {}
+      : pyObject_() {}
   ConcreteInterpreterObj(const ConcreteInterpreterObj& obj) = default;
   ConcreteInterpreterObj(ConcreteInterpreterObj&& obj) = default;
   ConcreteInterpreterObj(ConcreteInterpreterObj& obj) = default;
@@ -348,14 +348,14 @@ void unload() {
   MULTIPY_SAFE_RETHROW {
   MULTIPY_CHECK(pyObject_, "pyObject has already been freed");
   // free(pyObject_);
-  pyObject_ = nullptr;
+  // pyObject_ = nullptr;
   };
 }
 
 // ~ConcreteInterpreterObj(){
 //   unload();
 // }
-  py::handle pyObject_;
+  py::object pyObject_;
 };
 
 extern "C" __attribute__((visibility("default"))) void
@@ -647,7 +647,7 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
   }
 
   Obj wrap(py::object obj) {
-    objects_.emplace_back(std::move(ConcreteInterpreterObj(obj)));
+    objects_.emplace_back(std::move(ConcreteInterpreterObj(std::move(obj))));
     return Obj(this, objects_.size() - 1);
   }
 
