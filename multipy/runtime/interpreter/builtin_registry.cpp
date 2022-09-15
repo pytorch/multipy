@@ -7,6 +7,7 @@
 #include <Python.h>
 #include <c10/util/Exception.h>
 #include <fmt/format.h>
+#include <multipy/runtime/Exception.h>
 #include <multipy/runtime/interpreter/builtin_registry.h>
 
 namespace torch {
