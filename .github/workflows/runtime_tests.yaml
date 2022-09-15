@@ -11,6 +11,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.8, 3.9, '3.10']
+        py-major: [3]
         py-minor: [7]
         platform: [ubuntu-18.04]
       fail-fast: false
@@ -30,6 +31,14 @@ jobs:
         env:
           DOCKER_BUILDKIT: 1
         run: docker build -t multipy --progress=plain --build-arg PYTHON_VERSION=${{ matrix.python-version }} .
+
+      - name: Set Python Version
+        run: |
+          echo "ppython-version=${{ matrix.py-major }}.${{ matrix.py-minor }}" >> $GITHUB_ENV
+
+      - name: Print Python version
+        run: |
+          echo "ppython version = ${{ env.ppython-version }}"
 
       - name: Test
         run: |
