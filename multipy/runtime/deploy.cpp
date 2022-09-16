@@ -5,6 +5,7 @@
 // LICENSE file in the root directory of this source tree.
 
 #include <dlfcn.h>
+#include <libgen.h>
 #include <multipy/runtime/Exception.h>
 #include <multipy/runtime/deploy.h>
 #include <unistd.h>
