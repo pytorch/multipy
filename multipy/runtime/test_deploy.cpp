@@ -10,6 +10,7 @@
 #include <libgen.h>
 
 #include <c10/util/irange.h>
+#include <libgen.h>
 #include <multipy/runtime/deploy.h>
 #include <torch/script.h>
 #include <torch/torch.h>
@@ -48,50 +49,50 @@ const char* path(const char* envname, const char* path) {
   return e ? e : path;
 }
 
-TEST(TorchpyTest, InitManagerBasic) {
-  torch::deploy::InterpreterManager m(1);
-  ASSERT_EQ(m.countRegisteredModuleSources(), 1);
-}
+// TEST(TorchpyTest, InitManagerBasic) {
+//   torch::deploy::InterpreterManager m(1);
+//   ASSERT_EQ(m.countRegisteredModuleSources(), 1);
+// }
 
-#ifdef FBCODE_CAFFE2
-TEST(TorchpyTest, LoadLibrary) {
-  torch::deploy::InterpreterManager m(1);
-  torch::deploy::Package p = m.loadPackage(
-      path("LOAD_LIBRARY", "multipy/runtime/example/generated/load_library"));
-  auto model = p.loadPickle("fn", "fn.pkl");
-  model({});
-}
-#endif
+// #ifdef FBCODE_CAFFE2
+// TEST(TorchpyTest, LoadLibrary) {
+//   torch::deploy::InterpreterManager m(1);
+//   torch::deploy::Package p = m.loadPackage(
+//       path("LOAD_LIBRARY", "multipy/runtime/example/generated/load_library"));
+//   auto model = p.loadPickle("fn", "fn.pkl");
+//   model({});
+// }
+// #endif
 
-TEST(TorchpyTest, InitTwice) {
-  { torch::deploy::InterpreterManager m(2); }
-  { torch::deploy::InterpreterManager m(1); }
-}
+// TEST(TorchpyTest, InitTwice) {
+//   { torch::deploy::InterpreterManager m(2); }
+//   { torch::deploy::InterpreterManager m(1); }
+// }
 
-TEST(TorchpyTest, DifferentInterps) {
-  torch::deploy::InterpreterManager m(2);
-  m.registerModuleSource("check_none", "check = id(None)\n");
-  int64_t id0 = 0, id1 = 0;
-  {
-    auto I = m.allInstances()[0].acquireSession();
-    id0 = I.global("check_none", "check").toIValue().toInt();
-  }
-  {
-    auto I = m.allInstances()[1].acquireSession();
-    id1 = I.global("check_none", "check").toIValue().toInt();
-  }
-  ASSERT_NE(id0, id1);
-}
+// TEST(TorchpyTest, DifferentInterps) {
+//   torch::deploy::InterpreterManager m(2);
+//   m.registerModuleSource("check_none", "check = id(None)\n");
+//   int64_t id0 = 0, id1 = 0;
+//   {
+//     auto I = m.allInstances()[0].acquireSession();
+//     id0 = I.global("check_none", "check").toIValue().toInt();
+//   }
+//   {
+//     auto I = m.allInstances()[1].acquireSession();
+//     id1 = I.global("check_none", "check").toIValue().toInt();
+//   }
+//   ASSERT_NE(id0, id1);
+// }
 
-TEST(TorchpyTest, SimpleModel) {
-  compare_torchpy_jit(path("SIMPLE", simple), path("SIMPLE_JIT", simple_jit));
-}
+// TEST(TorchpyTest, SimpleModel) {
+//   compare_torchpy_jit(path("SIMPLE", simple), path("SIMPLE_JIT", simple_jit));
+// }
 
-TEST(TorchpyTest, ResNet) {
-  compare_torchpy_jit(
-      path("RESNET", "multipy/runtime/example/generated/resnet"),
-      path("RESNET_JIT", "multipy/runtime/example/generated/resnet_jit"));
-}
+// TEST(TorchpyTest, ResNet) {
+//   compare_torchpy_jit(
+//       path("RESNET", "multipy/runtime/example/generated/resnet"),
+//       path("RESNET_JIT", "multipy/runtime/example/generated/resnet_jit"));
+// }
 
 TEST(TorchpyTest, Movable) {
   torch::deploy::InterpreterManager m(1);
@@ -459,6 +460,7 @@ result = torch.Tensor([1,2,3])
   EXPECT_TRUE(w_grad0.equal(w_grad1));
 }
 
+#ifndef LEGACY_PYTHON_PRE_3_8
 TEST(TorchpyTest, ImportlibMetadata) {
   torch::deploy::InterpreterManager m(1);
   m.registerModuleSource("importlib_test", R"PYTHON(
@@ -470,6 +472,7 @@ result = version("torch")
   auto ver = I.global("importlib_test", "result").toIValue().toString();
   ASSERT_EQ(ver->string(), "0.0.1+fake_multipy");
 }
+#endif
 
 // OSS build does not have bultin numpy support yet. Use this flag to guard the
 // test case.

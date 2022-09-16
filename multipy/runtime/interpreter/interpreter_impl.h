@@ -32,7 +32,7 @@ struct InterpreterObj {
   friend struct ReplicatedObjImpl;
   public:
     InterpreterObj() = default;
-    InterpreterObj(const InterpreterObj& obj) = default;
+    InterpreterObj(const InterpreterObj& obj) = delete;
     InterpreterObj(InterpreterObj&& obj) = default;
     // virtual ~InterpreterObj() = default;
   private:
@@ -57,12 +57,12 @@ struct InterpreterObj {
 struct Obj {
   friend struct InterpreterSessionImpl;
   friend struct InterpreterObj;
-  Obj(InterpreterObj* baseObj)
+  Obj(std::shared_ptr<InterpreterObj> baseObj)
       : baseObj_(baseObj){}
   Obj() : interaction_(nullptr), baseObj_(nullptr), id_(0) {}
   Obj(InterpreterSessionImpl* interaction, int64_t id)
       : interaction_(interaction), id_(id), baseObj_(nullptr) {}
-  Obj(InterpreterSessionImpl* interaction, int64_t id, InterpreterObj* baseObj)
+  Obj(InterpreterSessionImpl* interaction, int64_t id, std::shared_ptr<InterpreterObj> baseObj)
       : interaction_(interaction), id_(id), baseObj_(baseObj) {}
 
 
@@ -75,7 +75,7 @@ struct Obj {
   Obj callKwargs(std::unordered_map<std::string, c10::IValue> kwargs);
   bool hasattr(const char* attr);
   Obj attr(const char* attr);
-  InterpreterObj* baseObj_;
+  std::shared_ptr<InterpreterObj> baseObj_;
 
  private:
   InterpreterSessionImpl* interaction_;

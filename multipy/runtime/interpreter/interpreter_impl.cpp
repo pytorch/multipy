@@ -9,6 +9,8 @@
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
+#include <fmt/format.h>
+#include <multipy/runtime/Exception.h>
 #include <multipy/runtime/interpreter/builtin_registry.h>
 #include <multipy/runtime/interpreter/import_find_sharedfuncptr.h>
 #include <multipy/runtime/interpreter/plugin_registry.h>
@@ -23,11 +25,13 @@
 
 #include <cassert>
 #include <cstdio>
+#include <memory>
 #include <iostream>
 #include <map>
 #include <thread>
 
 namespace py = pybind11;
+using namespace py::literals;
 
 // TODO this should come from cmake
 #define DEBUG 1
@@ -246,12 +250,12 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterObj
   ConcreteInterpreterObj(py::object pyObject)
       : pyObject_(pyObject) {}
   ConcreteInterpreterObj(Obj obj){
-    ConcreteInterpreterObj* iObj = (ConcreteInterpreterObj*) (obj.baseObj_);
-    pyObject_ = iObj->pyObject_;
+    std::shared_ptr<ConcreteInterpreterObj> cObj = std::dynamic_pointer_cast<ConcreteInterpreterObj> (obj.baseObj_);
+    pyObject_ = cObj->pyObject_;
   }
   ConcreteInterpreterObj()
       : pyObject_() {}
-  ConcreteInterpreterObj(const ConcreteInterpreterObj& obj) = default;
+  ConcreteInterpreterObj(const ConcreteInterpreterObj& obj) = delete;
   ConcreteInterpreterObj(ConcreteInterpreterObj&& obj) = default;
   ConcreteInterpreterObj(ConcreteInterpreterObj& obj) = default;
 
@@ -283,12 +287,12 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterObj
     py::tuple m_args(args.size());
     for (size_t i = 0, N = args.size(); i != N; ++i) {
       Obj obj = args[i];
-      InterpreterObj* iObj = obj.baseObj_;
-      m_args[i] = ((ConcreteInterpreterObj*)iObj)->getPyObject();
+      std::shared_ptr<ConcreteInterpreterObj> iObj = std::dynamic_pointer_cast<ConcreteInterpreterObj> (obj.baseObj_);
+      m_args[i] = ((std::shared_ptr<ConcreteInterpreterObj>)iObj)->getPyObject();
     }
     py::object pyObj = call(m_args);
     ConcreteInterpreterObj iObj = ConcreteInterpreterObj(pyObj);
-    return Obj(&iObj);
+    return Obj();
     };
   }
 
@@ -300,7 +304,7 @@ torch::deploy::Obj call(at::ArrayRef<at::IValue> args) override {
       }
       py::object pyObj = call(m_args);
       ConcreteInterpreterObj iObj = ConcreteInterpreterObj(pyObj);
-      return Obj(&iObj);
+      return Obj();
       // };
   }
 
@@ -321,7 +325,7 @@ torch::deploy::Obj callKwargs(
     }
     py::object pyObj = call(py_args, py_kwargs);
     ConcreteInterpreterObj iObj = ConcreteInterpreterObj(pyObj);
-    return Obj(&iObj);
+    return Obj();
     };
   }
 
@@ -340,7 +344,7 @@ torch::deploy::Obj attr(const char* attribute) override {
   bool a = hasattr(attribute);
   py::object pyObj = getPyObject().attr(attribute);
   ConcreteInterpreterObj iObj = ConcreteInterpreterObj(pyObj);
-  return Obj(&iObj);
+  return Obj();
   };
 }
 
@@ -363,6 +367,8 @@ ConcreteInterpreterImplConstructorCommon(
     const std::vector<std::string>& extra_python_paths,
     const std::vector<std::string>& plugin_paths) {
   BuiltinRegistry::runPreInitialization();
+
+#ifndef LEGACY_PYTHON_PRE_3_8
   PyPreConfig preconfig;
   PyPreConfig_InitIsolatedConfig(&preconfig);
   PyStatus status = Py_PreInitialize(&preconfig);
@@ -399,6 +405,12 @@ ConcreteInterpreterImplConstructorCommon(
   status = Py_InitializeFromConfig(&config);
   PyConfig_Clear(&config);
   TORCH_INTERNAL_ASSERT(!PyStatus_Exception(status))
+
+#else
+  Py_InitializeEx(1);
+  TORCH_INTERNAL_ASSERT(Py_IsInitialized);
+#endif
+
 #ifdef FBCODE_CAFFE2
   auto sys_path = global_impl("sys", "path");
   for (const auto& entry : extra_python_paths) {
@@ -644,20 +656,19 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
 
   py::handle unwrap(Obj obj) const {
     // create a breakpoint here and check if h1 and h2 are the same.
-    torch::deploy::InterpreterObj* iObj = obj.baseObj_;
-    ConcreteInterpreterObj* cObj = (ConcreteInterpreterObj*) iObj;
+    std::shared_ptr<ConcreteInterpreterObj> cObj = std::dynamic_pointer_cast<ConcreteInterpreterObj> (obj.baseObj_);
+    std::shared_ptr<ConcreteInterpreterObj> cObj2 = std::dynamic_pointer_cast<ConcreteInterpreterObj> (objects_.at(ID(obj)));
     py::handle h = cObj->getPyObject();
-    ConcreteInterpreterObj cObj2 = objects_.at(ID(obj));
-    py::handle h2 = objects_.at(ID(obj)).getPyObject();
+    py::handle h2 = cObj2->getPyObject();
     // return h2;
     return h;
     // return objects_.at(ID(obj)).getPyObject();
   }
 
   Obj wrap(py::object obj) {
-    ConcreteInterpreterObj concreteObj = ConcreteInterpreterObj(std::move(obj));
-    objects_.emplace_back(std::move(concreteObj));
-    return Obj(this, objects_.size() - 1, &concreteObj);
+    std::shared_ptr<torch::deploy::InterpreterObj> pConcreteObj(new ConcreteInterpreterObj(obj));
+    objects_.emplace_back(pConcreteObj);
+    return Obj(this, objects_.size() - 1, pConcreteObj);
   }
 
   ~ConcreteInterpreterSessionImpl() override {
@@ -665,7 +676,7 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
   }
   ConcreteInterpreterImpl* interp_;
   ScopedAcquire acquire_;
-  std::vector<ConcreteInterpreterObj> objects_;
+  std::vector<std::shared_ptr<torch::deploy::InterpreterObj>> objects_;
 };
 
 torch::deploy::InterpreterSessionImpl*
