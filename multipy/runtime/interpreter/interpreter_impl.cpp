@@ -593,21 +593,13 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
 
   Obj call(Obj obj, at::ArrayRef<Obj> args) override {
     MULTIPY_SAFE_RETHROW {
-      py::tuple m_args(args.size());
-      for (size_t i = 0, N = args.size(); i != N; ++i) {
-        m_args[i] = unwrap(args[i]);
-      }
-      return wrap(call(unwrap(obj), m_args));
+      return unwrapConcreteObj(obj)->call(args);
     };
   }
 
-  Obj call(Obj obj, at::ArrayRef<IValue> args) override {
+  Obj call(Obj obj, at::ArrayRef<at::IValue> args) override {
     MULTIPY_SAFE_RETHROW {
-      py::tuple m_args(args.size());
-      for (size_t i = 0, N = args.size(); i != N; ++i) {
-        m_args[i] = multipy::toPyObject(args[i]);
-      }
-      return wrap(call(unwrap(obj), m_args));
+      return unwrapConcreteObj(obj)->call(args);
     };
   }
 
@@ -616,17 +608,7 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
       std::vector<at::IValue> args,
       std::unordered_map<std::string, c10::IValue> kwargs) override {
     MULTIPY_SAFE_RETHROW {
-      py::tuple py_args(args.size());
-      for (size_t i = 0, N = args.size(); i != N; ++i) {
-        py_args[i] = multipy::toPyObject(args[i]);
-      }
-
-      py::dict py_kwargs;
-      for (auto kv : kwargs) {
-        py_kwargs[py::cast(std::get<0>(kv))] =
-            multipy::toPyObject(std::get<1>(kv));
-      }
-      return wrap(call(unwrap(obj), py_args, py_kwargs));
+      return unwrapConcreteObj(obj)->callKwargs(args, kwargs);
     };
   }
 
@@ -644,8 +626,8 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
 
   Obj attr(Obj obj, const char* attr) override {
     MULTIPY_SAFE_RETHROW {
-      // return unwrapConcreteObj(obj)->attr(attr);
-      return wrap(unwrap(obj).attr(attr));
+      return unwrapConcreteObj(obj)->attr(attr);
+      // return wrap(unwrap(obj).attr(attr));
     };
   }
 

@@ -141,28 +141,28 @@ inline at::IValue Obj::toIValue() const {
 }
 
 inline Obj Obj::operator()(at::ArrayRef<Obj> args) {
-  return interaction_->call(*this, args);
+  return baseObj_->call(args);
 }
 
 inline Obj Obj::operator()(at::ArrayRef<at::IValue> args) {
-  return interaction_->call(*this, args);
+  return baseObj_->call(args);
 }
 
 inline Obj Obj::callKwargs(
     std::vector<at::IValue> args,
     std::unordered_map<std::string, c10::IValue> kwargs) {
-  return interaction_->callKwargs(*this, std::move(args), std::move(kwargs));
+  return baseObj_->callKwargs(std::move(args), std::move(kwargs));
 }
 inline Obj Obj::callKwargs(
     std::unordered_map<std::string, c10::IValue> kwargs) {
-  return interaction_->callKwargs(*this, std::move(kwargs));
+  return baseObj_->callKwargs(std::move(kwargs));
 }
 inline bool Obj::hasattr(const char* attr) {
   return baseObj_->hasattr(attr);
 }
 
 inline Obj Obj::attr(const char* attr) {
-  return interaction_->attr(*this, attr);
+  return baseObj_->attr(attr);
 }
 
 } // namespace deploy
