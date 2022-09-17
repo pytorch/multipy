@@ -491,7 +491,7 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterImpl
 struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
     : public torch::deploy::InterpreterSessionImpl {
   ConcreteInterpreterSessionImpl(ConcreteInterpreterImpl* interp)
-      : interp_(interp), defaultObj_(nullptr){}
+      : interp_(interp), defaultObj_(Py_None){}
   Obj global(const char* module, const char* name) override {
     MULTIPY_SAFE_RETHROW {
       return wrap(global_impl(module, name));
@@ -660,30 +660,21 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
       return defaultObj_;
     }
     std::shared_ptr<ConcreteInterpreterObj> cObj = std::dynamic_pointer_cast<ConcreteInterpreterObj> (obj.baseObj_);
-    std::shared_ptr<ConcreteInterpreterObj> cObj2 = std::dynamic_pointer_cast<ConcreteInterpreterObj> (objects_.at(ID(obj)));
     py::handle h = cObj->getPyObject();
-    py::handle h2 = cObj2->getPyObject();
-    // return h2;
     return h;
-    // return objects_.at(ID(obj)).getPyObject();
   }
 
   Obj wrap(py::object obj) {
-    if (defaultObj_ == nullptr){
+    if (!defaultObj_){
       defaultObj_ = obj;
     }
     std::shared_ptr<torch::deploy::InterpreterObj> pConcreteObj(new ConcreteInterpreterObj(std::move(obj)));
-    objects_.emplace_back(pConcreteObj);
-    return Obj(this, objects_.size() - 1, pConcreteObj);
+    return Obj(this, pConcreteObj);
   }
 
-  ~ConcreteInterpreterSessionImpl() override {
-    objects_.clear();
-  }
   py::handle defaultObj_;
   ConcreteInterpreterImpl* interp_;
   ScopedAcquire acquire_;
-  std::vector<std::shared_ptr<torch::deploy::InterpreterObj>> objects_;
 };
 
 torch::deploy::InterpreterSessionImpl*

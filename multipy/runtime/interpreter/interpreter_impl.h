@@ -58,12 +58,12 @@ struct Obj {
   friend struct InterpreterSessionImpl;
   friend struct InterpreterObj;
   Obj(std::shared_ptr<InterpreterObj> baseObj)
-      : baseObj_(baseObj), id_(0), isDefault_(false){}
-  Obj() : interaction_(nullptr), baseObj_(nullptr), id_(0), isDefault_(true)  {}
-  Obj(InterpreterSessionImpl* interaction, int64_t id)
-      : interaction_(interaction), id_(id), baseObj_(nullptr), isDefault_(false)  {}
-  Obj(InterpreterSessionImpl* interaction, int64_t id, std::shared_ptr<InterpreterObj> baseObj)
-      : interaction_(interaction), id_(id), baseObj_(baseObj), isDefault_(false) {}
+      : baseObj_(baseObj), isDefault_(false){}
+  Obj() : interaction_(nullptr), baseObj_(nullptr), isDefault_(true)  {}
+  Obj(InterpreterSessionImpl* interaction)
+      : interaction_(interaction), baseObj_(nullptr), isDefault_(false)  {}
+  Obj(InterpreterSessionImpl* interaction, std::shared_ptr<InterpreterObj> baseObj)
+      : interaction_(interaction), baseObj_(baseObj), isDefault_(false) {}
 
 
   at::IValue toIValue() const;
@@ -117,9 +117,6 @@ struct InterpreterSessionImpl {
   virtual bool hasattr(Obj obj, const char* attr) = 0;
 
  protected:
-  int64_t ID(Obj obj) const {
-    return obj.id_;
-  }
   int64_t isDefault(Obj obj) const {
     return obj.isDefault_;
   }
