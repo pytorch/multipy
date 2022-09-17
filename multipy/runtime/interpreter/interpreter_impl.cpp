@@ -491,7 +491,7 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterImpl
 struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
     : public torch::deploy::InterpreterSessionImpl {
   ConcreteInterpreterSessionImpl(ConcreteInterpreterImpl* interp)
-      : interp_(interp) {}
+      : interp_(interp), defaultObj_(nullptr){}
   Obj global(const char* module, const char* name) override {
     MULTIPY_SAFE_RETHROW {
       return wrap(global_impl(module, name));
@@ -656,6 +656,9 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
 
   py::handle unwrap(Obj obj) const {
     // create a breakpoint here and check if h1 and h2 are the same.
+    if(isDefault(obj)){
+      return defaultObj_;
+    }
     std::shared_ptr<ConcreteInterpreterObj> cObj = std::dynamic_pointer_cast<ConcreteInterpreterObj> (obj.baseObj_);
     std::shared_ptr<ConcreteInterpreterObj> cObj2 = std::dynamic_pointer_cast<ConcreteInterpreterObj> (objects_.at(ID(obj)));
     py::handle h = cObj->getPyObject();
@@ -666,6 +669,9 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
   }
 
   Obj wrap(py::object obj) {
+    if (defaultObj_ == nullptr){
+      defaultObj_ = obj;
+    }
     std::shared_ptr<torch::deploy::InterpreterObj> pConcreteObj(new ConcreteInterpreterObj(std::move(obj)));
     objects_.emplace_back(pConcreteObj);
     return Obj(this, objects_.size() - 1, pConcreteObj);
@@ -674,6 +680,7 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
   ~ConcreteInterpreterSessionImpl() override {
     objects_.clear();
   }
+  py::handle defaultObj_;
   ConcreteInterpreterImpl* interp_;
   ScopedAcquire acquire_;
   std::vector<std::shared_ptr<torch::deploy::InterpreterObj>> objects_;

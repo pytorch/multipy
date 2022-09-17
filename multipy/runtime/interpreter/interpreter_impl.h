@@ -58,12 +58,12 @@ struct Obj {
   friend struct InterpreterSessionImpl;
   friend struct InterpreterObj;
   Obj(std::shared_ptr<InterpreterObj> baseObj)
-      : baseObj_(baseObj){}
-  Obj() : interaction_(nullptr), baseObj_(nullptr), id_(0) {}
+      : baseObj_(baseObj), id_(0), isDefault_(false){}
+  Obj() : interaction_(nullptr), baseObj_(nullptr), id_(0), isDefault_(true)  {}
   Obj(InterpreterSessionImpl* interaction, int64_t id)
-      : interaction_(interaction), id_(id), baseObj_(nullptr) {}
+      : interaction_(interaction), id_(id), baseObj_(nullptr), isDefault_(false)  {}
   Obj(InterpreterSessionImpl* interaction, int64_t id, std::shared_ptr<InterpreterObj> baseObj)
-      : interaction_(interaction), id_(id), baseObj_(baseObj) {}
+      : interaction_(interaction), id_(id), baseObj_(baseObj), isDefault_(false) {}
 
 
   at::IValue toIValue() const;
@@ -80,6 +80,7 @@ struct Obj {
  private:
   InterpreterSessionImpl* interaction_;
   int64_t id_;
+  bool isDefault_;
 };
 
 struct InterpreterSessionImpl {
@@ -119,7 +120,9 @@ struct InterpreterSessionImpl {
   int64_t ID(Obj obj) const {
     return obj.id_;
   }
-
+  int64_t isDefault(Obj obj) const {
+    return obj.isDefault_;
+  }
   bool isOwner(Obj obj) const {
     return this == obj.interaction_;
   }
