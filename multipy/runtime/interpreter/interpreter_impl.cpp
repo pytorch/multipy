@@ -666,7 +666,7 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
   }
 
   Obj wrap(py::object obj) {
-    std::shared_ptr<torch::deploy::InterpreterObj> pConcreteObj(new ConcreteInterpreterObj(obj));
+    std::shared_ptr<torch::deploy::InterpreterObj> pConcreteObj(new ConcreteInterpreterObj(std::move(obj)));
     objects_.emplace_back(pConcreteObj);
     return Obj(this, objects_.size() - 1, pConcreteObj);
   }
