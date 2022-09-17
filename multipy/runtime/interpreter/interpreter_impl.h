@@ -137,7 +137,7 @@ struct InterpreterImpl {
 // source file that would need to exist it both the libinterpreter.so and then
 // the libtorchpy library.
 inline at::IValue Obj::toIValue() const {
-  return interaction_->toIValue(*this);
+  return baseObj_->toIValue();
 }
 
 inline Obj Obj::operator()(at::ArrayRef<Obj> args) {
@@ -158,7 +158,7 @@ inline Obj Obj::callKwargs(
   return interaction_->callKwargs(*this, std::move(kwargs));
 }
 inline bool Obj::hasattr(const char* attr) {
-  return interaction_->hasattr(*this, attr);
+  return baseObj_->hasattr(attr);
 }
 
 inline Obj Obj::attr(const char* attr) {
