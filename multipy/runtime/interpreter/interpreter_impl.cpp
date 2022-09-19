@@ -542,6 +542,7 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
     };
   }
 
+  // meant to be used with replicated objects
   Obj unpickleOrGet(int64_t id, const PickledObject& obj) override {
     MULTIPY_SAFE_RETHROW {
       py::dict objects = interp_->objects;

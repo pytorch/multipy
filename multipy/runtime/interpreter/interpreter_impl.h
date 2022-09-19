@@ -85,7 +85,6 @@ struct Obj {
   std::shared_ptr<InterpreterObj> baseObj_;
 
  private:
-  int64_t id_;
   bool isDefault_;
 };
 
