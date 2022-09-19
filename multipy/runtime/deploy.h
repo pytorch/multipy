@@ -194,7 +194,7 @@ struct TORCH_API ReplicatedObjImpl {
   ReplicatedObjImpl(
     size_t object_id,
     PickledObject data
-  ) : data_(data), objectId_(object_id), manager_(nullptr) {}
+  ) : objectId_(object_id), data_(data), manager_(nullptr) {}
   // NOLINTNEXTLINE(bugprone-exception-escape)
   ~ReplicatedObjImpl();
   void unload(const Interpreter* onThisInterpreter);
