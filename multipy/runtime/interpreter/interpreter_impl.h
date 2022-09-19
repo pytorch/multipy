@@ -30,11 +30,14 @@ struct PickledObject {
 struct InterpreterObj {
   friend struct Obj;
   friend struct ReplicatedObjImpl;
+  protected:
+    InterpreterSessionImpl* interaction_;
   public:
-    InterpreterObj() = default;
+    InterpreterObj(): interaction_(nullptr){};
+    InterpreterObj(InterpreterSessionImpl* interaction): interaction_(interaction){};
     InterpreterObj(const InterpreterObj& obj) = delete;
     InterpreterObj(InterpreterObj&& obj) = default;
-    // virtual ~InterpreterObj() = default;
+    virtual ~InterpreterObj() = default;
   private:
 
     virtual at::IValue toIValue() const = 0;
@@ -59,11 +62,9 @@ struct Obj {
   friend struct InterpreterObj;
   Obj(std::shared_ptr<InterpreterObj> baseObj)
       : baseObj_(baseObj), isDefault_(false){}
-  Obj() : interaction_(nullptr), baseObj_(nullptr), isDefault_(true)  {}
-  Obj(InterpreterSessionImpl* interaction)
-      : interaction_(interaction), baseObj_(nullptr), isDefault_(false)  {}
+  Obj() : baseObj_(nullptr), isDefault_(true)  {}
   Obj(InterpreterSessionImpl* interaction, std::shared_ptr<InterpreterObj> baseObj)
-      : interaction_(interaction), baseObj_(baseObj), isDefault_(false) {}
+      : baseObj_(baseObj), isDefault_(false) {}
 
 
   at::IValue toIValue() const;
@@ -75,10 +76,15 @@ struct Obj {
   Obj callKwargs(std::unordered_map<std::string, c10::IValue> kwargs);
   bool hasattr(const char* attr);
   Obj attr(const char* attr);
+  InterpreterSessionImpl* getInteraction(){
+    if (!baseObj_){
+      return nullptr;
+    }
+    return baseObj_->interaction_;
+  }
   std::shared_ptr<InterpreterObj> baseObj_;
 
  private:
-  InterpreterSessionImpl* interaction_;
   int64_t id_;
   bool isDefault_;
 };
@@ -121,7 +127,7 @@ struct InterpreterSessionImpl {
     return obj.isDefault_;
   }
   bool isOwner(Obj obj) const {
-    return this == obj.interaction_;
+    return this == obj.getInteraction();
   }
 };
 
