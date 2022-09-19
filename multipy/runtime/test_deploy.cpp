@@ -6,8 +6,8 @@
 
 #include <ATen/Parallel.h>
 #include <gtest/gtest.h>
-#include <cstring>
 #include <libgen.h>
+#include <cstring>
 
 #include <c10/util/irange.h>
 #include <libgen.h>
@@ -196,9 +196,9 @@ TEST(TorchpyTest, ErrorsReplicatingObj) {
   auto obj = session1.fromMovable(replicatedObj);
   // should throw an error when trying to access obj from different session
   // NOLINTNEXTLINE(hicpp-avoid-goto,cppcoreguidelines-avoid-goto)
-EXPECT_THROW(p.createMovable(obj,&session2), std::runtime_error);
+  EXPECT_THROW(p.createMovable(obj, &session2), std::runtime_error);
   try {
-    p.createMovable(obj,&session2);
+    p.createMovable(obj, &session2);
   } catch (std::runtime_error& error) {
     EXPECT_TRUE(
         std::string(error.what())
