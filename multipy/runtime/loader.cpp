@@ -35,6 +35,7 @@
  * SUCH DAMAGE.
  */
 
+#include <cxxabi.h>
 #include <dlfcn.h>
 #include <elf.h>
 #include <fcntl.h>
@@ -243,9 +244,6 @@ struct EH_Frame_HDR {
 // It is passed a pointer to an object of the same shape as TLSEntry
 // with the module_id and offset.
 extern "C" void* __tls_get_addr(void*);
-
-extern "C" int
-__cxa_thread_atexit_impl(void (*dtor)(void*), void* obj, void* dso_symbol);
 
 // This object performs TLS emulation for modules not loaded by dlopen.
 // Normally modules have a module_id that is used as a key in libc for the
@@ -987,7 +985,7 @@ struct __attribute__((visibility("hidden"))) CustomLibraryImpl
         return (Elf64_Addr)local__tls_get_addr;
       }
       if (strcmp(sym_name, "__cxa_thread_atexit") == 0) {
-        return (Elf64_Addr)__cxa_thread_atexit_impl;
+        return (Elf64_Addr)__cxxabiv1::__cxa_thread_atexit;
       }
     }
 
@@ -1242,7 +1240,7 @@ struct __attribute__((visibility("hidden"))) CustomLibraryImpl
     void* start = pthread_getspecific(tls_key_);
     if (!start) {
       start = malloc(tls_mem_size_);
-      __cxa_thread_atexit_impl(free, start, &__dso_handle);
+      __cxxabiv1::__cxa_thread_atexit(free, start, &__dso_handle);
       memcpy(start, tls_initalization_image_, tls_file_size_);
       memset(
           (void*)((const char*)start + tls_file_size_),
