@@ -30,22 +30,24 @@ struct PickledObject {
 struct InterpreterObj {
   friend struct Obj;
   friend struct ReplicatedObjImpl;
-  public:
-    InterpreterObj() = default;
-    InterpreterObj(const InterpreterObj& obj) = delete;
-    InterpreterObj(InterpreterObj&& obj) = default;
-    // virtual ~InterpreterObj() = default;
-  private:
 
-    virtual at::IValue toIValue() const = 0;
-    virtual Obj call(at::ArrayRef<Obj> args) = 0;
-    virtual Obj call(at::ArrayRef<at::IValue> args) = 0;
-    virtual Obj callKwargs(
-        std::vector<at::IValue> args,
-        std::unordered_map<std::string, c10::IValue> kwargs) = 0;
-    virtual Obj callKwargs(std::unordered_map<std::string, c10::IValue> kwargs) = 0;
-    virtual bool hasattr(const char* attr) = 0;
-    virtual Obj attr(const char* attr) = 0;
+ public:
+  InterpreterObj() = default;
+  InterpreterObj(const InterpreterObj& obj) = delete;
+  InterpreterObj(InterpreterObj&& obj) = default;
+  virtual ~InterpreterObj() = default;
+
+ private:
+  virtual at::IValue toIValue() const = 0;
+  virtual Obj call(at::ArrayRef<Obj> args) = 0;
+  virtual Obj call(at::ArrayRef<at::IValue> args) = 0;
+  virtual Obj callKwargs(
+      std::vector<at::IValue> args,
+      std::unordered_map<std::string, c10::IValue> kwargs) = 0;
+  virtual Obj callKwargs(
+      std::unordered_map<std::string, c10::IValue> kwargs) = 0;
+  virtual bool hasattr(const char* attr) = 0;
+  virtual Obj attr(const char* attr) = 0;
 };
 
 // this is a wrapper class that refers to a PyObject* instance in a particular
@@ -58,13 +60,13 @@ struct Obj {
   friend struct InterpreterSessionImpl;
   friend struct InterpreterObj;
   Obj(std::shared_ptr<InterpreterObj> baseObj)
-      : baseObj_(baseObj), isDefault_(false){}
-  Obj() : interaction_(nullptr), baseObj_(nullptr), isDefault_(true)  {}
+      : baseObj_(baseObj), isDefault_(false) {}
+  Obj() : baseObj_(nullptr), interaction_(nullptr), isDefault_(true) {}
   Obj(InterpreterSessionImpl* interaction)
-      : interaction_(interaction), baseObj_(nullptr), isDefault_(false)  {}
-  Obj(InterpreterSessionImpl* interaction, std::shared_ptr<InterpreterObj> baseObj)
-      : interaction_(interaction), baseObj_(baseObj), isDefault_(false) {}
-
+      : baseObj_(nullptr), interaction_(interaction), isDefault_(false) {}
+  Obj(InterpreterSessionImpl* interaction,
+      std::shared_ptr<InterpreterObj> baseObj)
+      : baseObj_(baseObj), interaction_(interaction), isDefault_(false) {}
 
   at::IValue toIValue() const;
   Obj operator()(at::ArrayRef<Obj> args);

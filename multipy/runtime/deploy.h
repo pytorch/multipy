@@ -15,11 +15,11 @@
 #include <multipy/runtime/interpreter/Optional.hpp>
 #include <cassert>
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <string>
 #include <thread>
 #include <vector>
-#include <functional>
 
 namespace torch {
 namespace deploy {
@@ -28,15 +28,14 @@ struct ReplicatedObj;
 struct InterpreterManager;
 
 struct TORCH_API InterpreterSession {
-    InterpreterSession(
-    InterpreterSessionImpl* impl) noexcept
-    : impl_(impl), manager_(nullptr) {}
+  InterpreterSession(InterpreterSessionImpl* impl) noexcept
+      : impl_(impl), manager_(nullptr) {}
   InterpreterSession(
       InterpreterSessionImpl* impl,
       InterpreterManager* manager) noexcept
       : impl_(impl), manager_(manager) {}
   PickledObject pickleObj(Obj obj);
-  bool isOwner(Obj obj){
+  bool isOwner(Obj obj) {
     return impl_->isOwner(obj);
   }
   // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
@@ -52,9 +51,8 @@ struct TORCH_API InterpreterSession {
   }
   ReplicatedObj createMovable(Obj obj);
   Obj fromMovable(const ReplicatedObj& obj);
-  bool attachDeconstructorCallback(
-  std::function<void()> func
-  );
+  bool attachDeconstructorCallback(std::function<void()> func);
+
  private:
   friend struct ReplicatedObj;
   friend struct Package;
@@ -81,9 +79,9 @@ class TORCH_API Interpreter {
   Interpreter(std::shared_ptr<Environment> env);
 
   InterpreterSession acquireSession() const {
-    if(manager_){
+    if (manager_) {
       return InterpreterSession(pImpl_->acquireSession(), manager_);
-    }else{
+    } else {
       return InterpreterSession(pImpl_->acquireSession());
     }
   }
@@ -137,12 +135,10 @@ struct TORCH_API InterpreterManager {
   InterpreterSession acquireOne() {
     int where = resources_.acquire();
     InterpreterSession I = instances_[where].acquireSession();
-    I.attachDeconstructorCallback([this, where]() -> void{
-      resources_.free(where);
-    });
+    I.attachDeconstructorCallback(
+        [this, where]() -> void { resources_.free(where); });
     return I;
   }
-
 
   // use to make sure something gets run on all interpreters, such as loading or
   // unloading a model eagerly
@@ -170,7 +166,7 @@ struct TORCH_API InterpreterManager {
   size_t countRegisteredModuleSources() {
     return registeredModuleSource_.size();
   }
-  ReplicatedObj createMovable(Obj obj, InterpreterSession *I);
+  ReplicatedObj createMovable(Obj obj, InterpreterSession* I);
   InterpreterManager(const InterpreterManager&) = delete;
   InterpreterManager& operator=(const InterpreterManager&) = delete;
   InterpreterManager& operator=(InterpreterManager&&) = delete;
@@ -191,10 +187,8 @@ struct TORCH_API ReplicatedObjImpl {
       PickledObject data,
       InterpreterManager* manager)
       : objectId_(object_id), data_(data), manager_(manager) {}
-  ReplicatedObjImpl(
-    size_t object_id,
-    PickledObject data
-  ) : objectId_(object_id), data_(data), manager_(nullptr) {}
+  ReplicatedObjImpl(size_t object_id, PickledObject data)
+      : objectId_(object_id), data_(data), manager_(nullptr) {}
   // NOLINTNEXTLINE(bugprone-exception-escape)
   ~ReplicatedObjImpl();
   void unload(const Interpreter* onThisInterpreter);
@@ -287,7 +281,7 @@ struct TORCH_API Package {
         I.impl_->createOrGetPackageImporterFromContainerFile(containerFile_);
     return I;
   }
-  ReplicatedObj createMovable(Obj obj, InterpreterSession *I){
+  ReplicatedObj createMovable(Obj obj, InterpreterSession* I) {
     return manager_->createMovable(obj, I);
   }
 
