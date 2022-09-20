@@ -9,6 +9,8 @@ from abc import ABC, abstractmethod
 from pickle import (  # type: ignore[attr-defined]  # type: ignore[attr-defined]
     _getattribute,
     _Pickler,
+    dumps,
+    PicklingError,
     whichmodule as _pickle_whichmodule,
 )
 from types import ModuleType
@@ -25,6 +27,12 @@ class ObjNotFoundError(Exception):
 
 class ObjMismatchError(Exception):
     """Raised when an importer found a different object with the same name as the user-provided one."""
+
+    pass
+
+
+class PickleError(Exception):
+    """Raised when an object is not picklable."""
 
     pass
 
@@ -132,6 +140,18 @@ class Importer(ABC):
 
         obj_module_name, obj_location, obj_importer_name = get_obj_info(obj)
         obj2_module_name, obj2_location, obj2_importer_name = get_obj_info(obj2)
+
+        try:
+            dumps(obj)
+        except PicklingError as err:
+            msg = (
+                f"\n\nThe object provided is from '{obj_module_name}', "
+                f"which is coming from {obj_location}. However it cannot be pickled, and produces the below error."
+                f"/nMake sure the object in question does not cause an error when pickle.dumps(<object>) is run."
+                f"\n\nError - {err}"
+            )
+            raise PickleError(msg)
+
         msg = (
             f"\n\nThe object provided is from '{obj_module_name}', "
             f"which is coming from {obj_location}."
