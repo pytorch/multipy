@@ -503,7 +503,7 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterImpl
 struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
     : public torch::deploy::InterpreterSessionImpl {
   ConcreteInterpreterSessionImpl(ConcreteInterpreterImpl* interp)
-      : interp_(interp), defaultObj_(Py_None) {}
+      : defaultObj_(Py_None), interp_(interp){}
   Obj global(const char* module, const char* name) override {
     MULTIPY_SAFE_RETHROW {
       return wrap(global_impl(module, name));
