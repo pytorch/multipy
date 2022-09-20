@@ -64,10 +64,10 @@ struct InterpreterObj {
 struct Obj {
   friend struct InterpreterSessionImpl;
   friend struct InterpreterObj;
-  Obj(std::shared_ptr<InterpreterObj> baseObj)
+  explicit Obj(std::shared_ptr<InterpreterObj> baseObj)
       : baseObj_(baseObj), isDefault_(false) {}
   Obj() : baseObj_(nullptr), isDefault_(true) {}
-  Obj(InterpreterSessionImpl* interaction,
+  explicit Obj(InterpreterSessionImpl* interaction,
       std::shared_ptr<InterpreterObj> baseObj)
       : baseObj_(baseObj), isDefault_(false) {}
 
