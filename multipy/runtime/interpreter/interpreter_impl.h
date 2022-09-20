@@ -59,12 +59,12 @@ struct InterpreterObj {
 struct Obj {
   friend struct InterpreterSessionImpl;
   friend struct InterpreterObj;
-  Obj(std::shared_ptr<InterpreterObj> baseObj)
+  explicit Obj(std::shared_ptr<InterpreterObj> baseObj)
       : baseObj_(baseObj), isDefault_(false) {}
   Obj() : baseObj_(nullptr), interaction_(nullptr), isDefault_(true) {}
-  Obj(InterpreterSessionImpl* interaction)
+  explicit Obj(InterpreterSessionImpl* interaction)
       : baseObj_(nullptr), interaction_(interaction), isDefault_(false) {}
-  Obj(InterpreterSessionImpl* interaction,
+  explicit Obj(InterpreterSessionImpl* interaction,
       std::shared_ptr<InterpreterObj> baseObj)
       : baseObj_(baseObj), interaction_(interaction), isDefault_(false) {}
 
