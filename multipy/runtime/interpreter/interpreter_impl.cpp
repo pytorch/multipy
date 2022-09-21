@@ -246,16 +246,17 @@ bool file_exists(const std::string& path) {
 struct __attribute__((visibility("hidden"))) ConcreteInterpreterObj
     : public torch::deploy::InterpreterObj {
   friend struct Obj;
-  ConcreteInterpreterObj(py::object pyObject) : pyObject_(pyObject) {}
-  ConcreteInterpreterObj(Obj obj) {
+  explicit ConcreteInterpreterObj(py::object pyObject) : pyObject_(pyObject) {}
+  explicit ConcreteInterpreterObj(Obj obj) {
     std::shared_ptr<ConcreteInterpreterObj> cObj =
         std::dynamic_pointer_cast<ConcreteInterpreterObj>(obj.baseObj_);
     pyObject_ = cObj->pyObject_;
   }
   ConcreteInterpreterObj() : pyObject_() {}
   ConcreteInterpreterObj(const ConcreteInterpreterObj& obj) = delete;
+  ConcreteInterpreterObj& operator=(const ConcreteInterpreterObj& obj) = delete;
   ConcreteInterpreterObj(ConcreteInterpreterObj&& obj) = default;
-  ConcreteInterpreterObj(ConcreteInterpreterObj& obj) = default;
+  ConcreteInterpreterObj& operator=(ConcreteInterpreterObj&& obj) = default;
 
   py::handle getPyObject() const {
     MULTIPY_CHECK(pyObject_, "pyObject has already been freed");
@@ -491,8 +492,8 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterImpl
 
 struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
     : public torch::deploy::InterpreterSessionImpl {
-  ConcreteInterpreterSessionImpl(ConcreteInterpreterImpl* interp)
-      : defaultObj_(Py_None), interp_(interp){}
+  explicit ConcreteInterpreterSessionImpl(ConcreteInterpreterImpl* interp)
+      : defaultObj_(Py_None), interp_(interp) {}
   Obj global(const char* module, const char* name) override {
     MULTIPY_SAFE_RETHROW {
       return wrap(global_impl(module, name));
@@ -670,8 +671,7 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
     if (!defaultObj_) {
       defaultObj_ = obj;
     }
-    std::shared_ptr<torch::deploy::InterpreterObj> pConcreteObj(
-        new ConcreteInterpreterObj(std::move(obj)));
+    std::shared_ptr<torch::deploy::InterpreterObj> pConcreteObj = std::make_shared<ConcreteInterpreterObj>(std::move(obj));
     return Obj(this, pConcreteObj);
   }
 
