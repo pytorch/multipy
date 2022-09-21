@@ -58,7 +58,7 @@ struct TORCH_API InterpreterSession {
   friend struct Package;
   friend struct InterpreterManager;
   friend struct ReplicatedObjImpl;
-  size_t nextObjectId_ = 0;
+  inline static size_t nextObjectId_ = 0;
   std::unique_ptr<InterpreterSessionImpl> impl_;
   InterpreterManager* manager_; // if created from one
   std::function<void()> deconstruction_callback_ = NULL;
