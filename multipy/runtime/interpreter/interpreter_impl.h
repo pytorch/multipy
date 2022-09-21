@@ -34,7 +34,9 @@ struct InterpreterObj {
  public:
   InterpreterObj() = default;
   InterpreterObj(const InterpreterObj& obj) = delete;
+  InterpreterObj& operator=(const InterpreterObj& obj) = delete;
   InterpreterObj(InterpreterObj&& obj) = default;
+  InterpreterObj& operator=(InterpreterObj&& obj) = default;
   virtual ~InterpreterObj() = default;
 
  private:
@@ -64,7 +66,8 @@ struct Obj {
   Obj() : baseObj_(nullptr), interaction_(nullptr), isDefault_(true) {}
   explicit Obj(InterpreterSessionImpl* interaction)
       : baseObj_(nullptr), interaction_(interaction), isDefault_(false) {}
-  explicit Obj(InterpreterSessionImpl* interaction,
+  explicit Obj(
+    InterpreterSessionImpl* interaction,
       std::shared_ptr<InterpreterObj> baseObj)
       : baseObj_(baseObj), interaction_(interaction), isDefault_(false) {}
 
