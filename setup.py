@@ -42,15 +42,15 @@ class MultipyRuntimeBuild(build_ext):
         legacy_python_cmake_flag = 'OFF' if sys.version_info.minor > 7 else 'ON'
         print(f"-- Running multipy runtime makefile in dir {build_dir_abs}")
         subprocess.check_call(f"cmake -DLEGACY_PYTHON_PRE_3_8={legacy_python_cmake_flag} ..",
-                              cwd=build_dir_abs)
+                              cwd=build_dir_abs, shell=True)
 
         print(f"-- Running multipy runtime build in dir {build_dir_abs}")
         subprocess.check_call('cmake --build . --config Release',
-                              cwd=build_dir_abs)
+                              cwd=build_dir_abs, shell=True)
 
         print(f"-- Running multipy runtime install in dir {build_dir_abs}")
         subprocess.check_call('cmake --install . --prefix "."',
-                              cwd=build_dir_abs)
+                              cwd=build_dir_abs, shell=True)
         # TODO
         # followups: gen examples, copy .so out.
 
