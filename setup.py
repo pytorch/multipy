@@ -7,11 +7,55 @@
 
 import os
 import re
+import subprocess
 import sys
 from datetime import date
 
-from setuptools import find_packages, setup
+from setuptools import Extension, find_packages, setup
+from setuptools.command.build_ext import build_ext
 
+
+class MultipyRuntimeExtension(Extension):
+    def __init__(self, name):
+        # TODO
+        pass
+
+class MultipyRuntimeBuild(build_ext):
+    def run(self):
+        try:
+            out = subprocess.check_output(['cmake', '--version'])
+        except OSError:
+            raise RuntimeError(
+                "CMake must be installed to build the following extensions: " +
+                ", ".join(e.name for e in self.extensions))
+        base_dir = os.path.abspath(os.path.dirname(__file__))
+        build_dir = "multipy/runtime/build"
+        build_dir_abs = base_dir + "/" + build_dir
+        if not os.path.exists(build_dir_abs):
+            os.makedirs(build_dir_abs)
+        print(f"-- Running multipy runtime makefile in dir {build_dir_abs}")
+        subprocess.check_call('cmake -DLEGACY_PYTHON_PRE_3_8=OFF ..',
+                              cwd=build_dir_abs)
+
+        print(f"-- Running multipy runtime build in dir {build_dir_abs}")
+        subprocess.check_call('cmake --build . --config Release',
+                              cwd=build_dir_abs)
+
+        print(f"-- Running multipy runtime install in dir {build_dir_abs}")
+        subprocess.check_call('cmake --build . --config Release',
+                              cwd=build_dir_abs)
+
+        print(f"-- Running multipy runtime install in dir {build_dir_abs}")
+        subprocess.check_call('cmake --install . --prefix "."',
+                              cwd=build_dir_abs)
+        # TODO
+        # followups: gen examples, copy .so out.
+
+
+
+ext_modules = [
+  MultipyRuntimeExtension('tbd.so'), # TODO
+]
 
 def get_version():
     # get version string from version.py
@@ -76,6 +120,9 @@ if __name__ == "__main__":
                 "numpy<=1.21.6",
             ],
         },
+        # Cmake invocation for runtime build.
+        ext_modules=ext_modules,
+        cmdclass=dict(build_ext=MultipyRuntimeBuild),
         # PyPI package information.
         classifiers=[
             "Development Status :: 4 - Beta",
