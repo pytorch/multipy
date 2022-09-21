@@ -10,24 +10,30 @@ import re
 import subprocess
 import sys
 from datetime import date
-
 from setuptools import Extension, find_packages, setup
 from setuptools.command.build_ext import build_ext
 
 
 class MultipyRuntimeExtension(Extension):
     def __init__(self, name):
-        # TODO
-        pass
+        Extension.__init__(self, name, sources=[])
+
+def get_cmake_version():
+    output = subprocess.check_output(['cmake', '--version']).decode('utf-8')
+    return (output.splitlines()[0].split()[2])
 
 class MultipyRuntimeBuild(build_ext):
     def run(self):
         try:
-            out = subprocess.check_output(['cmake', '--version'])
+            cmake_version_comps = get_cmake_version().split(".")
+            if cmake_version_comps[0] < '3' or cmake_version_comps[1] < '19':
+                raise RuntimeError(
+                    "CMake 3.19 or later required for multipy runtime installation."
+                )
         except OSError:
             raise RuntimeError(
-                "CMake must be installed to build the following extensions: " +
-                ", ".join(e.name for e in self.extensions))
+                    "Error fetching cmake version. Please ensure cmake is installed correctly."
+                )
         base_dir = os.path.abspath(os.path.dirname(__file__))
         build_dir = "multipy/runtime/build"
         build_dir_abs = base_dir + "/" + build_dir
