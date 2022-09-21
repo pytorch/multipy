@@ -22,6 +22,7 @@ class TestCompat(unittest.TestCase):
     def test_hf_tokenizers(self):
         import tokenizers  # noqa: F401
 
+    @unittest.skip("torch.Library is not supported")
     def test_torchdynamo_eager(self):
         import torchdynamo
 
@@ -33,6 +34,7 @@ class TestCompat(unittest.TestCase):
 
         fn(torch.randn(10), torch.randn(10))
 
+    @unittest.skip("torch.Library is not supported")
     def test_torchdynamo_ofi(self):
         import torchdynamo
 

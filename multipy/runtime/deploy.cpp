@@ -54,6 +54,8 @@ InterpreterManager::InterpreterManager(
     : resources_(nInterp) {
   // disable GIL deadlock detection if it's not set already
   setenv("TORCH_DISABLE_DEADLOCK_DETECTION", "1", /*overwrite*/ 0);
+  // disable prims/torch.Library support
+  setenv("PYTORCH_DISABLE_LIBRARY", "1", /*overwrite*/ 0);
 
   for (const auto i : c10::irange(nInterp)) {
 #ifdef FBCODE_CAFFE2
