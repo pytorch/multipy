@@ -42,10 +42,6 @@ class MultipyRuntimeBuild(build_ext):
                               cwd=build_dir_abs)
 
         print(f"-- Running multipy runtime install in dir {build_dir_abs}")
-        subprocess.check_call('cmake --build . --config Release',
-                              cwd=build_dir_abs)
-
-        print(f"-- Running multipy runtime install in dir {build_dir_abs}")
         subprocess.check_call('cmake --install . --prefix "."',
                               cwd=build_dir_abs)
         # TODO
