@@ -81,7 +81,6 @@ struct Obj {
 
  private:
   InterpreterSessionImpl* interaction_;
-  int64_t id_;
   bool isDefault_;
 };
 
