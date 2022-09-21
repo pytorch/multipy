@@ -39,7 +39,9 @@ struct InterpreterObj {
   InterpreterObj(InterpreterSessionImpl* interaction)
       : interaction_(interaction){};
   InterpreterObj(const InterpreterObj& obj) = delete;
+  InterpreterObj& operator=(const InterpreterObj& obj) = delete;
   InterpreterObj(InterpreterObj&& obj) = default;
+  InterpreterObj& operator=(InterpreterObj&& obj) = default;
   virtual ~InterpreterObj() = default;
 
  private:

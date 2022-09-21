@@ -28,7 +28,7 @@ struct ReplicatedObj;
 struct InterpreterManager;
 
 struct TORCH_API InterpreterSession {
-  InterpreterSession(InterpreterSessionImpl* impl) noexcept
+  explicit InterpreterSession(InterpreterSessionImpl* impl) noexcept
       : impl_(impl), manager_(nullptr) {}
   InterpreterSession(
       InterpreterSessionImpl* impl,
@@ -61,7 +61,7 @@ struct TORCH_API InterpreterSession {
   inline static size_t nextObjectId_ = 0;
   std::unique_ptr<InterpreterSessionImpl> impl_;
   InterpreterManager* manager_; // if created from one
-  std::function<void()> deconstruction_callback_ = NULL;
+  std::function<void()> deconstruction_callback_ = nullptr;
 };
 
 class TORCH_API Interpreter {
@@ -76,7 +76,7 @@ class TORCH_API Interpreter {
 
  public:
   Interpreter(InterpreterManager* manager, std::shared_ptr<Environment> env);
-  Interpreter(std::shared_ptr<Environment> env);
+  explicit Interpreter(std::shared_ptr<Environment> env);
 
   InterpreterSession acquireSession() const {
     if (manager_) {
