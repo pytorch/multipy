@@ -75,8 +75,8 @@ if __name__ == "__main__":
                 # latest numpy doesn't support 3.7
                 "numpy<=1.21.6",
             ],
-            ':python_version >= "3.10"': [
-                "setuptools < 60",
+            ':python_version < "3.12"': [
+                "setuptools<60.0",
             ],
         },
         # PyPI package information.
