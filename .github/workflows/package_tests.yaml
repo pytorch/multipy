@@ -17,6 +17,7 @@ jobs:
         python-minor-version: [7,8,9,10]
         platform: [ubuntu-18.04]
         include:
+          - python-version: 3.9
           - platform: macos-latest
       fail-fast: false
     runs-on: ${{ matrix.platform }}
