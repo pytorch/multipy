@@ -38,7 +38,7 @@ jobs:
         run: |
           set -eux
           pip install -r dev-requirements.txt
-          xargs apt install -y build-requirements.txt
+          xargs apt install -yq --no-install-recommends build-requirements.txt
           wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add -
           apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main'
           echo "deb http://security.ubuntu.com/ubuntu focal-security main" >> /etc/apt/sources.list
