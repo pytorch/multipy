@@ -8,23 +8,29 @@ on:
 
   schedule:
     - cron: '0 2 * * *' # run at 2 AM UTC
+    workflow_dispatch:
 
 jobs:
   unittest:
     strategy:
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-major-version: [3]
+        python-minor-version: [7,8,9]
         platform: [ubuntu-18.04]
         include:
-          - python-version: 3.9
+          - python-major-version: 3
+            python-minor-version: 9
             platform: macos-latest
       fail-fast: false
     runs-on: ${{ matrix.platform }}
     steps:
-      - name: Setup Python ${{ matrix.python-version }}
+      - name: Set Python Version
+        run: |
+          echo "python-version=${{ matrix.python-major-version }}.${{ matrix.python-minor-version }}" >> $GITHUB_ENV
+      - name: Setup Python ${{ env.python-version }}
         uses: actions/setup-python@v2
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ env.python-version }}
           architecture: x64
       - name: Checkout MultiPy
         uses: actions/checkout@v2
@@ -32,7 +38,27 @@ jobs:
         run: |
           set -eux
           pip install -r dev-requirements.txt
+          wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add -
+          apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main'
+          echo "deb http://security.ubuntu.com/ubuntu focal-security main" >> /etc/apt/sources.list
+          apt update
+          apt install -y binutils cmake
+          git submodule update --init --recursive --jobs 0
+          pip3 install virtualenv
+          git clone https://github.com/pyenv/pyenv.git ~/.pyenv
+          export CFLAGS="-fPIC -g"
+          declare -A py_version_dict
+          py_version_dict[7]='3.7.10'
+          py_version_dict[8]='3.8.13'
+          py_version_dict[9]='3.9.13'
+          py_version_dict[10]='3.10.6'
+          py_install_version=${py_version_dict[${{ matrix.python-minor-version }}]}
+          ~/.pyenv/bin/pyenv install --force ${py_install_version}
+          virtualenv -p ~/.pyenv/versions/${py_install_version}/bin/python3 ~/venvs/multipy
+          source ~/venvs/multipy/bin/activate
+          pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cu113
           python setup.py install
+          deactivate
       - name: Run tests
         run: coverage run -m unittest discover --verbose --start-directory multipy/test/package/ --pattern "test_*"
       - name: Coverage
