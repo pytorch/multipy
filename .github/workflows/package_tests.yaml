@@ -40,7 +40,6 @@ jobs:
       - name: Install runtime build dependencies
         run: |
           set -eux
-          pip install -r dev-requirements.txt
           sudo apt update
           xargs sudo apt install -y -qq --no-install-recommends <build-requirements.txt
 
@@ -66,6 +65,12 @@ jobs:
           py_install_version=${py_version_dict[${{ matrix.python-minor-version }}]}
           ~/.pyenv/bin/pyenv install --force ${py_install_version}
           virtualenv -p ~/.pyenv/versions/${py_install_version}/bin/python3 ~/venvs/multipy
+
+      - name: Install dependencies
+        run: |
+          source ~/venvs/multipy/bin/activate
+          pip install -r dev-requirements.txt
+          deactivate
 
       - name: Run setup.py
         run: |
