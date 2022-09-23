@@ -53,6 +53,7 @@ jobs:
 
       - name: Set up virtual environment
         run: |
+          set -eux
           git submodule update --init --recursive --jobs 0
           pip3 install virtualenv
           git clone https://github.com/pyenv/pyenv.git ~/.pyenv
@@ -68,19 +69,21 @@ jobs:
 
       - name: Install dependencies
         run: |
+          set -eux
           source ~/venvs/multipy/bin/activate
           pip install -r dev-requirements.txt
           deactivate
 
       - name: Run setup.py
         run: |
+          set -eux
           source ~/venvs/multipy/bin/activate
-          pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cu113
           python setup.py install
           deactivate
 
       - name: Run tests
         run: |
+          set -eux
           source ~/venvs/multipy/bin/activate
           coverage run -m unittest discover --verbose --start-directory multipy/test/package/ --pattern "test_*"
           deactivate
