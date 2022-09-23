@@ -38,12 +38,12 @@ jobs:
         run: |
           set -eux
           pip install -r dev-requirements.txt
-          xargs apt install -yq --no-install-recommends build-requirements.txt
+          sudo xargs apt install -yq --no-install-recommends build-requirements.txt
           wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add -
-          apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main'
+          sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main'
           echo "deb http://security.ubuntu.com/ubuntu focal-security main" >> /etc/apt/sources.list
-          apt update
-          apt install -y binutils cmake
+          sudo apt update
+          sudo apt install -y binutils cmake
           git submodule update --init --recursive --jobs 0
           pip3 install virtualenv
           git clone https://github.com/pyenv/pyenv.git ~/.pyenv
