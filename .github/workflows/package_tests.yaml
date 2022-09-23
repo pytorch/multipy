@@ -45,7 +45,6 @@ jobs:
           xargs sudo apt install -y -qq --no-install-recommends <build-requirements.txt
 
       - name: Update cmake
-      # sudo apt-key add -
         run: |
           wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | sudo gpg --dearmor -o /usr/share/keyrings/magic-key.gpg
           echo "deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/magic-key.gpg] https://apt.kitware.com/ubuntu/ bionic main" | sudo tee -a /etc/apt/sources.list
@@ -67,10 +66,10 @@ jobs:
           py_install_version=${py_version_dict[${{ matrix.python-minor-version }}]}
           ~/.pyenv/bin/pyenv install --force ${py_install_version}
           virtualenv -p ~/.pyenv/versions/${py_install_version}/bin/python3 ~/venvs/multipy
-          source ~/venvs/multipy/bin/activate
 
       - name: Run setup.py
         run: |
+          source ~/venvs/multipy/bin/activate
           pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cu113
           python setup.py install
           deactivate
