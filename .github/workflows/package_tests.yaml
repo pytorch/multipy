@@ -45,10 +45,11 @@ jobs:
           xargs sudo apt install -y -qq --no-install-recommends <build-requirements.txt
 
       - name: Update cmake
+      # sudo apt-key add -
         run: |
-          wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | sudo tee -a /etc/apt/sources.list
+          wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | sudo gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/example.gpg --import -
           sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main'
-          echo "deb http://security.ubuntu.com/ubuntu focal-security main" >> /etc/apt/sources.list
+          echo "deb http://security.ubuntu.com/ubuntu focal-security main" | sudo tee -a /etc/apt/sources.list
           sudo apt update
           sudo apt install -y binutils cmake
 
