@@ -93,7 +93,8 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         run: |
           set -eux
+          source ~/venvs/multipy/bin/activate
           coverage report -m
           coverage xml
-
           codecov
+          deactivate
