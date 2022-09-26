@@ -78,6 +78,7 @@ jobs:
           set -eux
           source ~/venvs/multipy/bin/activate
           git submodule update --init --recursive --jobs 0
+          pip3 install --pre torch
           python setup.py install
           deactivate
 
