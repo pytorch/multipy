@@ -57,7 +57,7 @@ class MultipyRuntimeBuild(build_ext):
 
 
 ext_modules = [
-  MultipyRuntimeExtension('tbd.so'), # TODO
+  MultipyRuntimeExtension('multipy.so'),
 ]
 
 def get_version():
