@@ -59,7 +59,7 @@ class MultipyRuntimeBuild(build_ext):
 
         print(f"-- Running multipy runtime install in dir {build_dir_abs}")
         subprocess.check_call(
-            ["cmake", "--install", ".", "--prefix", "\".\""],
+            ["cmake", "--install", ".", "--prefix", '"."'],
             cwd=build_dir_abs,
             shell=True,
         )
@@ -68,7 +68,7 @@ class MultipyRuntimeBuild(build_ext):
 
 
 ext_modules = [
-    MultipyRuntimeExtension('multipy.so'),
+    MultipyRuntimeExtension("multipy.so"),
 ]
 
 
