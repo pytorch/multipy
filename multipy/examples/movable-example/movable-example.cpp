@@ -28,7 +28,7 @@ int main(int argc, const char* argv[]) {
         auto rObj = I.createMovable(model_obj);
         auto I2 = m.acquireOne();
         auto model_obj2 = I2.fromMovable(rObj);
-        // rOBj.unload(); // free the model on the first interpreter
+        rObj.unload(); // free the replicated object
 
         // Create a vector of inputs.
         std::vector<torch::jit::IValue> inputs;
