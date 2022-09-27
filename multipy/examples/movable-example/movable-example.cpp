@@ -22,11 +22,26 @@ int main(int argc, const char* argv[]) {
     try {
         // Load the model from the multipy.package.
         auto I = m.acquireOne();
-        auto model =
-            I.global("torch.nn", "Module")(std::vector<torch::deploy::Obj>());
-        auto obj = I.createMovable(model);
+        std::vector<torch::jit::IValue> constructor_inputs;
+        auto model_obj =
+        I.global("torch.nn", "Conv2d")({6, 2, 2, 1});
+        auto rObj = I.createMovable(model_obj);
+        auto I2 = m.acquireOne();
+        auto model_obj2 = I2.fromMovable(rObj);
+        // rOBj.unload(); // free the model on the first interpreter
+
+        // Create a vector of inputs.
+        std::vector<torch::jit::IValue> inputs;
+        inputs.push_back(torch::ones({1, 6, 6, 6}));
+
+        // Execute the model and turn its output into a tensor.
+        at::Tensor output = model_obj2(inputs).toIValue().toTensor();
+        std::cout << output.slice(/*dim=*/1, /*start=*/0, /*end=*/5) << '\n';
+
+
+
     } catch (const c10::Error& e) {
-        std::cerr << "error loading the model\n";
+        std::cerr << "error creating movable\n";
         std::cerr << e.msg();
         return -1;
     }
