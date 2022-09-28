@@ -6,12 +6,12 @@
 
 import io
 
-import multipy.package
-
 import torch
-from multipy.package import Importer, OrderedImporter, PackageImporter, sys_importer
-from multipy.package._package_pickler import create_pickler
-from multipy.package._package_unpickler import PackageUnpickler
+
+import torch.package
+from torch.package import Importer, OrderedImporter, PackageImporter, sys_importer
+from torch.package._package_pickler import create_pickler
+from torch.package._package_unpickler import PackageUnpickler
 from torch.serialization import _maybe_decode_ascii
 
 # For < pytorch 1.13 compatibility. We can likely delete this after it's release.
@@ -25,9 +25,7 @@ def _save_storages(importer, obj):
     serialized_storages = []
     serialized_dtypes = []
 
-    importer = (
-        importer if isinstance(importer, multipy.package.PackageImporter) else None
-    )
+    importer = importer if isinstance(importer, torch.package.PackageImporter) else None
     importers: Importer
     if importer is not None:
         importers = OrderedImporter(importer, sys_importer)
