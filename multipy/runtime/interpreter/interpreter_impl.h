@@ -30,14 +30,15 @@ struct PickledObject {
 struct InterpreterObj {
   friend struct Obj;
   friend struct ReplicatedObjImpl;
+  friend struct InterpreterSessionImpl;
 
  protected:
-  InterpreterSessionImpl* interaction_;
+  InterpreterSessionImpl* owningSession_;
 
  public:
-  InterpreterObj() : interaction_(nullptr){};
-  InterpreterObj(InterpreterSessionImpl* interaction)
-      : interaction_(interaction){};
+  InterpreterObj() : owningSession_(nullptr) {}
+  explicit InterpreterObj(InterpreterSessionImpl* owningSession)
+      : owningSession_(owningSession) {}
   InterpreterObj(const InterpreterObj& obj) = delete;
   InterpreterObj& operator=(const InterpreterObj& obj) = delete;
   InterpreterObj(InterpreterObj&& obj) = default;
@@ -46,7 +47,8 @@ struct InterpreterObj {
 
  private:
   virtual at::IValue toIValue() const = 0;
-  virtual Obj call(at::ArrayRef<Obj> args) = 0;
+  virtual Obj call(
+      at::ArrayRef<std::shared_ptr<InterpreterObj>> args) = 0;
   virtual Obj call(at::ArrayRef<at::IValue> args) = 0;
   virtual Obj callKwargs(
       std::vector<at::IValue> args,
@@ -60,7 +62,7 @@ struct InterpreterObj {
 // this is a wrapper class that refers to a PyObject* instance in a particular
 // interpreter. We can't use normal PyObject or pybind11 objects here
 // because these objects get used in a user application which will not directly
-// link against libpython. Instead all interaction with the Python state in each
+// link against libpython. Instead all owningSession with the Python state in each
 // interpreter is done via this wrapper class, and methods on
 // InterpreterSession.
 struct Obj {
@@ -69,9 +71,6 @@ struct Obj {
   explicit Obj(std::shared_ptr<InterpreterObj> baseObj)
       : baseObj_(baseObj), isDefault_(false) {}
   Obj() : baseObj_(nullptr), isDefault_(true) {}
-  explicit Obj(InterpreterSessionImpl* interaction,
-      std::shared_ptr<InterpreterObj> baseObj)
-      : baseObj_(baseObj), isDefault_(false) {}
 
   at::IValue toIValue() const;
   Obj operator()(at::ArrayRef<Obj> args);
@@ -82,16 +81,10 @@ struct Obj {
   Obj callKwargs(std::unordered_map<std::string, c10::IValue> kwargs);
   bool hasattr(const char* attr);
   Obj attr(const char* attr);
-  InterpreterSessionImpl* getInteraction() {
-    if (!baseObj_) {
-      return nullptr;
-    }
-    return baseObj_->interaction_;
-  }
-  std::shared_ptr<InterpreterObj> baseObj_;
 
  private:
   bool isDefault_;
+  std::shared_ptr<InterpreterObj> baseObj_;
 };
 
 struct InterpreterSessionImpl {
@@ -131,8 +124,11 @@ struct InterpreterSessionImpl {
   int64_t isDefault(Obj obj) const {
     return obj.isDefault_;
   }
+  std::shared_ptr<InterpreterObj> getBaseObj(Obj obj) const {
+    return obj.baseObj_;
+  }
   bool isOwner(Obj obj) const {
-    return this == obj.getInteraction();
+    return this == obj.baseObj_->owningSession_;
   }
 };
 
@@ -152,7 +148,11 @@ inline at::IValue Obj::toIValue() const {
 }
 
 inline Obj Obj::operator()(at::ArrayRef<Obj> args) {
-  return baseObj_->call(args);
+  std::vector<std::shared_ptr<torch::deploy::InterpreterObj>> copy;
+  for (Obj arg : args) {
+    copy.push_back(arg.baseObj_);
+  }
+  return baseObj_->call(copy);
 }
 
 inline Obj Obj::operator()(at::ArrayRef<at::IValue> args) {
