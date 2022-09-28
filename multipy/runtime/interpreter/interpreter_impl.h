@@ -67,7 +67,7 @@ struct Obj {
   explicit Obj(InterpreterSessionImpl* interaction)
       : baseObj_(nullptr), interaction_(interaction), isDefault_(false) {}
   explicit Obj(
-    InterpreterSessionImpl* interaction,
+      InterpreterSessionImpl* interaction,
       std::shared_ptr<InterpreterObj> baseObj)
       : baseObj_(baseObj), interaction_(interaction), isDefault_(false) {}
 

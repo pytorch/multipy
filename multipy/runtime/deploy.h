@@ -187,8 +187,6 @@ struct TORCH_API ReplicatedObjImpl {
       PickledObject data,
       InterpreterManager* manager)
       : objectId_(object_id), data_(data), manager_(manager) {}
-  ReplicatedObjImpl(size_t object_id, PickledObject data)
-      : objectId_(object_id), data_(data), manager_(nullptr) {}
   // NOLINTNEXTLINE(bugprone-exception-escape)
   ~ReplicatedObjImpl();
   void unload(const Interpreter* onThisInterpreter);
@@ -225,6 +223,7 @@ struct TORCH_API ReplicatedObj {
   }
   void attachInterpreterManager(InterpreterManager* manager);
   void unload(const Interpreter* onThisInterpreter = nullptr);
+  Obj toObj(InterpreterSession* I);
 
  private:
   ReplicatedObj(std::shared_ptr<ReplicatedObjImpl> pImpl)

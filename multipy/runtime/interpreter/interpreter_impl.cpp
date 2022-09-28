@@ -493,7 +493,7 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterImpl
 struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
     : public torch::deploy::InterpreterSessionImpl {
   explicit ConcreteInterpreterSessionImpl(ConcreteInterpreterImpl* interp)
-      : defaultObj_(Py_None), interp_(interp) {}
+      : interp_(interp) {}
   Obj global(const char* module, const char* name) override {
     MULTIPY_SAFE_RETHROW {
       return wrap(global_impl(module, name));
@@ -671,11 +671,12 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
     if (!defaultObj_) {
       defaultObj_ = obj;
     }
-    std::shared_ptr<torch::deploy::InterpreterObj> pConcreteObj = std::make_shared<ConcreteInterpreterObj>(std::move(obj));
+    std::shared_ptr<torch::deploy::InterpreterObj> pConcreteObj =
+    std::make_shared<ConcreteInterpreterObj>(std::move(obj));
     return Obj(this, pConcreteObj);
   }
 
-  py::handle defaultObj_;
+  py::object defaultObj_;
   ConcreteInterpreterImpl* interp_;
   ScopedAcquire acquire_;
 };
