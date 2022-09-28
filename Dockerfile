@@ -8,6 +8,7 @@ SHELL ["/bin/bash", "-c"]
 RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
         apt update && DEBIAN_FRONTEND=noninteractive apt install -yq --no-install-recommends \
         build-essential \
+        cmake \
         ca-certificates \
         ccache \
         curl \
