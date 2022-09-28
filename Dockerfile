@@ -8,6 +8,7 @@ SHELL ["/bin/bash", "-c"]
 RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
         apt update && DEBIAN_FRONTEND=noninteractive apt install -yq --no-install-recommends \
         build-essential \
+        cmake \
         ca-certificates \
         ccache \
         curl \
@@ -44,11 +45,15 @@ RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
         software-properties-common \
         python-pip \
         python3-pip && \
-        wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor -o /usr/share/keyrings/magic-key.gpg && \
-        echo "deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/magic-key.gpg] https://apt.kitware.com/ubuntu/ bionic main" | tee -a /etc/apt/sources.list && \
-        echo "deb http://security.ubuntu.com/ubuntu focal-security main" | tee -a /etc/apt/sources.list && \
+        # wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add - && \
+        # apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main' && \
+        # echo "deb http://security.ubuntu.com/ubuntu focal-security main" >> /etc/apt/sources.list && \
+        # apt-add-repository ppa:ubuntu-toolchain-r/test && \
         apt update && \
-        apt install -y binutils cmake && \
+        apt install -y binutils && \
+        # cmake && \
+        # apt install -y binutils cmake gcc-8 g++-8 && \
+        # update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 80 --slave /usr/bin/g++ g++ /usr/bin/g++-8 && \
     rm -rf /var/lib/apt/lists/*
 RUN /usr/sbin/update-ccache-symlinks
 RUN mkdir /opt/ccache && ccache --set-config=cache_dir=/opt/ccache

@@ -32,6 +32,14 @@ jobs:
           DOCKER_BUILDKIT: 1
         run: docker build -t multipy --progress=plain --build-arg PYTHON_MAJOR_VERSION=${{ matrix.python-major-version }} --build-arg PYTHON_MINOR_VERSION=${{ matrix.python-minor-version }} .
 
+      - name: Set Python Version
+        run: |
+          echo "python-version=${{ matrix.python-major-version }}.${{ matrix.python-minor-version }}" >> $GITHUB_ENV
+
+      - name: Print Python version
+        run: |
+          echo "python version = ${{ env.python-version }}"
+
       - name: Test
         run: |
           docker run --rm multipy bash -c "if [[ ${{ matrix.python-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && multipy/runtime/build/test_deploy"
