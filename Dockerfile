@@ -44,12 +44,13 @@ RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
         software-properties-common \
         python-pip \
         python3-pip && \
-        wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add - && \
-        apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main' && \
-        echo "deb http://security.ubuntu.com/ubuntu focal-security main" >> /etc/apt/sources.list && \
-        apt-add-repository ppa:ubuntu-toolchain-r/test && \
+        # wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add - && \
+        # apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main' && \
+        # echo "deb http://security.ubuntu.com/ubuntu focal-security main" >> /etc/apt/sources.list && \
+        # apt-add-repository ppa:ubuntu-toolchain-r/test && \
         apt update && \
-        apt install -y binutils cmake && \
+        apt install -y binutils && \
+        # cmake && \
         # apt install -y binutils cmake gcc-8 g++-8 && \
         # update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 80 --slave /usr/bin/g++ g++ /usr/bin/g++-8 && \
     rm -rf /var/lib/apt/lists/*
