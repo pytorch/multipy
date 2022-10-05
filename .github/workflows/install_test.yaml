@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         python-major-version: [3]
-        python-minor-version: [7,8,9, 10]
+        python-minor-version: [7,8,9,10]
         platform: [ubuntu-18.04]
       fail-fast: false
     runs-on: ${{ matrix.platform }}
@@ -70,9 +70,30 @@ jobs:
           pip3 install --pre torch
           deactivate
 
-      - name: Run pip install
+      - name: Run pip install within virtualenv
         run: |
           set -eux
           source ~/venvs/multipy/bin/activate
           pip install -e .
           deactivate
+
+      - name: Install dependencies with conda for 3.8+
+        run: |
+          set -eux
+          if [[ ${{ matrix.python-minor-version }} -gt 7 ]]; then \
+          curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
+          chmod +x ~/miniconda.sh && \
+          ~/miniconda.sh -b -p /opt/conda && \
+          rm ~/miniconda.sh && \
+          /opt/conda/bin/conda install -y python=${PYTHON_VERSION} mkl mkl-include conda-build pyyaml numpy ipython && \
+          /opt/conda/bin/conda install -y -c conda-forge libpython-static=${PYTHON_VERSION} && \
+          /opt/conda/bin/conda install -y pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly && \
+          /opt/conda/bin/conda clean -ya; \
+          fi
+
+      - name: Run pip install with conda for 3.8+
+        run: |
+          set -eux
+          if [[ ${{ matrix.python-minor-version }} -gt 7 ]]; then \
+          pip install -e .
+          fi
