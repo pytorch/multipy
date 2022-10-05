@@ -38,24 +38,40 @@ class MultipyRuntimeBuild(build_ext):
                 "Error fetching cmake version. Please ensure cmake is installed correctly."
             ) from None
         base_dir = os.path.abspath(os.path.dirname(__file__))
-        build_dir = "multipy/runtime/build"
+        build_dir = "multipy/runtime/build3"
         build_dir_abs = base_dir + "/" + build_dir
         if not os.path.exists(build_dir_abs):
             os.makedirs(build_dir_abs)
         legacy_python_cmake_flag = "OFF" if sys.version_info.minor > 7 else "ON"
         print(f"-- Running multipy runtime makefile in dir {build_dir_abs}")
-        subprocess.check_call(
-            ["cmake", f"-DLEGACY_PYTHON_PRE_3_8={legacy_python_cmake_flag}", ".."],
+
+        cmake_out = subprocess.run(
+            [f"cmake -DLEGACY_PYTHON_PRE_3_8={legacy_python_cmake_flag} .."],
             cwd=build_dir_abs,
             shell=True,
+            check=True,
+            capture_output=True,
         )
+        # if cmake_out.returncode == 0:
+        #     raise RuntimeError(cmake_out.stdout.decode("utf-8") + ":::<<<>>>:::" + cmake_out.stderr.decode("utf-8"))
+
+        # subprocess.check_call(
+        #     ["cmake", f"-DLEGACY_PYTHON_PRE_3_8={legacy_python_cmake_flag}", ".."],
+        #     cwd=build_dir_abs,
+        #     shell=True,
+        # )
 
         print(f"-- Running multipy runtime build in dir {build_dir_abs}")
-        subprocess.check_call(
-            ["cmake", "--build", ".", "--config Release"],
-            cwd=build_dir_abs,
-            shell=True,
-        )
+        try:
+            cmake_out2 = subprocess.run(
+                ["cmake --build . --config Release"],
+                cwd=build_dir_abs,
+                shell=True,
+                check=True,
+                capture_output=True,
+            )
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(e.output)
 
         print(f"-- Running multipy runtime install in dir {build_dir_abs}")
         subprocess.check_call(
@@ -133,9 +149,6 @@ if __name__ == "__main__":
             ':python_version < "3.8"': [
                 # latest numpy doesn't support 3.7
                 "numpy<=1.21.6",
-            ],
-            ':python_version < "3.12"': [
-                "setuptools<60.0",
             ],
         },
         # Cmake invocation for runtime build.
