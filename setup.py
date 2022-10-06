@@ -27,6 +27,11 @@ def get_cmake_version():
 
 class MultipyRuntimeBuild(build_ext):
     def run(self):
+        CMAKE_OFF_ARG = "--cmake-off"
+        if CMAKE_OFF_ARG in sys.argv:
+            sys.argv.pop(sys.argv.index(CMAKE_OFF_ARG))
+            return
+
         try:
             cmake_version_comps = get_cmake_version().split(".")
             if cmake_version_comps[0] < "3" or cmake_version_comps[1] < "19":
