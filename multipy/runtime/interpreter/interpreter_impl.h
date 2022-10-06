@@ -47,8 +47,7 @@ struct InterpreterObj {
 
  private:
   virtual at::IValue toIValue() const = 0;
-  virtual Obj call(
-      at::ArrayRef<std::shared_ptr<InterpreterObj>> args) = 0;
+  virtual Obj call(at::ArrayRef<std::shared_ptr<InterpreterObj>> args) = 0;
   virtual Obj call(at::ArrayRef<at::IValue> args) = 0;
   virtual Obj callKwargs(
       std::vector<at::IValue> args,
@@ -62,15 +61,15 @@ struct InterpreterObj {
 // this is a wrapper class that refers to a PyObject* instance in a particular
 // interpreter. We can't use normal PyObject or pybind11 objects here
 // because these objects get used in a user application which will not directly
-// link against libpython. Instead all owningSession with the Python state in each
-// interpreter is done via this wrapper class, and methods on
+// link against libpython. Instead all owningSession with the Python state in
+// each interpreter is done via this wrapper class, and methods on
 // InterpreterSession.
 struct Obj {
   friend struct InterpreterSessionImpl;
   friend struct InterpreterObj;
   explicit Obj(std::shared_ptr<InterpreterObj> baseObj)
-      : baseObj_(baseObj), isDefault_(false) {}
-  Obj() : baseObj_(nullptr), isDefault_(true) {}
+      : isDefault_(false), baseObj_(baseObj) {}
+  Obj() : isDefault_(true), baseObj_(nullptr) {}
 
   at::IValue toIValue() const;
   Obj operator()(at::ArrayRef<Obj> args);
