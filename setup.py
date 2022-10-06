@@ -71,7 +71,7 @@ class MultipyRuntimeBuild(build_ext):
         print(f"-- Running multipy runtime install in dir {build_dir_abs}")
         try:
             subprocess.run(
-                ['cmake --install . --prefix "."'],
+                ["cmake --install . --prefix \".\""],
                 cwd=build_dir_abs,
                 shell=True,
                 check=True,
