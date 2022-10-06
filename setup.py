@@ -59,7 +59,7 @@ class MultipyRuntimeBuild(build_ext):
                 capture_output=True,
             )
         except subprocess.CalledProcessError as e:
-            raise RuntimeError(e.output)
+            raise RuntimeError(e.output) from None
 
         print(f"-- Running multipy runtime build in dir {build_dir_abs}")
         try:
@@ -71,7 +71,7 @@ class MultipyRuntimeBuild(build_ext):
                 capture_output=True,
             )
         except subprocess.CalledProcessError as e:
-            raise RuntimeError(e.output)
+            raise RuntimeError(e.output) from None
 
         print(f"-- Running multipy runtime install in dir {build_dir_abs}")
         try:
@@ -81,7 +81,7 @@ class MultipyRuntimeBuild(build_ext):
                 shell=True,
             )
         except subprocess.CalledProcessError as e:
-            raise RuntimeError(e.output)
+            raise RuntimeError(e.output) from None
         # TODO
         # followups: gen examples, copy .so out.
 
