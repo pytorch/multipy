@@ -1,2 +1,5 @@
+[build-system]
+requires = ["torch >= 1.11.0", "setuptools < 60.0"]
+
 [tool.usort]
 first_party_detection = false
