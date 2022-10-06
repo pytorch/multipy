@@ -7,10 +7,88 @@
 
 import os
 import re
+import subprocess
 import sys
 from datetime import date
 
-from setuptools import find_packages, setup
+from setuptools import Extension, find_packages, setup
+from setuptools.command.build_ext import build_ext
+
+
+class MultipyRuntimeExtension(Extension):
+    def __init__(self, name):
+        Extension.__init__(self, name, sources=[])
+
+
+def get_cmake_version():
+    output = subprocess.check_output(["cmake", "--version"]).decode("utf-8")
+    return output.splitlines()[0].split()[2]
+
+
+class MultipyRuntimeBuild(build_ext):
+    def run(self):
+        CMAKE_OFF_ARG = "--cmake-off"
+        if CMAKE_OFF_ARG in sys.argv:
+            sys.argv.pop(sys.argv.index(CMAKE_OFF_ARG))
+            return
+
+        try:
+            cmake_version_comps = get_cmake_version().split(".")
+            if cmake_version_comps[0] < "3" or cmake_version_comps[1] < "19":
+                raise RuntimeError(
+                    "CMake 3.19 or later required for multipy runtime installation."
+                )
+        except OSError:
+            raise RuntimeError(
+                "Error fetching cmake version. Please ensure cmake is installed correctly."
+            ) from None
+        base_dir = os.path.abspath(os.path.dirname(__file__))
+        build_dir = "multipy/runtime/build3"
+        build_dir_abs = base_dir + "/" + build_dir
+        if not os.path.exists(build_dir_abs):
+            os.makedirs(build_dir_abs)
+        legacy_python_cmake_flag = "OFF" if sys.version_info.minor > 7 else "ON"
+
+        print(f"-- Running multipy runtime makefile in dir {build_dir_abs}")
+        try:
+            subprocess.run(
+                [f"cmake -DLEGACY_PYTHON_PRE_3_8={legacy_python_cmake_flag} .."],
+                cwd=build_dir_abs,
+                shell=True,
+                check=True,
+                capture_output=True,
+            )
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(e.output) from None
+
+        print(f"-- Running multipy runtime build in dir {build_dir_abs}")
+        try:
+            subprocess.run(
+                ["cmake --build . --config Release"],
+                cwd=build_dir_abs,
+                shell=True,
+                check=True,
+                capture_output=True,
+            )
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(e.output) from None
+
+        print(f"-- Running multipy runtime install in dir {build_dir_abs}")
+        try:
+            subprocess.check_call(
+                ["cmake", "--install", ".", "--prefix", '"."'],
+                cwd=build_dir_abs,
+                shell=True,
+            )
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(e.output) from None
+        # TODO
+        # followups: gen examples, copy .so out.
+
+
+ext_modules = [
+    MultipyRuntimeExtension("multipy.so"),
+]
 
 
 def get_version():
@@ -76,6 +154,9 @@ if __name__ == "__main__":
                 "numpy<=1.21.6",
             ],
         },
+        # Cmake invocation for runtime build.
+        ext_modules=ext_modules,
+        cmdclass=dict(build_ext=MultipyRuntimeBuild),
         # PyPI package information.
         classifiers=[
             "Development Status :: 4 - Beta",
