@@ -141,6 +141,17 @@ std::string stringf(const char* format, Args... args) {
   snprintf((char*)result.data(), size_s + 1, format, args...);
   return result;
 }
+
+#ifndef PAGE_MASK
+// This must match the compiled kernel config settings.
+#ifndef CONFIG_ARM64_PAGE_SHIFT
+#define CONFIG_ARM64_PAGE_SHIFT 12
+#endif
+#define PAGE_SHIFT CONFIG_ARM64_PAGE_SHIFT
+#define PAGE_SIZE (1 << PAGE_SHIFT)
+#define PAGE_MASK (~(PAGE_SIZE - 1))
+#endif
+
 // Returns the address of the page containing address 'x'.
 #define PAGE_START(x) ((x)&PAGE_MASK)
 
@@ -815,8 +826,8 @@ struct __attribute__((visibility("hidden"))) CustomLibraryImpl
         "{}: is not 2's complement, little endian",
         this->name_);
     DEPLOY_CHECK(
-        header_->e_machine == EM_X86_64,
-        "{}: is not in x86_64 format",
+        header_->e_machine == EM_X86_64 || header_->e_machine == EM_AARCH64,
+        "{}: is not in x86_64/aarch64 format",
         this->name_);
   }
 
@@ -1103,12 +1114,17 @@ struct __attribute__((visibility("hidden"))) CustomLibraryImpl
     }
 
     switch (r_type) {
+      case R_AARCH64_GLOB_DAT:
+      case R_AARCH64_JUMP_SLOT:
+      case R_AARCH64_TLS_DTPREL:
+      case R_AARCH64_ABS64:
       case R_X86_64_JUMP_SLOT:
       case R_X86_64_64:
       case R_X86_64_GLOB_DAT: {
         const Elf64_Addr result = *sym_addr + reloc.r_addend;
         *static_cast<Elf64_Addr*>(rel_target) = result;
       } break;
+      case R_AARCH64_RELATIVE:
       case R_X86_64_RELATIVE: {
         // In practice, r_sym is always zero, but if it weren't, the linker
         // would still look up the referenced symbol (and abort if the symbol
@@ -1125,6 +1141,17 @@ struct __attribute__((visibility("hidden"))) CustomLibraryImpl
         const Elf64_Addr base = reinterpret_cast<Elf64_Addr>(rel_target);
         const Elf32_Addr result = target - base;
         *static_cast<Elf32_Addr*>(rel_target) = result;
+      } break;
+      case R_AARCH64_TLS_DTPMOD: {
+        // TODO: implement DTPMOD instead of setting module_id=0
+        *static_cast<Elf64_Addr*>(rel_target) = 0;
+      } break;
+      case R_AARCH64_TLSDESC: {
+        // TODO implement TLSDESC
+        // https://android.googlesource.com/platform/bionic/+/master/linker/linker_relocate.cpp#439
+        DEPLOY_ERROR(
+            "R_AARCH64_TLSDESC is not supported yet -- recompile with -mtls-dialect=trad. "
+            "https://github.com/pytorch/multipy/issues/64");
       } break;
       default:
         DEPLOY_ERROR("unknown reloc type {} in \"{}\"", r_type, name_.c_str());
