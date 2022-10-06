@@ -69,16 +69,16 @@ class MultipyRuntimeBuild(build_ext):
             raise RuntimeError(e.output)
 
         print(f"-- Running multipy runtime install in dir {build_dir_abs}")
-        try:
-            subprocess.run(
-                ["cmake --install . --prefix \".\""],
-                cwd=build_dir_abs,
-                shell=True,
-                check=True,
-                capture_output=True,
-            )
-        except subprocess.CalledProcessError as e:
-            raise RuntimeError(e.output)
+        # try:
+        #     subprocess.run(
+        #         ["cmake --install . --prefix \".\""],
+        #         cwd=build_dir_abs,
+        #         shell=True,
+        #         check=True,
+        #         capture_output=True,
+        #     )
+        # except subprocess.CalledProcessError as e:
+        #     raise RuntimeError(e.output)
         # TODO
         # followups: gen examples, copy .so out.
 
