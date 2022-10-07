@@ -28,9 +28,14 @@ def get_cmake_version():
 class MultipyRuntimeBuild(build_ext):
     def run(self):
         CMAKE_OFF_ARG = "--cmake-off"
+        ABI_CXX_ARG = "--abi-cxx"
+        abi_cxx_flag = "OFF"
         if CMAKE_OFF_ARG in sys.argv:
             sys.argv.pop(sys.argv.index(CMAKE_OFF_ARG))
             return
+        if ABI_CXX_ARG in sys.argv:
+           sys.argv.pop(sys.argv.index(CMAKE_OFF_ARG))
+           abi_cxx_flag="ON"
 
         try:
             cmake_version_comps = get_cmake_version().split(".")
@@ -52,7 +57,7 @@ class MultipyRuntimeBuild(build_ext):
         print(f"-- Running multipy runtime makefile in dir {build_dir_abs}")
         try:
             subprocess.run(
-                [f"cmake -DLEGACY_PYTHON_PRE_3_8={legacy_python_cmake_flag} .."],
+                [f"cmake -DLEGACY_PYTHON_PRE_3_8={legacy_python_cmake_flag} -DABI_EQUALS_1={abi_cxx_flag} .."],
                 cwd=build_dir_abs,
                 shell=True,
                 check=True,
