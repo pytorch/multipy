@@ -13,6 +13,7 @@ from datetime import date
 
 from setuptools import Extension, find_packages, setup
 from setuptools.command.build_ext import build_ext
+from setuptools.command.develop import develop
 
 
 class MultipyRuntimeExtension(Extension):
@@ -25,13 +26,26 @@ def get_cmake_version():
     return output.splitlines()[0].split()[2]
 
 
-class MultipyRuntimeBuild(build_ext):
-    def run(self):
-        CMAKE_OFF_ARG = "--cmake-off"
-        if CMAKE_OFF_ARG in sys.argv:
-            sys.argv.pop(sys.argv.index(CMAKE_OFF_ARG))
-            return
+class MultipyRuntimeDevelop(develop):
+    user_options = develop.user_options + [("cmakeoff", None, None)]
 
+    def initialize_options(self):
+        develop.initialize_options(self)
+        self.cmakeoff=None
+
+    def finalize_options(self):
+        develop.finalize_options(self)
+        if self.cmakeoff is not None:
+            self.distribution.get_command_obj("build_ext").cmake_off= True
+
+
+class MultipyRuntimeBuild(build_ext):
+    user_options = build_ext.user_options + MultipyRuntimeDevelop.user_options
+    cmake_off = False
+
+    def run(self):
+        if self.cmake_off:
+            return
         try:
             cmake_version_comps = get_cmake_version().split(".")
             if cmake_version_comps[0] < "3" or cmake_version_comps[1] < "19":
@@ -84,6 +98,8 @@ class MultipyRuntimeBuild(build_ext):
             raise RuntimeError(e.output) from None
         # TODO
         # followups: gen examples, copy .so out.
+
+        build_ext.run(self)
 
 
 ext_modules = [
@@ -154,9 +170,11 @@ if __name__ == "__main__":
                 "numpy<=1.21.6",
             ],
         },
-        # Cmake invocation for runtime build.
         ext_modules=ext_modules,
-        cmdclass=dict(build_ext=MultipyRuntimeBuild),
+        cmdclass={
+            'build_ext': MultipyRuntimeBuild,
+            'develop': MultipyRuntimeDevelop,
+        },
         # PyPI package information.
         classifiers=[
             "Development Status :: 4 - Beta",
