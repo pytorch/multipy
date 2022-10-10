@@ -6,7 +6,6 @@
 
 #include <ATen/Parallel.h>
 #include <gtest/gtest.h>
-#include <libgen.h>
 #include <cstring>
 
 #include <c10/util/irange.h>
@@ -88,6 +87,19 @@ TEST(TorchpyTest, SimpleModel) {
   compare_torchpy_jit(path("SIMPLE", simple), path("SIMPLE_JIT", simple_jit));
 }
 
+#ifdef FBCODE_CAFFE2
+TEST(TorchpyTest, LoadTextAndBinary) {
+  torch::deploy::InterpreterManager manager(1);
+  torch::deploy::Package p = manager.loadPackage(path("SIMPLE", simple));
+
+  std::string text = p.loadText("extra_files", "text");
+  ASSERT_EQ(text, "hello");
+
+  std::string decodedBinary = p.loadBinary("extra_files", "binary");
+  ASSERT_EQ(decodedBinary, "hello");
+}
+#endif
+
 TEST(TorchpyTest, ResNet) {
   compare_torchpy_jit(
       path("RESNET", "multipy/runtime/example/generated/resnet"),
@@ -101,7 +113,7 @@ TEST(TorchpyTest, Movable) {
     auto I = m.acquireOne();
     auto model =
         I.global("torch.nn", "Module")(std::vector<torch::deploy::Obj>());
-    obj = m.createMovable(model, &I);
+    obj = I.createMovable(model);
   }
   obj.acquireSession();
 }
@@ -196,9 +208,9 @@ TEST(TorchpyTest, ErrorsReplicatingObj) {
   auto obj = session1.fromMovable(replicatedObj);
   // should throw an error when trying to access obj from different session
   // NOLINTNEXTLINE(hicpp-avoid-goto,cppcoreguidelines-avoid-goto)
-  EXPECT_THROW(p.createMovable(obj, &session2), std::runtime_error);
+  EXPECT_THROW(session2.createMovable(obj), std::runtime_error);
   try {
-    p.createMovable(obj, &session2);
+    session2.createMovable(obj);
   } catch (std::runtime_error& error) {
     EXPECT_TRUE(
         std::string(error.what())
@@ -346,7 +358,7 @@ def get_tensor():
 
   auto objOnI =
       I.global("test_module", "get_tensor")(at::ArrayRef<at::IValue>{});
-  auto replicated = manager.createMovable(objOnI, &I);
+  auto replicated = I.createMovable(objOnI);
   auto objOnI2 = I2.fromMovable(replicated);
 
   auto tensorOnI = objOnI.toIValue().toTensor();
