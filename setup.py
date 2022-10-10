@@ -100,8 +100,6 @@ class MultipyRuntimeBuild(build_ext):
         # TODO
         # followups: gen examples, copy .so out.
 
-        build_ext.run(self)
-
 
 ext_modules = [
     MultipyRuntimeExtension("multipy.so"),
