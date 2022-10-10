@@ -14,6 +14,7 @@ from datetime import date
 from setuptools import Extension, find_packages, setup
 from setuptools.command.build_ext import build_ext
 from setuptools.command.develop import develop
+from setuptools.command.install import install
 
 
 class MultipyRuntimeExtension(Extension):
@@ -26,8 +27,12 @@ def get_cmake_version():
     return output.splitlines()[0].split()[2]
 
 
-class MultipyRuntimeDevelop(develop):
-    user_options = develop.user_options + [("cmakeoff", None, None)]
+class MultipyRuntimeCmake(object):
+    user_options = [("cmakeoff", None, None)]
+
+
+class MultipyRuntimeDevelop(MultipyRuntimeCmake, develop):
+    user_options = develop.user_options + MultipyRuntimeCmake.user_options
 
     def initialize_options(self):
         develop.initialize_options(self)
@@ -39,8 +44,8 @@ class MultipyRuntimeDevelop(develop):
             self.distribution.get_command_obj("build_ext").cmake_off = True
 
 
-class MultipyRuntimeBuild(build_ext):
-    user_options = build_ext.user_options + MultipyRuntimeDevelop.user_options
+class MultipyRuntimeBuild(MultipyRuntimeCmake, build_ext):
+    user_options = build_ext.user_options + MultipyRuntimeCmake.user_options
     cmake_off = False
 
     def run(self):
@@ -104,6 +109,17 @@ class MultipyRuntimeBuild(build_ext):
 ext_modules = [
     MultipyRuntimeExtension("multipy.so"),
 ]
+
+
+class MultipyRuntimeInstall(MultipyRuntimeCmake, install):
+    user_options = install.user_options + MultipyRuntimeCmake.user_options
+
+    def initialize_options(self):
+        develop.initialize_options(self)
+        self.cmakeoff = None
+
+    def finalize_options(self):
+        develop.finalize_options(self)
 
 
 def get_version():
@@ -173,6 +189,7 @@ if __name__ == "__main__":
         cmdclass={
             "build_ext": MultipyRuntimeBuild,
             "develop": MultipyRuntimeDevelop,
+            "install": MultipyRuntimeInstall,
         },
         # PyPI package information.
         classifiers=[
