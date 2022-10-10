@@ -31,12 +31,12 @@ class MultipyRuntimeDevelop(develop):
 
     def initialize_options(self):
         develop.initialize_options(self)
-        self.cmakeoff=None
+        self.cmakeoff = None
 
     def finalize_options(self):
         develop.finalize_options(self)
         if self.cmakeoff is not None:
-            self.distribution.get_command_obj("build_ext").cmake_off= True
+            self.distribution.get_command_obj("build_ext").cmake_off = True
 
 
 class MultipyRuntimeBuild(build_ext):
@@ -89,8 +89,8 @@ class MultipyRuntimeBuild(build_ext):
 
         print(f"-- Running multipy runtime install in dir {build_dir_abs}")
         try:
-            subprocess.check_call(
-                ["cmake", "--install", ".", "--prefix", '"."'],
+            subprocess.check_output(
+                ["cmake", "--install", ".", "--prefix", """ "." """],
                 cwd=build_dir_abs,
                 shell=True,
             )
@@ -172,8 +172,8 @@ if __name__ == "__main__":
         },
         ext_modules=ext_modules,
         cmdclass={
-            'build_ext': MultipyRuntimeBuild,
-            'develop': MultipyRuntimeDevelop,
+            "build_ext": MultipyRuntimeBuild,
+            "develop": MultipyRuntimeDevelop,
         },
         # PyPI package information.
         classifiers=[
