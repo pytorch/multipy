@@ -91,6 +91,12 @@ COPY --from=submodule-update /opt/multipy /opt/multipy
 
 WORKDIR /opt/multipy
 
+RUN if [[ -d "/opt/multipy/temp/dist" ]]; then \
+    python -m pip install --force-reinstall /opt/multipy/temp/dist/*.whl; \
+fi
+
+
+
 # Build Multipy
 RUN mkdir multipy/runtime/build && \
     cd multipy/runtime/build && \
