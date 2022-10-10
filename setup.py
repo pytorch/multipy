@@ -115,6 +115,8 @@ class MultipyRuntimeInstall(MultipyRuntimeCmake, install):
 
     def finalize_options(self):
         install.finalize_options(self)
+        if self.cmakeoff is not None:
+            self.cmakeoff = None
 
     def run(self):
         install.run(self)
@@ -192,7 +194,7 @@ if __name__ == "__main__":
         cmdclass={
             "build_ext": MultipyRuntimeBuild,
             "develop": MultipyRuntimeDevelop,
-            "install": MultipyRuntimeInstall,
+            #"install": MultipyRuntimeInstall,
         },
         # PyPI package information.
         classifiers=[

@@ -74,7 +74,7 @@ jobs:
         run: |
           set -eux
           source ~/venvs/multipy/bin/activate
-          pip install --install-option="--cmakeoff" -e .
+          pip install -e . --install-option="--cmakeoff"
           deactivate
 
       - name: Run pip install within virtualenv
