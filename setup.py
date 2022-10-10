@@ -168,9 +168,6 @@ if __name__ == "__main__":
     with open("README.md", encoding="utf8") as f:
         readme = f.read()
 
-    with open("requirements.txt") as f:
-        reqs = f.read()
-
     with open("dev-requirements.txt") as f:
         dev_reqs = f.read()
 
@@ -191,7 +188,6 @@ if __name__ == "__main__":
         license="BSD-3",
         keywords=["pytorch", "machine learning"],
         python_requires=">=3.7",
-        #install_requires=reqs.strip().split("\n"),
         include_package_data=True,
         packages=find_packages(exclude=()),
         extras_require={
@@ -205,7 +201,7 @@ if __name__ == "__main__":
         cmdclass={
             "build_ext": MultipyRuntimeBuild,
             "develop": MultipyRuntimeDevelop,
-            #"install": MultipyRuntimeInstall,
+            "install": MultipyRuntimeInstall,
         },
         # PyPI package information.
         classifiers=[
