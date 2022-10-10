@@ -112,7 +112,7 @@ ext_modules = [
 
 
 class MultipyRuntimeInstall(MultipyRuntimeCmake, install):
-    user_options = install.user_options + MultipyRuntimeCmake.user_options
+    user_options = install.user_options + [("cmakeoff", None, None)] # MultipyRuntimeCmake.user_options
 
     def initialize_options(self):
         install.initialize_options(self)
@@ -120,6 +120,9 @@ class MultipyRuntimeInstall(MultipyRuntimeCmake, install):
 
     def finalize_options(self):
         install.finalize_options(self)
+
+    def run(self):
+        install.run(self)
 
 
 def get_version():
