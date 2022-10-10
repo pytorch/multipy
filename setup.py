@@ -116,9 +116,20 @@ class MultipyRuntimeInstall(MultipyRuntimeCmake, install):
     def finalize_options(self):
         install.finalize_options(self)
         if self.cmakeoff is not None:
-            self.cmakeoff = None
+            self.distribution.get_command_obj("build_ext").cmake_off = True
 
     def run(self):
+        base_dir = os.path.abspath(os.path.dirname(__file__))
+        try:
+            reqs_filename = "requirements.txt"
+            subprocess.run(
+                    [f"pip install -r {reqs_filename}"],
+                    cwd=base_dir,
+                    shell=True,
+                    check=True,
+                )
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(e.output) from None
         install.run(self)
 
 
@@ -180,7 +191,7 @@ if __name__ == "__main__":
         license="BSD-3",
         keywords=["pytorch", "machine learning"],
         python_requires=">=3.7",
-        install_requires=reqs.strip().split("\n"),
+        #install_requires=reqs.strip().split("\n"),
         include_package_data=True,
         packages=find_packages(exclude=()),
         extras_require={
