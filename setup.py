@@ -57,7 +57,7 @@ class MultipyRuntimeBuild(build_ext):
                 "Error fetching cmake version. Please ensure cmake is installed correctly."
             ) from None
         base_dir = os.path.abspath(os.path.dirname(__file__))
-        build_dir = "multipy/runtime/build3"
+        build_dir = "multipy/runtime/build"
         build_dir_abs = base_dir + "/" + build_dir
         if not os.path.exists(build_dir_abs):
             os.makedirs(build_dir_abs)
@@ -89,10 +89,11 @@ class MultipyRuntimeBuild(build_ext):
 
         print(f"-- Running multipy runtime install in dir {build_dir_abs}")
         try:
-            subprocess.check_output(
-                ["cmake", "--install", ".", "--prefix", """ "." """],
+            subprocess.run(
+                ['cmake --install . --prefix "."'],
                 cwd=build_dir_abs,
                 shell=True,
+                check=True,
             )
         except subprocess.CalledProcessError as e:
             raise RuntimeError(e.output) from None
