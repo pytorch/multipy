@@ -115,11 +115,11 @@ class MultipyRuntimeInstall(MultipyRuntimeCmake, install):
     user_options = install.user_options + MultipyRuntimeCmake.user_options
 
     def initialize_options(self):
-        develop.initialize_options(self)
+        install.initialize_options(self)
         self.cmakeoff = None
 
     def finalize_options(self):
-        develop.finalize_options(self)
+        install.finalize_options(self)
 
 
 def get_version():
