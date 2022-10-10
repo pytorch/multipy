@@ -106,13 +106,8 @@ class MultipyRuntimeBuild(MultipyRuntimeCmake, build_ext):
         # followups: gen examples, copy .so out.
 
 
-ext_modules = [
-    MultipyRuntimeExtension("multipy.so"),
-]
-
-
 class MultipyRuntimeInstall(MultipyRuntimeCmake, install):
-    user_options = install.user_options + [("cmakeoff", None, None)] # MultipyRuntimeCmake.user_options
+    user_options = install.user_options + MultipyRuntimeCmake.user_options
 
     def initialize_options(self):
         install.initialize_options(self)
@@ -123,6 +118,11 @@ class MultipyRuntimeInstall(MultipyRuntimeCmake, install):
 
     def run(self):
         install.run(self)
+
+
+ext_modules = [
+    MultipyRuntimeExtension("multipy.so"),
+]
 
 
 def get_version():
