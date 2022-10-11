@@ -96,13 +96,15 @@ jobs:
           /opt/conda/bin/conda install -y python=${{ env.python-version }} mkl mkl-include conda-build pyyaml numpy ipython && \
           /opt/conda/bin/conda install -y -c conda-forge libpython-static=${{ env.python-version }} && \
           /opt/conda/bin/conda install -y pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly && \
-          /opt/conda/bin/conda clean -ya; \
+          /opt/conda/bin/conda clean -ya && \
+          rm -rf multipy/runtime/build* && \
+          pip install -e .; \
           fi
 
-      - name: Run pip install with conda for 3.8+
-        run: |
-          set -eux
-          if [[ ${{ matrix.python-minor-version }} -gt 7 ]]; then \
-          rm -rf multipy/runtime/build* && \
-          pip install .; \
-          fi
+      # - name: Run pip install with conda for 3.8+
+      #   run: |
+      #     set -eux
+      #     if [[ ${{ matrix.python-minor-version }} -gt 7 ]]; then \
+      #     rm -rf multipy/runtime/build* && \
+      #     pip install .; \
+      #     fi
