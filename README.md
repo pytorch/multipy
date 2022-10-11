@@ -18,6 +18,17 @@ You'll first need to install the `multipy` python module which includes
 pip install "git+https://github.com/pytorch/multipy.git"
 ```
 
+### Installing `multipy::runtime` **(recommended)**
+The C++ binaries (`libtorch_interpreter.so`,`libtorch_deploy.a`, `utils.cmake`), and the header files of `multipy::runtime` can be installed from our [nightly release](https://github.com/pytorch/multipy/releases/tag/nightly-runtime-abi-0). The ABI for the nightly release is 0. You can find a version of the release with ABI=1 [here](https://github.com/pytorch/multipy/releases/tag/nightly-runtime-abi-1).
+
+```
+wget https://github.com/pytorch/multipy/releases/download/nightly-runtime-abi-0/multipy_runtime.tar.gz
+tar -xvzf multipy_runtime.tar.gz
+```
+
+In order to run PyTorch models, we need to link to libtorch (PyTorch's C++ distribution) which is provided when you [pip or conda install pytorch](https://pytorch.org/).
+If you're not sure which ABI value to use, it's important to note that the pytorch C++ binaries, provided when you pip or conda install, are compiled with an ABI value of 0. If you're using libtorch from the pip or conda distribution of pytorch then ensure to use multipy installation with an ABI of 0 (`nightly-runtime-abi-0`).
+
 ### Building `multipy::runtime` via Docker
 
 The easiest way to build multipy from source is to build it via docker.
@@ -40,6 +51,8 @@ docker run --rm multipy multipy/runtime/build/test_deploy
 ### Installing `multipy::runtime` from source
 
 Multipy needs a local copy of python with `-fPIC` enabled as well as a recent copy of pytorch.
+
+Furthermore, we use CMake for our build which whose installation instructions can be found at [https://cmake.org/install/](https://cmake.org/install/). There are also a myriad of alternative ways to install it such as through [conda](https://anaconda.org/anaconda/cmake) or [brew](https://formulae.brew.sh/formula/cmake). Choose the best method for your workflow.
 
 #### Dependencies: Conda
 
@@ -68,6 +81,11 @@ pip3 install --pre torch torchvision torchaudio --extra-index-url https://downlo
 
 # cpu only
 pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cpu
+```
+
+#### Dependencies: System (Ubuntu >= 20.4) [^1]
+```
+xargs sudo apt install -y -qq --no-install-recommends <build-requirements.txt
 ```
 
 #### Building
@@ -101,6 +119,15 @@ python example/generate_examples.py
 cd build
 ./test_deploy
 ```
+
+[^1]: While not officially supported, torch::deploy can also be built on Ubuntu 18.04 by reinstalling binutils from Ubuntu 20.04 which can be installed by running.
+    ```bash
+    wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor -o /usr/share/keyrings/magic-key.gpg && \
+    echo "deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/magic-key.gpg] https://apt.kitware.com/ubuntu/ bionic main" | tee -a /etc/apt/sources.list && \
+    echo "deb http://security.ubuntu.com/ubuntu focal-security main" | tee -a /etc/apt/sources.list && \
+    apt update && \
+    apt install -y binutils
+    ```
 
 ## Example
 
