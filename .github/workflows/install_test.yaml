@@ -104,5 +104,5 @@ jobs:
           set -eux
           if [[ ${{ matrix.python-minor-version }} -gt 7 ]]; then \
           rm -rf multipy/runtime/build* && \
-          pip install -e .; \
+          pip install .; \
           fi
