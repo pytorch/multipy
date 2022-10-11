@@ -18,8 +18,8 @@ You'll first need to install the `multipy` python module which includes
 pip install "git+https://github.com/pytorch/multipy.git"
 ```
 
-### Installing `multipy::runtime` **(recommended)**
-The C++ binaries (`libtorch_interpreter.so`,`libtorch_deploy.a`, `utils.cmake`), and the header files of `multipy::runtime` can be installed from our [nightly release](https://github.com/pytorch/multipy/releases/tag/nightly-runtime-abi-0). The ABI for the nightly release is 0. You can find a version of the release with ABI=1 [here](https://github.com/pytorch/multipy/releases/tag/nightly-runtime-abi-1).
+### Installing `torch::deploy` **(recommended)**
+The C++ binaries (`libtorch_interpreter.so`,`libtorch_deploy.a`, `utils.cmake`), and the header files of `multipy::runtime` can be installed for the following versions of python [3.7](https://github.com/pytorch/multipy/releases/tag/nightly-runtime-python3.7), [3.8](https://github.com/pytorch/multipy/releases/tag/nightly-runtime-python3.8), [3.9](https://github.com/pytorch/multipy/releases/tag/nightly-runtime-python3.9), and [3.10](https://github.com/pytorch/multipy/releases/tag/nightly-runtime-python3.10).
 
 ```
 wget https://github.com/pytorch/multipy/releases/download/nightly-runtime-abi-0/multipy_runtime.tar.gz
