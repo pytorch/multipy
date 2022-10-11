@@ -123,7 +123,7 @@ class MultipyRuntimeInstall(MultipyRuntimeCmake, install):
         # optional "--cmakeoff" flag gets applied to dependencies specified in
         # requirements.txt as well (installed using "install-requires" argument of setup()).
         # Since we obviously don't want things like "pip install numpy --install-option=--cmakeoff",
-        # we install these deps directly in this overriden install command without
+        # we install these deps directly in this overridden install command without
         # spurious options, instead of using "install-requires".
         base_dir = os.path.abspath(os.path.dirname(__file__))
         try:
