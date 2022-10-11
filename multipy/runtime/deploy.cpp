@@ -189,9 +189,6 @@ ReplicatedObj InterpreterSession::createMovable(Obj obj) {
 if (manager_) {
   return manager_->createMovable(obj, this);
 }
-
-  throw std::logic_error("ReplicatedObj InterpreterSession::createMovable(Obj obj) is deprecated, \
-  please use ReplicatedObj InterpreterManager::createMovable(Obj obj, InterpreterSession* I) instead.");
 }
 
 ReplicatedObj InterpreterManager::createMovable(
