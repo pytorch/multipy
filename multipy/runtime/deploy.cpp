@@ -10,6 +10,7 @@
 #include <multipy/runtime/deploy.h>
 #include <unistd.h>
 #include <functional>
+#include <iostream>
 
 #include <multipy/runtime/interpreter/Optional.hpp>
 #include <stdexcept>
@@ -170,6 +171,8 @@ void ReplicatedObj::unload(const Interpreter* onThisInterpreter) {
   pImpl_->unload(onThisInterpreter);
 }
 
+[[deprecated("Use `ReplicatedObj InterpreterManager::createMovable(Obj obj, InterpreterSession* I)' instead. \
+We will have no backwards compatibility guarentees for this function.")]]
 ReplicatedObj InterpreterSession::createMovable(Obj obj) {
 
   MULTIPY_CHECK(
@@ -183,11 +186,9 @@ ReplicatedObj InterpreterSession::createMovable(Obj obj) {
 
 // Fully deprecate after moving over internal users to new API, currently here
 // to keep bc with old API.
-#ifdef FBCODE_CAFFE2
-  if (manager_) {
-    return manager_->createMovable(obj, this);
-  }
-#endif
+if (manager_) {
+  return manager_->createMovable(obj, this);
+}
 
   throw std::logic_error("ReplicatedObj InterpreterSession::createMovable(Obj obj) is deprecated, \
   please use ReplicatedObj InterpreterManager::createMovable(Obj obj, InterpreterSession* I) instead.");

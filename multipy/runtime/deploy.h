@@ -274,6 +274,32 @@ struct TORCH_API Package {
     return createMovable(loaded, &I);
   }
 
+#ifdef FBCODE_CAFFE2
+  std::string loadText(const std::string& packageName, const std::string& key) {
+    auto I = acquireSession();
+    return I.self.attr("load_text")({packageName, key})
+        .toIValue()
+        .toStringRef();
+  }
+
+  // Example usage:
+  //  in python:
+  //    with PackageExporter(output) as pe:
+  //        pe.save_binary("extra_files", "greeting", b'hello')
+  //  in cpp:
+  //    std::string decodedBinary = package->loadBinary("extra_files",
+  //    "greeting").toStringRef();
+  //    std::cout << decodedBinary; --> outputs "hello"
+  std::string loadBinary(
+      const std::string& packageName,
+      const std::string& key) {
+    auto I = acquireSession();
+    return I.self.attr("load_binary")({packageName, key})
+        .toIValue()
+        .toStringRef();
+  }
+#endif
+
   InterpreterSession acquireSession() {
     auto I = manager_->acquireOne();
     I.self =
