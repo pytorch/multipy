@@ -9,7 +9,7 @@
 code and runs it using multiple embedded Python interpreters in a C++ process without a shared global interpreter lock (GIL). For more information on how `MultiPy` works
 internally, please see the related [arXiv paper](https://arxiv.org/pdf/2104.00254.pdf).
 
-## Installation
+## Installation with CMake
 
 You'll first need to install the `multipy` python module which includes
 `multipy.package`.
@@ -17,18 +17,6 @@ You'll first need to install the `multipy` python module which includes
 ```shell
 pip install "git+https://github.com/pytorch/multipy.git"
 ```
-
-### Installing `multipy::runtime` **(recommended)**
-
-The C++ binaries (`libtorch_interpreter.so`,`libtorch_deploy.a`, `utils.cmake`), and the header files of `multipy::runtime` can be installed from our [nightly release](https://github.com/pytorch/multipy/releases/tag/nightly-runtime-abi-0). The ABI for the nightly release is 0. You can find a version of the release with ABI=1 [here](https://github.com/pytorch/multipy/releases/tag/nightly-runtime-abi-1).
-
-```
-wget https://github.com/pytorch/multipy/releases/download/nightly-runtime-abi-0/multipy_runtime.tar.gz
-tar -xvzf multipy_runtime.tar.gz
-```
-
-In order to run PyTorch models, we need to link to libtorch (PyTorch's C++ distribution) which is provided when you [pip or conda install pytorch](https://pytorch.org/).
-If you're not sure which ABI value to use, it's important to note that the pytorch C++ binaries, provided when you pip or conda install, are compiled with an ABI value of 0. If you're using libtorch from the pip or conda distribution of pytorch then ensure to use multipy installation with an ABI of 0 (`nightly-runtime-abi-0`).
 
 ### Building `multipy::runtime` via Docker
 
@@ -89,7 +77,11 @@ pip3 install --pre torch torchvision torchaudio --extra-index-url https://downlo
 git checkout https://github.com/pytorch/multipy.git
 git submodule sync && git submodule update --init --recursive
 
-cd multipy/multipy/runtime
+cd multipy
+# install python parts of `torch::deploy` in multipy/multipy/utils
+pip install -e . --install-option="--cmakeoff"
+
+cd multipy/runtime
 
 # build runtime
 mkdir build
