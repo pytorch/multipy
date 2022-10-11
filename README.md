@@ -9,7 +9,7 @@
 code and runs it using multiple embedded Python interpreters in a C++ process without a shared global interpreter lock (GIL). For more information on how `MultiPy` works
 internally, please see the related [arXiv paper](https://arxiv.org/pdf/2104.00254.pdf).
 
-## Installation with CMake
+## Installation
 
 You'll first need to install the `multipy` python module which includes
 `multipy.package`.
