@@ -87,6 +87,19 @@ TEST(TorchpyTest, SimpleModel) {
   compare_torchpy_jit(path("SIMPLE", simple), path("SIMPLE_JIT", simple_jit));
 }
 
+#ifdef FBCODE_CAFFE2
+TEST(TorchpyTest, LoadTextAndBinary) {
+  torch::deploy::InterpreterManager manager(1);
+  torch::deploy::Package p = manager.loadPackage(path("SIMPLE", simple));
+
+  std::string text = p.loadText("extra_files", "text");
+  ASSERT_EQ(text, "hello");
+
+  std::string decodedBinary = p.loadBinary("extra_files", "binary");
+  ASSERT_EQ(decodedBinary, "hello");
+}
+#endif
+
 TEST(TorchpyTest, ResNet) {
   compare_torchpy_jit(
       path("RESNET", "multipy/runtime/example/generated/resnet"),
