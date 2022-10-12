@@ -79,7 +79,7 @@ class MultipyRuntimeBuild(MultipyRuntimeCmake, build_ext):
                 stderr=subprocess.STDOUT,
             )
         except subprocess.CalledProcessError as e:
-            raise RuntimeError(e.output) from None
+            raise RuntimeError(e.output.decode("utf-8")) from None
 
         print(f"-- Running multipy runtime build in dir {build_dir_abs}")
         try:
@@ -92,7 +92,7 @@ class MultipyRuntimeBuild(MultipyRuntimeCmake, build_ext):
                 stderr=subprocess.STDOUT,
             )
         except subprocess.CalledProcessError as e:
-            raise RuntimeError(e.output) from None
+            raise RuntimeError(e.output.decode("utf-8")) from None
 
         print(f"-- Running multipy runtime install in dir {build_dir_abs}")
         try:
@@ -105,7 +105,7 @@ class MultipyRuntimeBuild(MultipyRuntimeCmake, build_ext):
                 stderr=subprocess.STDOUT,
             )
         except subprocess.CalledProcessError as e:
-            raise RuntimeError(e.output) from None
+            raise RuntimeError(e.output.decode("utf-8")) from None
         # TODO
         # followups: gen examples, copy .so out.
 
@@ -141,7 +141,7 @@ class MultipyRuntimeInstall(MultipyRuntimeCmake, install):
                 stderr=subprocess.STDOUT,
             )
         except subprocess.CalledProcessError as e:
-            raise RuntimeError(e.output) from None
+            raise RuntimeError(e.output.decode("utf-8")) from None
         install.run(self)
 
 
