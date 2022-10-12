@@ -28,7 +28,6 @@ struct InterpreterManager;
 struct LoadBalancer;
 
 struct TORCH_API InterpreterSession {
-
   friend struct LoadBalancer;
 
   explicit InterpreterSession(InterpreterSessionImpl* impl) noexcept
@@ -52,12 +51,13 @@ struct TORCH_API InterpreterSession {
   Obj fromIValue(at::IValue ivalue) {
     return impl_->fromIValue(std::move(ivalue));
   }
- // Use `ReplicatedObj InterpreterManager::createMovable(Obj obj, InterpreterSession* I)' instead.
-  // We will have no backwards compatibility guarentees for this function.
+  // Use `ReplicatedObj InterpreterManager::createMovable(Obj obj,
+  // InterpreterSession* I)' instead. We will have no backwards compatibility
+  // guarentees for this function.
   ReplicatedObj createMovable(Obj obj);
   Obj fromMovable(const ReplicatedObj& obj);
 
-protected:
+ protected:
   bool attachDeconstructorCallback(std::function<void()> func);
 
  private:
@@ -83,7 +83,8 @@ class TORCH_API Interpreter {
 
  public:
   Interpreter(InterpreterManager* manager, std::shared_ptr<Environment> env);
-  explicit Interpreter(std::shared_ptr<Environment> env): Interpreter(nullptr, env){}
+  explicit Interpreter(std::shared_ptr<Environment> env)
+      : Interpreter(nullptr, env) {}
 
   InterpreterSession acquireSession() const {
     if (manager_) {
