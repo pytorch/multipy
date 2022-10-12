@@ -180,9 +180,7 @@ ReplicatedObj InterpreterSession::createMovable(Obj obj) {
 
 // Fully deprecate after moving over internal users to new API, currently here
 // to keep bc with old API.
-if (manager_) {
   return manager_->createMovable(obj, this);
-}
 }
 
 ReplicatedObj InterpreterManager::createMovable(
