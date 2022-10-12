@@ -70,10 +70,18 @@ jobs:
           pip3 install --pre torch
           deactivate
 
+      - name: Run lightweight pip install within virtualenv
+        run: |
+          set -eux
+          source ~/venvs/multipy/bin/activate
+          pip install -e . --install-option="--cmakeoff"
+          deactivate
+
       - name: Run pip install within virtualenv
         run: |
           set -eux
           source ~/venvs/multipy/bin/activate
+          rm -rf multipy/runtime/build*
           pip install -e .
           deactivate
 

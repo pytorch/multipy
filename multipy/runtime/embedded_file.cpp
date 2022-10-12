@@ -26,12 +26,10 @@ EmbeddedFile::EmbeddedFile(
 
   const char* payloadStart = nullptr;
   size_t size = 0;
-  std::string exePath;
-  std::ifstream("/proc/self/cmdline") >> exePath;
-  ElfFile elfFile(exePath.c_str());
+  // payloadSection needs to be kept to ensure the source file is still mapped.
+  multipy::optional<Section> payloadSection;
   for (const auto& s : sections) {
-    multipy::optional<Section> payloadSection =
-        elfFile.findSection(s.sectionName);
+    payloadSection = searchForSection(s.sectionName);
     if (payloadSection != multipy::nullopt) {
       payloadStart = payloadSection->start;
       customLoader = s.customLoader;
@@ -55,7 +53,8 @@ EmbeddedFile::EmbeddedFile(
         libStart != nullptr && libEnd != nullptr,
         "torch::deploy requires a build-time dependency on "
         "embedded_interpreter or embedded_interpreter_cuda, neither of which "
-        "were found.  torch::cuda::is_available()=" +
+        "were found. name=" +
+            name + " torch::cuda::is_available()=" +
             std::to_string(torch::cuda::is_available()));
 
     size = libEnd - libStart;
