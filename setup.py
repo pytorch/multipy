@@ -75,10 +75,11 @@ class MultipyRuntimeBuild(MultipyRuntimeCmake, build_ext):
                 cwd=build_dir_abs,
                 shell=True,
                 check=True,
-                capture_output=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
             )
         except subprocess.CalledProcessError as e:
-            raise RuntimeError(e.output) from None
+            raise RuntimeError(e.output.decode("utf-8")) from None
 
         print(f"-- Running multipy runtime build in dir {build_dir_abs}")
         try:
@@ -87,10 +88,11 @@ class MultipyRuntimeBuild(MultipyRuntimeCmake, build_ext):
                 cwd=build_dir_abs,
                 shell=True,
                 check=True,
-                capture_output=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
             )
         except subprocess.CalledProcessError as e:
-            raise RuntimeError(e.output) from None
+            raise RuntimeError(e.output.decode("utf-8")) from None
 
         print(f"-- Running multipy runtime install in dir {build_dir_abs}")
         try:
@@ -99,9 +101,11 @@ class MultipyRuntimeBuild(MultipyRuntimeCmake, build_ext):
                 cwd=build_dir_abs,
                 shell=True,
                 check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
             )
         except subprocess.CalledProcessError as e:
-            raise RuntimeError(e.output) from None
+            raise RuntimeError(e.output.decode("utf-8")) from None
         # TODO
         # followups: gen examples, copy .so out.
 
@@ -133,9 +137,11 @@ class MultipyRuntimeInstall(MultipyRuntimeCmake, install):
                 cwd=base_dir,
                 shell=True,
                 check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
             )
         except subprocess.CalledProcessError as e:
-            raise RuntimeError(e.output) from None
+            raise RuntimeError(e.output.decode("utf-8")) from None
         install.run(self)
 
 
