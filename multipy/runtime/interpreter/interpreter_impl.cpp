@@ -245,13 +245,18 @@ bool file_exists(const std::string& path) {
 
 struct __attribute__((visibility("hidden"))) ConcreteInterpreterObj
     : public torch::deploy::InterpreterObj {
-  friend struct Obj;
-  explicit ConcreteInterpreterObj(py::object pyObject) : pyObject_(pyObject) {}
-  explicit ConcreteInterpreterObj(Obj obj) {
-    std::shared_ptr<ConcreteInterpreterObj> cObj =
-        std::dynamic_pointer_cast<ConcreteInterpreterObj>(obj.baseObj_);
-    pyObject_ = cObj->pyObject_;
-  }
+  friend struct torch::deploy::Obj;
+  friend struct torch::deploy::InterpreterObj;
+
+  explicit ConcreteInterpreterObj(
+      py::object pyObject,
+      torch::deploy::InterpreterSessionImpl* owningSession)
+      : torch::deploy::InterpreterObj(owningSession), pyObject_(pyObject) {}
+  explicit ConcreteInterpreterObj(
+      at::IValue value,
+      torch::deploy::InterpreterSessionImpl* owningSession)
+      : torch::deploy::InterpreterObj(owningSession),
+        pyObject_(multipy::toPyObject(value)) {}
   ConcreteInterpreterObj() : pyObject_() {}
   ConcreteInterpreterObj(const ConcreteInterpreterObj& obj) = delete;
   ConcreteInterpreterObj& operator=(const ConcreteInterpreterObj& obj) = delete;
@@ -282,32 +287,35 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterObj
     };
   }
 
-  torch::deploy::Obj call(at::ArrayRef<Obj> args) override {
+  torch::deploy::Obj call(
+      at::ArrayRef<std::shared_ptr<torch::deploy::InterpreterObj>> args)
+      override {
     MULTIPY_SAFE_RETHROW {
       py::tuple m_args(args.size());
-      for (size_t i = 0, N = args.size(); i != N; ++i) {
-        Obj obj = args[i];
-        std::shared_ptr<ConcreteInterpreterObj> iObj =
-            std::dynamic_pointer_cast<ConcreteInterpreterObj>(obj.baseObj_);
-        m_args[i] =
-            ((std::shared_ptr<ConcreteInterpreterObj>)iObj)->getPyObject();
+      size_t i = 0;
+      for (std::shared_ptr<torch::deploy::InterpreterObj> iObj : args) {
+        std::shared_ptr<ConcreteInterpreterObj> cObj =
+            std::dynamic_pointer_cast<ConcreteInterpreterObj>(iObj);
+        m_args[i++] = cObj->getPyObject();
       }
       py::object pyObj = call(m_args);
-      ConcreteInterpreterObj iObj = ConcreteInterpreterObj(pyObj);
-      return Obj();
+      std::shared_ptr<ConcreteInterpreterObj> cObj =
+          std::make_shared<ConcreteInterpreterObj>(pyObj, owningSession_);
+      return Obj(cObj);
     };
   }
 
   torch::deploy::Obj call(at::ArrayRef<at::IValue> args) override {
-    // MULTIPY_SAFE_RETHROW {
-    py::tuple m_args(args.size());
-    for (size_t i = 0, N = args.size(); i != N; ++i) {
-      m_args[i] = multipy::toPyObject(args[i]);
-    }
-    py::object pyObj = call(m_args);
-    ConcreteInterpreterObj iObj = ConcreteInterpreterObj(pyObj);
-    return Obj();
-    // };
+    MULTIPY_SAFE_RETHROW {
+      py::tuple m_args(args.size());
+      for (size_t i = 0, N = args.size(); i != N; ++i) {
+        m_args[i] = multipy::toPyObject(args[i]);
+      }
+      py::object pyObj = call(m_args);
+      std::shared_ptr<ConcreteInterpreterObj> cObj =
+          std::make_shared<ConcreteInterpreterObj>(pyObj, owningSession_);
+      return Obj(cObj);
+    };
   }
 
   torch::deploy::Obj callKwargs(
@@ -325,8 +333,9 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterObj
             multipy::toPyObject(std::get<1>(kv));
       }
       py::object pyObj = call(py_args, py_kwargs);
-      ConcreteInterpreterObj iObj = ConcreteInterpreterObj(pyObj);
-      return Obj();
+      std::shared_ptr<ConcreteInterpreterObj> cObj =
+          std::make_shared<ConcreteInterpreterObj>(pyObj, owningSession_);
+      return Obj(cObj);
     };
   }
 
@@ -345,8 +354,9 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterObj
     MULTIPY_SAFE_RETHROW {
       bool a = hasattr(attribute);
       py::object pyObj = getPyObject().attr(attribute);
-      ConcreteInterpreterObj iObj = ConcreteInterpreterObj(pyObj);
-      return Obj();
+      std::shared_ptr<ConcreteInterpreterObj> cObj =
+          std::make_shared<ConcreteInterpreterObj>(pyObj, owningSession_);
+      return Obj(cObj);
     };
   }
 
@@ -494,6 +504,7 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
       return wrap(multipy::toPyObject(value));
     };
   }
+
   Obj createOrGetPackageImporterFromContainerFile(
       const std::shared_ptr<caffe2::serialize::PyTorchStreamReader>&
           containerFile_) override {
@@ -530,6 +541,8 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
           std::move(container_file)};
     };
   }
+
+  // meant to be used with replicated objects
   Obj unpickleOrGet(int64_t id, const PickledObject& obj) override {
     MULTIPY_SAFE_RETHROW {
       py::dict objects = interp_->objects;
@@ -562,6 +575,7 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
       return wrap(result);
     };
   }
+
   void unload(int64_t id) override {
     MULTIPY_SAFE_RETHROW {
       py::dict objects = interp_->objects;
@@ -574,27 +588,19 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
 
   IValue toIValue(Obj obj) const override {
     MULTIPY_SAFE_RETHROW {
-      return multipy::toTypeInferredIValue(unwrap(obj));
+      return obj.toIValue();
     };
   }
 
   Obj call(Obj obj, at::ArrayRef<Obj> args) override {
     MULTIPY_SAFE_RETHROW {
-      py::tuple m_args(args.size());
-      for (size_t i = 0, N = args.size(); i != N; ++i) {
-        m_args[i] = unwrap(args[i]);
-      }
-      return wrap(call(unwrap(obj), m_args));
+      return obj(args);
     };
   }
 
-  Obj call(Obj obj, at::ArrayRef<IValue> args) override {
+  Obj call(Obj obj, at::ArrayRef<at::IValue> args) override {
     MULTIPY_SAFE_RETHROW {
-      py::tuple m_args(args.size());
-      for (size_t i = 0, N = args.size(); i != N; ++i) {
-        m_args[i] = multipy::toPyObject(args[i]);
-      }
-      return wrap(call(unwrap(obj), m_args));
+      return obj(args);
     };
   }
 
@@ -603,17 +609,7 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
       std::vector<at::IValue> args,
       std::unordered_map<std::string, c10::IValue> kwargs) override {
     MULTIPY_SAFE_RETHROW {
-      py::tuple py_args(args.size());
-      for (size_t i = 0, N = args.size(); i != N; ++i) {
-        py_args[i] = multipy::toPyObject(args[i]);
-      }
-
-      py::dict py_kwargs;
-      for (auto kv : kwargs) {
-        py_kwargs[py::cast(std::get<0>(kv))] =
-            multipy::toPyObject(std::get<1>(kv));
-      }
-      return wrap(call(unwrap(obj), py_args, py_kwargs));
+      return obj.callKwargs(args, kwargs);
     };
   }
 
@@ -624,13 +620,13 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
 
   bool hasattr(Obj obj, const char* attr) override {
     MULTIPY_SAFE_RETHROW {
-      return py::hasattr(unwrap(obj), attr);
+      return obj.hasattr(attr);
     };
   }
 
   Obj attr(Obj obj, const char* attr) override {
     MULTIPY_SAFE_RETHROW {
-      return wrap(unwrap(obj).attr(attr));
+      return obj.attr(attr);
     };
   }
 
@@ -646,12 +642,11 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
   }
 
   py::handle unwrap(Obj obj) const {
-    // create a breakpoint here and check if h1 and h2 are the same.
     if (isDefault(obj)) {
       return defaultObj_;
     }
     std::shared_ptr<ConcreteInterpreterObj> cObj =
-        std::dynamic_pointer_cast<ConcreteInterpreterObj>(obj.baseObj_);
+        std::dynamic_pointer_cast<ConcreteInterpreterObj>(getBaseObj(obj));
     py::handle h = cObj->getPyObject();
     return h;
   }
@@ -661,8 +656,8 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
       defaultObj_ = obj;
     }
     std::shared_ptr<torch::deploy::InterpreterObj> pConcreteObj =
-        std::make_shared<ConcreteInterpreterObj>(std::move(obj));
-    return Obj(this, pConcreteObj);
+        std::make_shared<ConcreteInterpreterObj>(std::move(obj), this);
+    return Obj(pConcreteObj);
   }
 
   py::handle defaultObj_;

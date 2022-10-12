@@ -30,9 +30,15 @@ struct PickledObject {
 struct InterpreterObj {
   friend struct Obj;
   friend struct ReplicatedObjImpl;
+  friend struct InterpreterSessionImpl;
+
+ protected:
+  InterpreterSessionImpl* owningSession_;
 
  public:
-  InterpreterObj() = default;
+  InterpreterObj() : owningSession_(nullptr) {}
+  explicit InterpreterObj(InterpreterSessionImpl* owningSession)
+      : owningSession_(owningSession) {}
   InterpreterObj(const InterpreterObj& obj) = delete;
   InterpreterObj& operator=(const InterpreterObj& obj) = delete;
   InterpreterObj(InterpreterObj&& obj) = default;
@@ -41,7 +47,7 @@ struct InterpreterObj {
 
  private:
   virtual at::IValue toIValue() const = 0;
-  virtual Obj call(at::ArrayRef<Obj> args) = 0;
+  virtual Obj call(at::ArrayRef<std::shared_ptr<InterpreterObj>> args) = 0;
   virtual Obj call(at::ArrayRef<at::IValue> args) = 0;
   virtual Obj callKwargs(
       std::vector<at::IValue> args,
@@ -55,21 +61,15 @@ struct InterpreterObj {
 // this is a wrapper class that refers to a PyObject* instance in a particular
 // interpreter. We can't use normal PyObject or pybind11 objects here
 // because these objects get used in a user application which will not directly
-// link against libpython. Instead all interaction with the Python state in each
-// interpreter is done via this wrapper class, and methods on
+// link against libpython. Instead all owningSession with the Python state in
+// each interpreter is done via this wrapper class, and methods on
 // InterpreterSession.
 struct Obj {
   friend struct InterpreterSessionImpl;
   friend struct InterpreterObj;
   explicit Obj(std::shared_ptr<InterpreterObj> baseObj)
-      : baseObj_(baseObj), isDefault_(false) {}
-  Obj() : baseObj_(nullptr), interaction_(nullptr), isDefault_(true) {}
-  explicit Obj(InterpreterSessionImpl* interaction)
-      : baseObj_(nullptr), interaction_(interaction), isDefault_(false) {}
-  explicit Obj(
-      InterpreterSessionImpl* interaction,
-      std::shared_ptr<InterpreterObj> baseObj)
-      : baseObj_(baseObj), interaction_(interaction), isDefault_(false) {}
+      : isDefault_(false), baseObj_(baseObj) {}
+  Obj() : isDefault_(true), baseObj_(nullptr) {}
 
   at::IValue toIValue() const;
   Obj operator()(at::ArrayRef<Obj> args);
@@ -80,11 +80,10 @@ struct Obj {
   Obj callKwargs(std::unordered_map<std::string, c10::IValue> kwargs);
   bool hasattr(const char* attr);
   Obj attr(const char* attr);
-  std::shared_ptr<InterpreterObj> baseObj_;
 
  private:
-  InterpreterSessionImpl* interaction_;
   bool isDefault_;
+  std::shared_ptr<InterpreterObj> baseObj_;
 };
 
 struct InterpreterSessionImpl {
@@ -124,8 +123,11 @@ struct InterpreterSessionImpl {
   int64_t isDefault(Obj obj) const {
     return obj.isDefault_;
   }
+  std::shared_ptr<InterpreterObj> getBaseObj(Obj obj) const {
+    return obj.baseObj_;
+  }
   bool isOwner(Obj obj) const {
-    return this == obj.interaction_;
+    return this == obj.baseObj_->owningSession_;
   }
 };
 
@@ -141,32 +143,36 @@ struct InterpreterImpl {
 // source file that would need to exist it both the libinterpreter.so and then
 // the libtorchpy library.
 inline at::IValue Obj::toIValue() const {
-  return interaction_->toIValue(*this);
+  return baseObj_->toIValue();
 }
 
 inline Obj Obj::operator()(at::ArrayRef<Obj> args) {
-  return interaction_->call(*this, args);
+  std::vector<std::shared_ptr<torch::deploy::InterpreterObj>> copy;
+  for (Obj arg : args) {
+    copy.push_back(arg.baseObj_);
+  }
+  return baseObj_->call(copy);
 }
 
 inline Obj Obj::operator()(at::ArrayRef<at::IValue> args) {
-  return interaction_->call(*this, args);
+  return baseObj_->call(args);
 }
 
 inline Obj Obj::callKwargs(
     std::vector<at::IValue> args,
     std::unordered_map<std::string, c10::IValue> kwargs) {
-  return interaction_->callKwargs(*this, std::move(args), std::move(kwargs));
+  return baseObj_->callKwargs(std::move(args), std::move(kwargs));
 }
 inline Obj Obj::callKwargs(
     std::unordered_map<std::string, c10::IValue> kwargs) {
-  return interaction_->callKwargs(*this, std::move(kwargs));
+  return baseObj_->callKwargs(std::move(kwargs));
 }
 inline bool Obj::hasattr(const char* attr) {
-  return interaction_->hasattr(*this, attr);
+  return baseObj_->hasattr(attr);
 }
 
 inline Obj Obj::attr(const char* attr) {
-  return interaction_->attr(*this, attr);
+  return baseObj_->attr(attr);
 }
 
 } // namespace deploy
