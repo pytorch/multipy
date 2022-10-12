@@ -10,7 +10,6 @@
 #include <multipy/runtime/deploy.h>
 #include <unistd.h>
 #include <functional>
-#include <iostream>
 
 #include <multipy/runtime/interpreter/Optional.hpp>
 #include <stdexcept>
@@ -120,7 +119,7 @@ InterpreterSession ReplicatedObj::acquireSession(
   return I;
 }
 
-Obj ReplicatedObj::toObj(InterpreterSession* I){
+Obj ReplicatedObj::toObj(InterpreterSession* I) {
   return I->fromMovable(*this);
 }
 
@@ -165,10 +164,10 @@ void ReplicatedObj::unload(const Interpreter* onThisInterpreter) {
   pImpl_->unload(onThisInterpreter);
 }
 
-[[deprecated("Use `ReplicatedObj InterpreterManager::createMovable(Obj obj, InterpreterSession* I)' instead. \
-We will have no backwards compatibility guarentees for this function.")]]
-ReplicatedObj InterpreterSession::createMovable(Obj obj) {
-
+[[deprecated(
+    "Use `ReplicatedObj InterpreterManager::createMovable(Obj obj, InterpreterSession* I)' instead. \
+We will have no backwards compatibility guarentees for this function.")]] ReplicatedObj
+InterpreterSession::createMovable(Obj obj) {
   MULTIPY_CHECK(
       manager_,
       "A InterpreterSession needs to be constructed with a manager is needed in order to create a create a ReplicatedObj. \
@@ -178,8 +177,8 @@ ReplicatedObj InterpreterSession::createMovable(Obj obj) {
       impl_->isOwner(obj),
       "Cannot create movable from an object that lives in different session");
 
-// Fully deprecate after moving over internal users to new API, currently here
-// to keep bc with old API.
+  // Fully deprecate after moving over internal users to new API, currently here
+  // to keep bc with old API.
   return manager_->createMovable(obj, this);
 }
 
