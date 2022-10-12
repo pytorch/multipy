@@ -16,6 +16,7 @@ namespace torch {
 namespace deploy {
 
 struct InterpreterSessionImpl;
+struct Obj;
 
 struct PickledObject {
   std::string data_;
@@ -26,6 +27,31 @@ struct PickledObject {
   std::shared_ptr<caffe2::serialize::PyTorchStreamReader> containerFile_;
 };
 
+struct InterpreterObj {
+  friend struct Obj;
+  friend struct ReplicatedObjImpl;
+
+ public:
+  InterpreterObj() = default;
+  InterpreterObj(const InterpreterObj& obj) = delete;
+  InterpreterObj& operator=(const InterpreterObj& obj) = delete;
+  InterpreterObj(InterpreterObj&& obj) = default;
+  InterpreterObj& operator=(InterpreterObj&& obj) = default;
+  virtual ~InterpreterObj() = default;
+
+ private:
+  virtual at::IValue toIValue() const = 0;
+  virtual Obj call(at::ArrayRef<Obj> args) = 0;
+  virtual Obj call(at::ArrayRef<at::IValue> args) = 0;
+  virtual Obj callKwargs(
+      std::vector<at::IValue> args,
+      std::unordered_map<std::string, c10::IValue> kwargs) = 0;
+  virtual Obj callKwargs(
+      std::unordered_map<std::string, c10::IValue> kwargs) = 0;
+  virtual bool hasattr(const char* attr) = 0;
+  virtual Obj attr(const char* attr) = 0;
+};
+
 // this is a wrapper class that refers to a PyObject* instance in a particular
 // interpreter. We can't use normal PyObject or pybind11 objects here
 // because these objects get used in a user application which will not directly
@@ -34,9 +60,16 @@ struct PickledObject {
 // InterpreterSession.
 struct Obj {
   friend struct InterpreterSessionImpl;
-  Obj() : interaction_(nullptr), id_(0) {}
-  Obj(InterpreterSessionImpl* interaction, int64_t id)
-      : interaction_(interaction), id_(id) {}
+  friend struct InterpreterObj;
+  explicit Obj(std::shared_ptr<InterpreterObj> baseObj)
+      : baseObj_(baseObj), isDefault_(false) {}
+  Obj() : baseObj_(nullptr), interaction_(nullptr), isDefault_(true) {}
+  explicit Obj(InterpreterSessionImpl* interaction)
+      : baseObj_(nullptr), interaction_(interaction), isDefault_(false) {}
+  explicit Obj(
+      InterpreterSessionImpl* interaction,
+      std::shared_ptr<InterpreterObj> baseObj)
+      : baseObj_(baseObj), interaction_(interaction), isDefault_(false) {}
 
   at::IValue toIValue() const;
   Obj operator()(at::ArrayRef<Obj> args);
@@ -47,10 +80,11 @@ struct Obj {
   Obj callKwargs(std::unordered_map<std::string, c10::IValue> kwargs);
   bool hasattr(const char* attr);
   Obj attr(const char* attr);
+  std::shared_ptr<InterpreterObj> baseObj_;
 
  private:
   InterpreterSessionImpl* interaction_;
-  int64_t id_;
+  bool isDefault_;
 };
 
 struct InterpreterSessionImpl {
@@ -87,10 +121,9 @@ struct InterpreterSessionImpl {
   virtual bool hasattr(Obj obj, const char* attr) = 0;
 
  protected:
-  int64_t ID(Obj obj) const {
-    return obj.id_;
+  int64_t isDefault(Obj obj) const {
+    return obj.isDefault_;
   }
-
   bool isOwner(Obj obj) const {
     return this == obj.interaction_;
   }
