@@ -16,7 +16,6 @@
 #include <cassert>
 #include <fstream>
 #include <functional>
-#include <iostream>
 #include <string>
 #include <thread>
 #include <vector>
@@ -26,8 +25,12 @@ namespace deploy {
 
 struct ReplicatedObj;
 struct InterpreterManager;
+struct LoadBalancer;
 
 struct TORCH_API InterpreterSession {
+
+  friend struct LoadBalancer;
+
   explicit InterpreterSession(InterpreterSessionImpl* impl) noexcept
       : impl_(impl), manager_(nullptr) {}
   InterpreterSession(
@@ -49,8 +52,12 @@ struct TORCH_API InterpreterSession {
   Obj fromIValue(at::IValue ivalue) {
     return impl_->fromIValue(std::move(ivalue));
   }
+ // Use `ReplicatedObj InterpreterManager::createMovable(Obj obj, InterpreterSession* I)' instead.
+  // We will have no backwards compatibility guarentees for this function.
   ReplicatedObj createMovable(Obj obj);
   Obj fromMovable(const ReplicatedObj& obj);
+
+protected:
   bool attachDeconstructorCallback(std::function<void()> func);
 
  private:
@@ -76,7 +83,7 @@ class TORCH_API Interpreter {
 
  public:
   Interpreter(InterpreterManager* manager, std::shared_ptr<Environment> env);
-  explicit Interpreter(std::shared_ptr<Environment> env);
+  explicit Interpreter(std::shared_ptr<Environment> env): Interpreter(nullptr, env){}
 
   InterpreterSession acquireSession() const {
     if (manager_) {
@@ -85,7 +92,6 @@ class TORCH_API Interpreter {
       return InterpreterSession(pImpl_->acquireSession());
     }
   }
-  void setUpInterpreter();
   ~Interpreter();
   Interpreter(Interpreter&& rhs) noexcept
       : handle_(rhs.handle_),
@@ -221,7 +227,6 @@ struct TORCH_API ReplicatedObj {
     auto I = acquireSession();
     return I.self.hasattr(name);
   }
-  void attachInterpreterManager(InterpreterManager* manager);
   void unload(const Interpreter* onThisInterpreter = nullptr);
   Obj toObj(InterpreterSession* I);
 

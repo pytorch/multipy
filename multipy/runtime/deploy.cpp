@@ -112,7 +112,8 @@ InterpreterSession ReplicatedObj::acquireSession(
     const Interpreter* onThisInterpreter) const {
   MULTIPY_CHECK(
       (pImpl_->manager_ || onThisInterpreter),
-      "ReplicatedObjImpl needs an interpreter or needs to be associated with an InterpreterManager (with ReplicatedObj::attachInterpreterManager) to create an InterpreterSession.");
+      "ReplicatedObjImpl needs an interpreter or needs to be associated with an InterpreterManager in order to use this functionality without onThisInterpreter. \
+      This behavior may be deprecated in the future and holds no backwards compatibility guarentees.");
   InterpreterSession I = onThisInterpreter ? onThisInterpreter->acquireSession()
                                            : pImpl_->manager_->acquireOne();
   I.self = I.fromMovable(*this);
@@ -121,13 +122,6 @@ InterpreterSession ReplicatedObj::acquireSession(
 
 Obj ReplicatedObj::toObj(InterpreterSession* I){
   return I->fromMovable(*this);
-}
-
-void ReplicatedObj::attachInterpreterManager(InterpreterManager* manager) {
-  MULTIPY_CHECK(
-      !pImpl_->manager_,
-      "ReplicatedObjImpl must not be associated with an interpreter manager to attach it to one.");
-  pImpl_->manager_ = manager;
 }
 
 bool InterpreterSession::attachDeconstructorCallback(
@@ -241,20 +235,6 @@ Interpreter::Interpreter(
           "interpreter",
           pythonInterpreterSections,
           pythonInterpreterSymbols) {
-  setUpInterpreter();
-}
-Interpreter::Interpreter(std::shared_ptr<Environment> env)
-    : handle_(nullptr),
-      manager_(nullptr),
-      env_(env),
-      interpreterFile_(
-          "interpreter",
-          pythonInterpreterSections,
-          pythonInterpreterSymbols) {
-  setUpInterpreter();
-}
-
-void Interpreter::setUpInterpreter() {
   int flags = RTLD_LOCAL | RTLD_LAZY;
   if (interpreterFile_.customLoader) {
     flags |= RTLD_DEEPBIND;
