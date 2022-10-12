@@ -360,12 +360,6 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterObj
     };
   }
 
-  void unload() {
-    MULTIPY_SAFE_RETHROW {
-      MULTIPY_CHECK(pyObject_, "pyObject has already been freed");
-    };
-  }
-
   py::object pyObject_;
 };
 
