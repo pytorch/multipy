@@ -85,36 +85,22 @@ jobs:
           pip install -e .
           deactivate
 
-      - name: Install conda and init shell
+      - name: Install dependencies with conda for 3.8+
         run: |
-          set -eux
           if [[ ${{ matrix.python-minor-version }} -gt 7 ]]; then \
           curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
           chmod +x ~/miniconda.sh && \
           ~/miniconda.sh -b -p /opt/conda && \
           rm ~/miniconda.sh && \
-          /opt/conda/bin/conda update -y -n base -c defaults conda && \
-          /opt/conda/bin/conda create -yn newenv; \
-          fi
-
-      - name: Install dependencies with conda for 3.8+
-        run: |
-          if [[ ${{ matrix.python-minor-version }} -gt 7 ]]; then \
-          /opt/conda/bin/conda init bash && \
-          /opt/conda/bin/conda activate newenv && \
           /opt/conda/bin/conda install -y python=${{ env.python-version }} mkl mkl-include conda-build pyyaml numpy ipython && \
           /opt/conda/bin/conda install -y -c conda-forge libpython-static=${{ env.python-version }} && \
           /opt/conda/bin/conda install -y pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly && \
-          /opt/conda/bin/conda clean -ya && \
-          /opt/conda/bin/conda deactivate; \
+          /opt/conda/bin/conda clean -ya; \
           fi
 
       - name: Run pip install with conda for 3.8+
         run: |
           set -eux
           if [[ ${{ matrix.python-minor-version }} -gt 7 ]]; then \
-          /opt/conda/bin/conda init bash && \
-          /opt/conda/bin/conda activate newenv && \
-          pip install -e . && \
-          /opt/conda/bin/conda deactivate; \
+          pip install -e .
           fi
