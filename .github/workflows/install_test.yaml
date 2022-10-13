@@ -93,7 +93,7 @@ jobs:
           chmod +x ~/miniconda.sh && \
           ~/miniconda.sh -b -p /opt/conda && \
           rm ~/miniconda.sh && \
-          /opt/conda/bin/conda init -y bash && \
+          /opt/conda/bin/conda init bash && \
           /opt/conda/bin/conda create -yn newenv; \
           fi
 
