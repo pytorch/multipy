@@ -102,7 +102,9 @@ cd build
 ./test_deploy
 ```
 
-## Example
+## Examples
+
+See the [examples directory](./examples) for complete examples.
 
 ### Packaging a model `for multipy::runtime`
 
@@ -204,27 +206,27 @@ minimal `CMakeLists.txt` file would look like:
 cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
 project(multipy_tutorial)
 
-find_package(Torch REQUIRED)
+set(MULTIPY_PATH ".." CACHE PATH "The repo where multipy is built or the PYTHONPATH")
+
+# include the multipy utils to help link against
+include(${MULTIPY_PATH}/multipy/runtime/utils.cmake)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=0")
 set(TORCH_CXX_FLAGS "-D_GLIBCXX_USE_CXX11_ABI=0")
 
 # add headers from multipy
-include_directories(${PATH_TO_MULTIPY_DIR})
+include_directories(${MULTIPY_PATH})
 
-add_library(torch_deploy_internal STATIC IMPORTED)
-
+# link the multipy prebuilt binary
+add_library(multipy_internal STATIC IMPORTED)
 set_target_properties(multipy_internal
     PROPERTIES
     IMPORTED_LOCATION
-    ${PATH_TO_MULTIPY_DIR}/multipy/runtime/lib/libtorch_deploy.a)
-
+    ${MULTIPY_PATH}/multipy/runtime/build/libtorch_deploy.a)
 caffe2_interface_library(multipy_internal multipy)
 
 add_executable(example-app example-app.cpp)
-target_link_libraries(example-app PUBLIC
-    "-Wl,--no-as-needed -rdynamic"
-    shm crypt pthread dl util m ffi lzma readline nsl ncursesw panelw z multipy "${TORCH_LIBRARIES}")
+target_link_libraries(example-app PUBLIC "-Wl,--no-as-needed -rdynamic" dl pthread util multipy c10 torch_cpu)
 ```
 
 Currently, it is necessary to build ``multipy::runtime`` as a static library.
@@ -246,6 +248,7 @@ export LIBRARY_PATH="$LIBRARY_PATH:/home/user/anaconda3/envs/multipy-example/lib
 
 The last step is configuring and building the project. Assuming that our code
 directory is laid out like this:
+
 ```
 example-app/
     CMakeLists.txt
@@ -257,12 +260,8 @@ We can now run the following commands to build the application from within the
 ``example-app/`` folder:
 
 ```bash
-cmake -S . -B build/
-    -DCMAKE_PREFIX_PATH="$(python -c 'import torch.utils; print(torch.utils.cmake_prefix_path)')" \
-    -DPATH_TO_MULTIPY_DIR="/home/user/repos/" # whereever the multipy release was unzipped during installation
-
-cd build
-make -j
+cmake -S . -B build -DMULTIPY_PATH="/home/user/repos/multipy" # the parent directory of multipy (i.e. the git repo)
+cmake --build build --config Release -j
 ```
 
 Now we can run our app:

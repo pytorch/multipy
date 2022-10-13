@@ -10,6 +10,7 @@
 #include <ATen/core/ivalue.h>
 #include <caffe2/serialize/inline_container.h>
 
+#include <multipy/runtime/Exception.h>
 #include <multipy/runtime/interpreter/Optional.hpp>
 
 namespace torch {

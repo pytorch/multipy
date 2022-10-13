@@ -553,6 +553,16 @@ TEST(TorchpyTest, PrintInstruction) {
   EXPECT_TRUE(result3.toTensor().equal(expected_forward));
 }
 
+TEST(MultiPyException, Assert) {
+  EXPECT_THROW(MULTIPY_INTERNAL_ASSERT(false), std::runtime_error);
+  EXPECT_THROW(MULTIPY_INTERNAL_ASSERT(false, "msg"), std::runtime_error);
+}
+
+TEST(MultiPyException, Check) {
+  EXPECT_THROW(MULTIPY_CHECK(false), std::runtime_error);
+  EXPECT_THROW(MULTIPY_CHECK(false, "msg"), std::runtime_error);
+}
+
 int main(int argc, char* argv[]) {
   ::testing::InitGoogleTest(&argc, argv);
   char tempeh[256];
