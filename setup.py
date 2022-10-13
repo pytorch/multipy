@@ -106,8 +106,39 @@ class MultipyRuntimeBuild(MultipyRuntimeCmake, build_ext):
             )
         except subprocess.CalledProcessError as e:
             raise RuntimeError(e.output.decode("utf-8")) from None
-        # TODO
-        # followups: gen examples, copy .so out.
+
+        example_dir = os.path.abspath(os.path.dirname(__file__)) + "/" +\
+         "multipy/runtime/example"
+        print(f"-- Generating examples in dir {example_dir}")
+        try:
+            subprocess.run(
+                ["python generate_examples.py"],
+                cwd=example_dir,
+                shell=True,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            )
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(e.output.decode("utf-8")) from None
+
+        dist_dir = "/opt/dist"
+        print(f"-- Copying out contents of build/dist to {dist_dir}")
+        if not os.path.exists(dist_dir):
+            os.makedirs({dist_dir})
+        try:
+            subprocess.run(
+                [f"cp -r multipy/runtime/build/dist/* {dist_dir}"],
+                cwd=base_dir,
+                shell=True,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            )
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(e.output.decode("utf-8")) from None
+
+
 
 
 class MultipyRuntimeInstall(MultipyRuntimeCmake, install):
