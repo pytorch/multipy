@@ -36,15 +36,8 @@ SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" PARENT_SCOPE)
 set(DEPLOY_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 get_filename_component(MULTIPY_DIR ${CMAKE_CURRENT_SOURCE_DIR} DIRECTORY)
 
-find_package (Python3 COMPONENTS Interpreter Development)
-set(PYTORCH_ROOT "${Python3_SITELIB}")
-
 add_subdirectory(interpreter)
 add_subdirectory(third-party/fmt)
-include_directories(BEFORE "${PYTORCH_ROOT}/torch/include")
-include_directories(BEFORE "${PYTORCH_ROOT}/torch/include/torch/csrc/api/include/")
-include_directories(BEFORE "${Python3_INCLUDE_DIRS}")
-
 
 include(${DEPLOY_DIR}/utils.cmake)
 
@@ -112,7 +105,6 @@ set(INTERPRETER_TEST_SOURCES_GPU
 # TODO: Currently tests can only be done when ABI=1 as the testing infrustructure
 # used by ASSERT_TRUE requires ABI=1 in Github actions, we should fix this!
 
-LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
 add_executable(test_deploy ${INTERPRETER_TEST_SOURCES})
 # target_compile_definitions(test_deploy PUBLIC TEST_CUSTOM_LIBRARY)
 if (${LEGACY_PYTHON_PRE_3_8})

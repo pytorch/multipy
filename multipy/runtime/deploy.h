@@ -37,6 +37,8 @@ struct TORCH_API InterpreterSession {
   InterpreterSession(InterpreterSession&&) noexcept = default;
   // NOLINTNEXTLINE(bugprone-exception-escape)
   ~InterpreterSession();
+
+  // global imports a python object from the specified module.
   Obj global(const char* module, const char* name) {
     return impl_->global(module, name);
   }
@@ -313,3 +315,7 @@ struct TORCH_API Package {
 
 } // namespace deploy
 } // namespace torch
+
+namespace multipy {
+namespace runtime = torch::deploy;
+}
