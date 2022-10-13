@@ -11,12 +11,12 @@ internally, please see the related [arXiv paper](https://arxiv.org/pdf/2104.0025
 
 ## Installation
 
-You'll first need to install the `multipy` python module which includes
+<!-- You'll first need to install the `multipy` python module which includes
 `multipy.package`.
 
 ```shell
 pip install "git+https://github.com/pytorch/multipy.git"
-```
+``` -->
 
 ### Building `multipy::runtime` via Docker
 
@@ -29,7 +29,7 @@ export DOCKER_BUILDKIT=1
 docker build -t multipy .
 ```
 
-The built artifacts will be located in `/opt/dist`
+The built artifacts are located in `multipy/runtime/build`, and contents of `multipy/runtime/build/dist` are copied out to `/opt/dist`.
 
 To run the tests:
 
@@ -74,6 +74,9 @@ We support both `conda` and `pyenv`+`virtualenv` to create isolated environments
 
 > **NOTE** We support Python versions 3.7 through 3.10 for `multipy`; note that for `conda` environments the `libpython-static` libraries are available for `3.8` onwards. With `virtualenv`/`pyenv` any version from 3.7 through 3.10 can be used, as the PIC library is built explicitly.
 
+<details>
+<summary>Click to expand</summary>
+
 Example commands for installing conda:
 ```shell
 curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
@@ -81,18 +84,19 @@ chmod +x ~/miniconda.sh && \
 ~/miniconda.sh -b -p /opt/conda && \
 rm ~/miniconda.sh
 ```
-
 Virtualenv / pyenv can be installed as follows:
 ```shell
 pip3 install virtualenv
 git clone https://github.com/pyenv/pyenv.git ~/.pyenv
 ```
+</details>
+
 
 #### Installing python, pytorch and related dependencies
 
 Multipy requires the latest version of pytorch to run models successfully, and we recommend fetching the latest _nightlies_ for pytorch and also cuda, if required.
 
-In a `conda` environment, we would do the following:
+##### In a `conda` environment, we would do the following:
 ```shell
 conda create -n newenv
 conda activate newenv
@@ -106,7 +110,7 @@ conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly
 conda install pytorch torchvision torchaudio cpuonly -c pytorch-nightly
 ```
 
-For a `pyenv`/`virtualenv` setup, one could do:
+##### For a `pyenv` / `virtualenv` setup, one could do:
 ```shell
 export CFLAGS="-fPIC -g"
 ~/.pyenv/bin/pyenv install --force 3.8.6
@@ -138,7 +142,8 @@ pip install  -e . --install-option="--cmakeoff"
 
 > **NOTE** As of 10/11/2022 the linking of prebuilt static fPIC versions of python downloaded from `conda-forge` can be problematic on certain systems (for example Centos 8), with linker errors like `libpython_multipy.a: error adding symbols: File format not recognized`. This seems to be an issue with `binutils`, and the steps in https://wiki.gentoo.org/wiki/Project:Toolchain/Binutils_2.32_upgrade_notes/elfutils_0.175:_unable_to_initialize_decompress_status_for_section_.debug_info can help. Alternatively, the user can go with the `virtualenv`/`pyenv` flow above.
 
-### Installing `multipy::runtime` from source
+
+### Running `multipy::runtime` build steps from source
 
 Both `docker` and `pip install` options above are wrappers around the `cmake build` of multipy's runtime. If the user wishes to run the build steps manually instead, as before the dependencies would have to be installed in the user's (isolated) environment of choice first. After that the following steps can be executed:
 
