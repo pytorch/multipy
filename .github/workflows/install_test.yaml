@@ -99,6 +99,7 @@ jobs:
 
       - name: Install dependencies with conda for 3.8+
         run: |
+          if [[ ${{ matrix.python-minor-version }} -gt 7 ]]; then \
           /opt/conda/bin/conda activate newenv && \
           /opt/conda/bin/conda install -y python=${{ env.python-version }} mkl mkl-include conda-build pyyaml numpy ipython && \
           /opt/conda/bin/conda install -y -c conda-forge libpython-static=${{ env.python-version }} && \
