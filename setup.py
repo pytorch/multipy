@@ -125,10 +125,10 @@ class MultipyRuntimeBuild(MultipyRuntimeCmake, build_ext):
         dist_dir = "/opt/dist"
         print(f"-- Copying out contents of build/dist to {dist_dir}")
         if not os.path.exists(dist_dir):
-            os.makedirs({dist_dir})
+            os.makedirs(dist_dir)
         try:
             subprocess.run(
-                [f"cp -r multipy/runtime/build/dist/* {dist_dir}"],
+                [f"cp -r multipy/runtime/build/dist/* {dist_dir}/"],
                 cwd=base_dir,
                 shell=True,
                 check=True,
