@@ -85,7 +85,7 @@ jobs:
           pip install -e .
           deactivate
 
-      - name: Install dependencies with conda for 3.8+
+      - name: Install conda and init shell
         run: |
           set -eux
           if [[ ${{ matrix.python-minor-version }} -gt 7 ]]; then \
@@ -93,7 +93,12 @@ jobs:
           chmod +x ~/miniconda.sh && \
           ~/miniconda.sh -b -p /opt/conda && \
           rm ~/miniconda.sh && \
-          /opt/conda/bin/conda create -yn newenv && \
+          /opt/conda/bin/conda init -y bash && \
+          /opt/conda/bin/conda create -yn newenv; \
+          fi
+
+      - name: Install dependencies with conda for 3.8+
+        run: |
           /opt/conda/bin/conda activate newenv && \
           /opt/conda/bin/conda install -y python=${{ env.python-version }} mkl mkl-include conda-build pyyaml numpy ipython && \
           /opt/conda/bin/conda install -y -c conda-forge libpython-static=${{ env.python-version }} && \
