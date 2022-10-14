@@ -11,13 +11,6 @@ internally, please see the related [arXiv paper](https://arxiv.org/pdf/2104.0025
 
 ## Installation
 
-<!-- You'll first need to install the `multipy` python module which includes
-`multipy.package`.
-
-```shell
-pip install "git+https://github.com/pytorch/multipy.git"
-``` -->
-
 ### Building `multipy::runtime` via Docker
 
 The easiest way to build multipy, along with fetching all interpreter dependencies, is to do so via docker.
@@ -29,7 +22,7 @@ export DOCKER_BUILDKIT=1
 docker build -t multipy .
 ```
 
-The built artifacts are located in `multipy/runtime/build`, and contents of `multipy/runtime/build/dist` are copied out to `/opt/dist`.
+The built artifacts are located in `multipy/runtime/build`.
 
 To run the tests:
 
