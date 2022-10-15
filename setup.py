@@ -106,8 +106,6 @@ class MultipyRuntimeBuild(MultipyRuntimeCmake, build_ext):
             )
         except subprocess.CalledProcessError as e:
             raise RuntimeError(e.output.decode("utf-8")) from None
-        # TODO
-        # followups: gen examples, copy .so out.
 
 
 class MultipyRuntimeInstall(MultipyRuntimeCmake, install):
