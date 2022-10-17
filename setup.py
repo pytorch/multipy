@@ -14,6 +14,7 @@ from datetime import date
 from setuptools import Extension, find_packages, setup
 from setuptools.command.build_ext import build_ext
 from setuptools.command.develop import develop
+from setuptools.command.install import install
 
 
 class MultipyRuntimeExtension(Extension):
@@ -26,8 +27,12 @@ def get_cmake_version():
     return output.splitlines()[0].split()[2]
 
 
-class MultipyRuntimeDevelop(develop):
-    user_options = develop.user_options + [("cmakeoff", None, None), ("abicxx", None, None)]
+class MultipyRuntimeCmake(object):
+    user_options = [("cmakeoff", None, None), ("abicxx", None, None)]
+
+
+class MultipyRuntimeDevelop(MultipyRuntimeCmake, develop):
+    user_options = develop.user_options + MultipyRuntimeCmake.user_options
 
     def initialize_options(self):
         develop.initialize_options(self)
@@ -42,8 +47,8 @@ class MultipyRuntimeDevelop(develop):
             self.distribution.get_command_obj("build_ext").abicxx = True
 
 
-class MultipyRuntimeBuild(build_ext):
-    user_options = build_ext.user_options + MultipyRuntimeDevelop.user_options
+class MultipyRuntimeBuild(MultipyRuntimeCmake, build_ext):
+    user_options = build_ext.user_options + MultipyRuntimeCmake.user_options
     cmake_off = False
     abicxx = False
 
@@ -75,10 +80,11 @@ class MultipyRuntimeBuild(build_ext):
                 cwd=build_dir_abs,
                 shell=True,
                 check=True,
-                capture_output=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
             )
         except subprocess.CalledProcessError as e:
-            raise RuntimeError(e.output) from None
+            raise RuntimeError(e.output.decode("utf-8")) from None
 
         print(f"-- Running multipy runtime build in dir {build_dir_abs}")
         try:
@@ -87,10 +93,11 @@ class MultipyRuntimeBuild(build_ext):
                 cwd=build_dir_abs,
                 shell=True,
                 check=True,
-                capture_output=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
             )
         except subprocess.CalledProcessError as e:
-            raise RuntimeError(e.output) from None
+            raise RuntimeError(e.output.decode("utf-8")) from None
 
         print(f"-- Running multipy runtime install in dir {build_dir_abs}")
         try:
@@ -99,11 +106,46 @@ class MultipyRuntimeBuild(build_ext):
                 cwd=build_dir_abs,
                 shell=True,
                 check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
             )
         except subprocess.CalledProcessError as e:
-            raise RuntimeError(e.output) from None
-        # TODO
-        # followups: gen examples, copy .so out.
+            raise RuntimeError(e.output.decode("utf-8")) from None
+
+
+class MultipyRuntimeInstall(MultipyRuntimeCmake, install):
+    user_options = install.user_options + MultipyRuntimeCmake.user_options
+
+    def initialize_options(self):
+        install.initialize_options(self)
+        self.cmakeoff = None
+
+    def finalize_options(self):
+        install.finalize_options(self)
+        if self.cmakeoff is not None:
+            self.distribution.get_command_obj("build_ext").cmake_off = True
+
+    def run(self):
+        # Setuptools/setup.py on docker image has some interesting behavior, in that the
+        # optional "--cmakeoff" flag gets applied to dependencies specified in
+        # requirements.txt as well (installed using "install-requires" argument of setup()).
+        # Since we obviously don't want things like "pip install numpy --install-option=--cmakeoff",
+        # we install these deps directly in this overridden install command without
+        # spurious options, instead of using "install-requires".
+        base_dir = os.path.abspath(os.path.dirname(__file__))
+        try:
+            reqs_filename = "requirements.txt"
+            subprocess.run(
+                [f"pip install -r {reqs_filename}"],
+                cwd=base_dir,
+                shell=True,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            )
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(e.output.decode("utf-8")) from None
+        install.run(self)
 
 
 ext_modules = [
@@ -141,9 +183,6 @@ if __name__ == "__main__":
     with open("README.md", encoding="utf8") as f:
         readme = f.read()
 
-    with open("requirements.txt") as f:
-        reqs = f.read()
-
     with open("dev-requirements.txt") as f:
         dev_reqs = f.read()
 
@@ -164,7 +203,6 @@ if __name__ == "__main__":
         license="BSD-3",
         keywords=["pytorch", "machine learning"],
         python_requires=">=3.7",
-        install_requires=reqs.strip().split("\n"),
         include_package_data=True,
         packages=find_packages(exclude=()),
         extras_require={
@@ -174,10 +212,12 @@ if __name__ == "__main__":
                 "numpy<=1.21.6",
             ],
         },
+        # Cmake invocation for runtime build.
         ext_modules=ext_modules,
         cmdclass={
             "build_ext": MultipyRuntimeBuild,
             "develop": MultipyRuntimeDevelop,
+            "install": MultipyRuntimeInstall,
         },
         # PyPI package information.
         classifiers=[
@@ -190,4 +230,3 @@ if __name__ == "__main__":
             "Topic :: Scientific/Engineering :: Artificial Intelligence",
         ],
     )
-

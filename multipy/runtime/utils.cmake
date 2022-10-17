@@ -4,6 +4,14 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
+find_package (Python3 COMPONENTS Interpreter Development)
+set(PYTORCH_ROOT "${Python3_SITELIB}")
+
+include_directories(BEFORE "${PYTORCH_ROOT}/torch/include")
+include_directories(BEFORE "${PYTORCH_ROOT}/torch/include/torch/csrc/api/include/")
+include_directories(BEFORE "${Python3_INCLUDE_DIRS}")
+LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
+
 macro(caffe2_interface_library SRC DST)
   add_library(${DST} INTERFACE)
   add_dependencies(${DST} ${SRC})

@@ -6,6 +6,7 @@
 
 #include <ATen/Parallel.h>
 #include <gtest/gtest.h>
+#include <libgen.h>
 #include <cstring>
 
 #include <c10/util/irange.h>
@@ -113,7 +114,7 @@ TEST(TorchpyTest, Movable) {
     auto I = m.acquireOne();
     auto model =
         I.global("torch.nn", "Module")(std::vector<torch::deploy::Obj>());
-    obj = I.createMovable(model);
+    obj = m.createMovable(model, &I);
   }
   obj.acquireSession();
 }
@@ -208,9 +209,9 @@ TEST(TorchpyTest, ErrorsReplicatingObj) {
   auto obj = session1.fromMovable(replicatedObj);
   // should throw an error when trying to access obj from different session
   // NOLINTNEXTLINE(hicpp-avoid-goto,cppcoreguidelines-avoid-goto)
-  EXPECT_THROW(session2.createMovable(obj), std::runtime_error);
+  EXPECT_THROW(p.createMovable(obj, &session2), std::runtime_error);
   try {
-    session2.createMovable(obj);
+    p.createMovable(obj, &session2);
   } catch (std::runtime_error& error) {
     EXPECT_TRUE(
         std::string(error.what())
@@ -358,7 +359,7 @@ def get_tensor():
 
   auto objOnI =
       I.global("test_module", "get_tensor")(at::ArrayRef<at::IValue>{});
-  auto replicated = I.createMovable(objOnI);
+  auto replicated = manager.createMovable(objOnI, &I);
   auto objOnI2 = I2.fromMovable(replicated);
 
   auto tensorOnI = objOnI.toIValue().toTensor();
@@ -551,6 +552,16 @@ TEST(TorchpyTest, PrintInstruction) {
   // after Python environment was created and then destroyed.
   auto result3 = (*module)(inputs);
   EXPECT_TRUE(result3.toTensor().equal(expected_forward));
+}
+
+TEST(MultiPyException, Assert) {
+  EXPECT_THROW(MULTIPY_INTERNAL_ASSERT(false), std::runtime_error);
+  EXPECT_THROW(MULTIPY_INTERNAL_ASSERT(false, "msg"), std::runtime_error);
+}
+
+TEST(MultiPyException, Check) {
+  EXPECT_THROW(MULTIPY_CHECK(false), std::runtime_error);
+  EXPECT_THROW(MULTIPY_CHECK(false, "msg"), std::runtime_error);
 }
 
 int main(int argc, char* argv[]) {
