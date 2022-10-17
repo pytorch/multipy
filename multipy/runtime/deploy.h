@@ -15,7 +15,7 @@
 #include <multipy/runtime/interpreter/Optional.hpp>
 #include <cassert>
 #include <fstream>
-#include <iostream>
+#include <functional>
 #include <string>
 #include <thread>
 #include <vector>
@@ -25,13 +25,21 @@ namespace deploy {
 
 struct ReplicatedObj;
 struct InterpreterManager;
+struct LoadBalancer;
 
 struct TORCH_API InterpreterSession {
+  friend struct LoadBalancer;
+
+  explicit InterpreterSession(InterpreterSessionImpl* impl) noexcept
+      : impl_(impl), manager_(nullptr) {}
   InterpreterSession(
       InterpreterSessionImpl* impl,
       InterpreterManager* manager) noexcept
       : impl_(impl), manager_(manager) {}
-
+  PickledObject pickleObj(Obj obj);
+  bool isOwner(Obj obj) {
+    return impl_->isOwner(obj);
+  }
   // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
   Obj self; // when retrieved from a PythonMovable this will be set.
   InterpreterSession(InterpreterSession&&) noexcept = default;
@@ -45,17 +53,24 @@ struct TORCH_API InterpreterSession {
   Obj fromIValue(at::IValue ivalue) {
     return impl_->fromIValue(std::move(ivalue));
   }
+  // Use `ReplicatedObj InterpreterManager::createMovable(Obj obj,
+  // InterpreterSession* I)' instead. We will have no backwards compatibility
+  // guarentees for this function.
   ReplicatedObj createMovable(Obj obj);
   Obj fromMovable(const ReplicatedObj& obj);
+
+ protected:
+  bool attachDeconstructorCallback(std::function<void()> func);
 
  private:
   friend struct ReplicatedObj;
   friend struct Package;
   friend struct InterpreterManager;
   friend struct ReplicatedObjImpl;
+  inline static size_t nextObjectId_ = 0;
   std::unique_ptr<InterpreterSessionImpl> impl_;
   InterpreterManager* manager_; // if created from one
-  int64_t notifyIdx_ = -1;
+  std::function<void()> deconstruction_callback_ = nullptr;
 };
 
 class TORCH_API Interpreter {
@@ -70,8 +85,15 @@ class TORCH_API Interpreter {
 
  public:
   Interpreter(InterpreterManager* manager, std::shared_ptr<Environment> env);
+  explicit Interpreter(std::shared_ptr<Environment> env)
+      : Interpreter(nullptr, env) {}
+
   InterpreterSession acquireSession() const {
-    return InterpreterSession(pImpl_->acquireSession(), manager_);
+    if (manager_) {
+      return InterpreterSession(pImpl_->acquireSession(), manager_);
+    } else {
+      return InterpreterSession(pImpl_->acquireSession());
+    }
   }
   ~Interpreter();
   Interpreter(Interpreter&& rhs) noexcept
@@ -122,7 +144,8 @@ struct TORCH_API InterpreterManager {
   InterpreterSession acquireOne() {
     int where = resources_.acquire();
     InterpreterSession I = instances_[where].acquireSession();
-    I.notifyIdx_ = where;
+    I.attachDeconstructorCallback(
+        [this, where]() -> void { resources_.free(where); });
     return I;
   }
 
@@ -152,7 +175,7 @@ struct TORCH_API InterpreterManager {
   size_t countRegisteredModuleSources() {
     return registeredModuleSource_.size();
   }
-
+  ReplicatedObj createMovable(Obj obj, InterpreterSession* I);
   InterpreterManager(const InterpreterManager&) = delete;
   InterpreterManager& operator=(const InterpreterManager&) = delete;
   InterpreterManager& operator=(InterpreterManager&&) = delete;
@@ -160,7 +183,7 @@ struct TORCH_API InterpreterManager {
  private:
   friend struct Package;
   friend struct InterpreterSession;
-  size_t nextObjectId_ = 0;
+  friend struct InterpreterSessionImpl;
   std::vector<Interpreter> instances_;
   LoadBalancer resources_;
   std::unordered_map<std::string, std::string> registeredModuleSource_;
@@ -207,8 +230,8 @@ struct TORCH_API ReplicatedObj {
     auto I = acquireSession();
     return I.self.hasattr(name);
   }
-
   void unload(const Interpreter* onThisInterpreter = nullptr);
+  Obj toObj(InterpreterSession* I);
 
  private:
   ReplicatedObj(std::shared_ptr<ReplicatedObjImpl> pImpl)
@@ -256,7 +279,7 @@ struct TORCH_API Package {
   ReplicatedObj loadPickle(const std::string& module, const std::string& file) {
     auto I = acquireSession();
     auto loaded = I.self.attr("load_pickle")({module, file});
-    return I.createMovable(loaded);
+    return createMovable(loaded, &I);
   }
 
 #ifdef FBCODE_CAFFE2
@@ -291,6 +314,9 @@ struct TORCH_API Package {
         I.impl_->createOrGetPackageImporterFromContainerFile(containerFile_);
     return I;
   }
+  ReplicatedObj createMovable(Obj obj, InterpreterSession* I) {
+    return manager_->createMovable(obj, I);
+  }
 
  private:
   Package(
@@ -310,6 +336,7 @@ struct TORCH_API Package {
   friend struct ReplicatedObj;
   friend struct InterpreterManager;
   InterpreterManager* manager_;
+
   std::shared_ptr<caffe2::serialize::PyTorchStreamReader> containerFile_;
 };
 
