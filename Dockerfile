@@ -57,7 +57,13 @@ ENV PATH /opt/conda/bin:$PATH
 # get the repo
 FROM dev-base as submodule-update
 WORKDIR /opt/multipy
-COPY . .
+
+# add files incrementally
+COPY .git .git
+COPY .gitmodules .gitmodules
+COPY multipy multipy
+COPY compat-requirements.txt compat-requirements.txt
+
 RUN git submodule update --init --recursive --jobs 0
 
 # Install conda/pyenv + necessary python dependencies
@@ -80,7 +86,9 @@ RUN if [[ ${PYTHON_MINOR_VERSION} -gt 7 ]]; then \
     git clone https://github.com/pyenv/pyenv.git ~/.pyenv && \
     export CFLAGS="-fPIC -g" && \
     ~/.pyenv/bin/pyenv install --force 3.7.10 && \
-    virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy; \
+    virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy && \
+    source ~/venvs/multipy/bin/activate && \
+    pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cu113; \
     fi
 
 # Build/Install pytorch with post-cxx11 ABI
@@ -92,19 +100,31 @@ COPY --from=submodule-update /opt/multipy /opt/multipy
 WORKDIR /opt/multipy
 
 # Build Multipy
-RUN mkdir multipy/runtime/build && \
+RUN rm -r multipy/runtime/build; mkdir multipy/runtime/build && \
     cd multipy/runtime/build && \
     if [[ ${PYTHON_MINOR_VERSION} -lt 8 ]]; then \
     source ~/venvs/multipy/bin/activate && \
-    pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cu113 && \
     cmake -DLEGACY_PYTHON_PRE_3_8=ON ..; \
     else \
     cmake -DLEGACY_PYTHON_PRE_3_8=OFF ..; \
     fi && \
-    cmake --build . --config Release && \
+    cmake --build . --config Release -j && \
     cmake --install . --prefix "." && \
     cd ../example && python generate_examples.py
 
+# Build examples
+COPY examples examples
+RUN cd examples && \
+    rm -r build; \
+    if [[ ${PYTHON_MINOR_VERSION} -lt 8 ]]; then \
+    source ~/venvs/multipy/bin/activate; \
+    else \
+    source /opt/conda/bin/activate; \
+    fi && \
+    cmake -S . -B build/ -DMULTIPY_PATH=".." && \
+    cmake --build build/ --config Release -j
+
 ENV PYTHONPATH=. LIBTEST_DEPLOY_LIB=multipy/runtime/build/libtest_deploy_lib.so
+
 
 RUN mkdir /opt/dist && cp -r multipy/runtime/build/dist/* /opt/dist/

@@ -19,7 +19,7 @@
   }
 
 #define MULTIPY_INTERNAL_ASSERT_NO_MESSAGE(condition) \
-  MULTIPY_INTERNAL_ASSERT_WITH_MESSAGE(#condition, "")
+  MULTIPY_INTERNAL_ASSERT_WITH_MESSAGE(condition, #condition)
 
 #define MULTIPY_INTERNAL_ASSERT_(x, condition, message, FUNC, ...) FUNC
 
@@ -39,7 +39,7 @@
   }
 
 #define MULTIPY_CHECK_NO_MESSAGE(condition) \
-  MULTIPY_CHECK_WITH_MESSAGE(#condition, "")
+  MULTIPY_CHECK_WITH_MESSAGE(condition, #condition)
 
 #define MULTIPY_CHECK_(x, condition, message, FUNC, ...) FUNC
 
