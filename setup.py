@@ -28,7 +28,7 @@ def get_cmake_version():
 
 
 class MultipyRuntimeCmake(object):
-    user_options = [("cmakeoff", None, None)]
+    user_options = [("cmakeoff", None, None), ("abicxx", None, None)]
 
 
 class MultipyRuntimeDevelop(MultipyRuntimeCmake, develop):
@@ -37,16 +37,20 @@ class MultipyRuntimeDevelop(MultipyRuntimeCmake, develop):
     def initialize_options(self):
         develop.initialize_options(self)
         self.cmakeoff = None
+        self.abicxx = None
 
     def finalize_options(self):
         develop.finalize_options(self)
         if self.cmakeoff is not None:
             self.distribution.get_command_obj("build_ext").cmake_off = True
+        if self.abicxx is not None:
+            self.distribution.get_command_obj("build_ext").abicxx = True
 
 
 class MultipyRuntimeBuild(MultipyRuntimeCmake, build_ext):
     user_options = build_ext.user_options + MultipyRuntimeCmake.user_options
     cmake_off = False
+    abicxx = False
 
     def run(self):
         if self.cmake_off:
@@ -67,11 +71,14 @@ class MultipyRuntimeBuild(MultipyRuntimeCmake, build_ext):
         if not os.path.exists(build_dir_abs):
             os.makedirs(build_dir_abs)
         legacy_python_cmake_flag = "OFF" if sys.version_info.minor > 7 else "ON"
+        cxx_abi_flag = "ON" if self.abicxx else "OFF"
 
         print(f"-- Running multipy runtime makefile in dir {build_dir_abs}")
         try:
             subprocess.run(
-                [f"cmake -DLEGACY_PYTHON_PRE_3_8={legacy_python_cmake_flag} .."],
+                [
+                    f"cmake -DLEGACY_PYTHON_PRE_3_8={legacy_python_cmake_flag} -DABI_EQUALS_1={cxx_abi_flag} .."
+                ],
                 cwd=build_dir_abs,
                 shell=True,
                 check=True,
