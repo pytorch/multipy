@@ -145,9 +145,9 @@ Both `docker` and `pip install` options above are wrappers around the `cmake bui
 ```bash
 # checkout repo
 git clone https://github.com/pytorch/multipy.git
-git submodule sync && git submodule update --init --recursive
 
 cd multipy
+git submodule sync && git submodule update --init --recursive
 # install python parts of `torch::deploy` in multipy/multipy/utils
 pip install -e . --install-option="--cmakeoff"
 
