@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 project(multipy_tutorial)
 
 set(MULTIPY_PATH ".." CACHE PATH "The repo where multipy is built or the PYTHONPATH")

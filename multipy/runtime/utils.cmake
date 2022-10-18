@@ -7,6 +7,14 @@
 find_package (Python3 COMPONENTS Interpreter Development)
 set(PYTORCH_ROOT "${Python3_SITELIB}")
 
+# if pytorch was installed in develop mode we need to resolve the egg-link
+set(PYTORCH_EGG_LINK "${PYTORCH_ROOT}/torch.egg-link")
+if (EXISTS "${PYTORCH_EGG_LINK}")
+  file (STRINGS "${PYTORCH_EGG_LINK}" PYTORCH_ROOT LIMIT_COUNT 1)
+endif()
+
+message(STATUS "PYTORCH_ROOT - ${PYTORCH_ROOT}" )
+
 include_directories(BEFORE "${PYTORCH_ROOT}/torch/include")
 include_directories(BEFORE "${PYTORCH_ROOT}/torch/include/torch/csrc/api/include/")
 include_directories(BEFORE "${Python3_INCLUDE_DIRS}")
