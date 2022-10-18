@@ -144,7 +144,7 @@ Both `docker` and `pip install` options above are wrappers around the `cmake bui
 
 ```bash
 # checkout repo
-git checkout https://github.com/pytorch/multipy.git
+git clone https://github.com/pytorch/multipy.git
 git submodule sync && git submodule update --init --recursive
 
 cd multipy
