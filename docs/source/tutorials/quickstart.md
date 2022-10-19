@@ -1,6 +1,6 @@
-## Example
+# Quickstart
 
-### Packaging a model `for torch::deploy`
+## Packaging a model `for torch::deploy`
 
 ``torch::deploy`` can load and run Python models that are packaged with
 ``torch.package``. You can learn more about ``torch.package`` in the ``torch.package`` [documentation](https://pytorch.org/docs/stable/package.html#tutorials).
@@ -9,7 +9,6 @@ For now, let's create a simple model that we can load and run in ``torch::deploy
 
 <!-- #md -->
 ```python
-import torch
 from torch.package import PackageExporter
 import torchvision
 
@@ -34,8 +33,10 @@ with the model.
 Now, there should be a file named ``my_package.pt`` in your working directory.
 
 <br>
+
+## Load the model in C++
+
 <!-- #md -->
-### Load the model in C++
 ```cpp
 #include <multipy/runtime/deploy.h>
 #include <multipy/runtime/path_environment.h>
@@ -59,7 +60,7 @@ int main(int argc, const char* argv[]) {
     torch::deploy::InterpreterManager manager(4, env);
 
     try {
-        // Load the model from the multipy.package.
+        // Load the model from the torch.package.
         torch::deploy::Package package = manager.loadPackage(argv[1]);
         torch::deploy::ReplicatedObj model = package.loadPickle("model", "model.pkl");
     } catch (const c10::Error& e) {
@@ -83,7 +84,7 @@ interpreters, allowing you to load balance across them when running your code.
 packages on your system which are external, but necessary, for your model.
 
 Using the ``InterpreterManager::loadPackage`` method, you can load a
-``multipy.package`` from disk and make it available to all interpreters.
+``torch.package`` from disk and make it available to all interpreters.
 
 ``Package::loadPickle`` allows you to retrieve specific Python objects
 from the package, like the ResNet model we saved earlier.
@@ -95,38 +96,40 @@ an free interpreter to execute that interaction.
 
 <br>
 
-### Build and execute the C++ example
+## Build and execute the C++ example
 
 Assuming the above C++ program was stored in a file called, `example-app.cpp`, a
 minimal `CMakeLists.txt` file would look like:
+
 <!-- #md -->
 ```cmake
-cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 project(multipy_tutorial)
 
-find_package(Torch REQUIRED)
+set(MULTIPY_PATH ".." CACHE PATH "The repo where multipy is built or the PYTHONPATH")
+
+# include the multipy utils to help link against
+include(${MULTIPY_PATH}/multipy/runtime/utils.cmake)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=0")
 set(TORCH_CXX_FLAGS "-D_GLIBCXX_USE_CXX11_ABI=0")
 
 # add headers from multipy
-include_directories(${PATH_TO_MULTIPY_DIR})
+include_directories(${MULTIPY_PATH})
 
-add_library(torch_deploy_internal STATIC IMPORTED)
-
+# link the multipy prebuilt binary
+add_library(multipy_internal STATIC IMPORTED)
 set_target_properties(multipy_internal
     PROPERTIES
     IMPORTED_LOCATION
-    ${PATH_TO_MULTIPY_DIR}/multipy/runtime/lib/libtorch_deploy.a)
-
+    ${MULTIPY_PATH}/multipy/runtime/build/libtorch_deploy.a)
 caffe2_interface_library(multipy_internal multipy)
 
 add_executable(example-app example-app.cpp)
-target_link_libraries(example-app PUBLIC
-    "-Wl,--no-as-needed -rdynamic"
-    shm crypt pthread dl util m ffi lzma readline nsl ncursesw panelw z multipy "${TORCH_LIBRARIES}")
+target_link_libraries(example-app PUBLIC "-Wl,--no-as-needed -rdynamic" dl pthread util multipy c10 torch_cpu)
 ```
 <!-- #endmd -->
+
 Currently, it is necessary to build ``torch::deploy`` as a static library.
 In order to correctly link to a static library, the utility ``caffe2_interface_library``
 is used to appropriately set and unset ``--whole-archive`` flag.
@@ -138,14 +141,17 @@ to the deploy interpreters (which are dynamically loaded).
 **Updating LIBRARY_PATH and LD_LIBRARY_PATH**
 
 In order to locate dependencies provided by PyTorch (e.g. `libshm`), we need to update the `LIBRARY_PATH` and `LD_LIBRARY_PATH` environment variables to include the path to PyTorch's C++ libraries. If you installed PyTorch using pip or conda, this path is usually in the site-packages. An example of this is provided below.
+
 <!-- #md -->
 ```bash
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/home/user/anaconda3/envs/multipy-example/lib/python3.8/site-packages/torch/lib"
 export LIBRARY_PATH="$LIBRARY_PATH:/home/user/anaconda3/envs/multipy-example/lib/python3.8/site-packages/torch/lib"
 ```
 <!-- #endmd -->
+
 The last step is configuring and building the project. Assuming that our code
 directory is laid out like this:
+
 <!-- #md -->
 ```
 example-app/
@@ -154,19 +160,19 @@ example-app/
 ```
 <!-- #endmd -->
 
+
 We can now run the following commands to build the application from within the
 ``example-app/`` folder:
+
 <!-- #md -->
 ```bash
-cmake -S . -B build/
-    -DCMAKE_PREFIX_PATH="$(python -c 'import torch.utils; print(torch.utils.cmake_prefix_path)')" \
-    -DPATH_TO_MULTIPY_DIR="/home/user/repos/" # whereever the multipy release was unzipped during installation
-
-cd build
-make -j
+cmake -S . -B build -DMULTIPY_PATH="/home/user/repos/multipy" # the parent directory of multipy (i.e. the git repo)
+cmake --build build --config Release -j
 ```
 <!-- #endmd -->
+
 Now we can run our app:
+
 <!-- #md -->
 ```bash
 ./example-app /path/to/my_package.pt

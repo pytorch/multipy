@@ -11,8 +11,17 @@ Documentation
 ---------------
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Usage
 
    setup.md
-   quickstart.md
+   tutorials/tutorial_root
+   api/library_root
+
+Acknowledgements
+----------------
+
+This documentation website for the MultiPy C++ API has been enabled by the
+`Exhale <https://github.com/svenevs/exhale/>`_ project and generous investment
+of time and effort by its maintainer, `svenevs <https://github.com/svenevs/>`_.
+We thank Stephen for his work and his efforts providing help with both the PyTorch and MultiPy C++ documentation.

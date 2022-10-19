@@ -26,6 +26,7 @@
 import os
 import subprocess
 import sys
+import textwrap
 
 import pytorch_sphinx_theme
 from docutils import nodes
@@ -56,7 +57,68 @@ extensions = [
     "sphinx.ext.autosectionlabel",
     "nbsphinx",
     "IPython.sphinxext.ipython_console_highlighting",
+    'breathe',
+    'exhale',
 ]
+
+#exhale stuff
+
+# Setup absolute paths for communicating with breathe / exhale where
+# items are expected / should be trimmed by.
+# This file is {repo_root}/docs/cpp/source/conf.py
+this_file_dir = os.path.abspath(os.path.dirname(__file__))
+doxygen_xml_dir = os.path.join(
+    os.path.dirname(this_file_dir),  # {repo_root}/docs/cpp
+    'build',                         # {repo_root}/docs/cpp/build
+    'xml'                            # {repo_root}/docs/cpp/build/xml
+)
+repo_root = os.path.dirname(  # {repo_root}
+    os.path.dirname(          # {repo_root}/docs
+            this_file_dir     # {repo_root}/docs/source
+    )
+)
+
+breathe_projects = {"MultiPy": doxygen_xml_dir}
+breathe_default_project = "MultiPy"
+
+# Setup the exhale extension
+exhale_args = {
+    ############################################################################
+    # These arguments are required.                                            #
+    ############################################################################
+    "containmentFolder": "./api",
+    "rootFileName": "library_root.rst",
+    "rootFileTitle": "Library API",
+    "doxygenStripFromPath": repo_root,
+    ############################################################################
+    # Suggested optional arguments.                                            #
+    ############################################################################
+    "createTreeView": True,
+    "exhaleExecutesDoxygen": True,
+    "exhaleUseDoxyfile": True,
+    "verboseBuild": True,
+    ############################################################################
+    # HTML Theme specific configurations.                                      #
+    ############################################################################
+    # Fix broken Sphinx RTD Theme 'Edit on GitHub' links
+    # Search for 'Edit on GitHub' on the FAQ:
+    #     http://exhale.readthedocs.io/en/latest/faq.html
+    "pageLevelConfigMeta": ":github_url: https://github.com/pytorch/multipy",
+    ############################################################################
+    # Individual page layout example configuration.                            #
+    ############################################################################
+    # Example of adding contents directives on custom kinds with custom title
+    "contentsTitle": "Page Contents",
+    "kindsWithContentsDirectives": ["class", "file", "namespace", "struct"],
+    # Exclude PIMPL files from class hierarchy tree and namespace pages.
+    "listingExclude": [r".*Impl$"],
+    ############################################################################
+    # Main library page layout example configuration.                          #
+    ############################################################################
+    "afterTitleDescription": textwrap.dedent(u'''
+        Welcome to the developer reference for the PyTorch C++ API.
+    '''),
+}
 
 # katex options
 #
