@@ -11,4 +11,4 @@ multipy/runtime/interpreter/frozen/**
 multipy/runtime/example/generated/
 *.egg-info
 .DS_Store
-multipy/docs/source/api/
+docs/source/api/
