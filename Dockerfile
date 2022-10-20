@@ -102,7 +102,7 @@ RUN rm -r multipy/runtime/build; mkdir multipy/runtime/build && \
     source ~/venvs/multipy/bin/activate && \
     cmake -DLEGACY_PYTHON_PRE_3_8=ON ..; \
     else \
-    cmake -DLEGACY_PYTHON_PRE_3_8=OFF -DPython3_EXECUTABLE="$(which python3)" ..; \
+    cmake -DLEGACY_PYTHON_PRE_3_8=OFF ..; \
     fi && \
     cmake --build . --config Release -j && \
     cmake --install . --prefix "." && \
@@ -117,7 +117,7 @@ RUN cd examples && \
     else \
     source /opt/conda/bin/activate; \
     fi && \
-    cmake -S . -B build/ -DMULTIPY_PATH=".." -DPython3_EXECUTABLE="$(which python3)" && \
+    cmake -S . -B build/ -DMULTIPY_PATH=".." && \
     cmake --build build/ --config Release -j
 
 ENV PYTHONPATH=. LIBTEST_DEPLOY_LIB=multipy/runtime/build/libtest_deploy_lib.so

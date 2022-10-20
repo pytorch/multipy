@@ -4,6 +4,11 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
+# prefer the active Python version instead of the latest -- only works on cmake
+# 3.15+
+# https://cmake.org/cmake/help/latest/module/FindPython3.html#hints
+set(Python3_FIND_STRATEGY LOCATION)
+
 find_package (Python3 COMPONENTS Interpreter Development)
 set(PYTORCH_ROOT "${Python3_SITELIB}")
 
