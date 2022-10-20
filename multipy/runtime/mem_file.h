@@ -51,6 +51,8 @@ struct MemFile {
   [[nodiscard]] const char* data() const {
     return (const char*)mem_;
   }
+
+  // return the file descriptor of the underlying file.
   int valid() {
     return fcntl(fd_, F_GETFD) != -1 || errno != EBADF;
   }
@@ -62,6 +64,8 @@ struct MemFile {
       close(fd_);
     }
   }
+
+  // return the size of the underlying file defined by the `MemFile`
   size_t size() {
     return n_bytes_;
   }

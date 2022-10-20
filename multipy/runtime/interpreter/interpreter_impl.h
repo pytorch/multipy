@@ -19,6 +19,7 @@ namespace deploy {
 struct InterpreterSessionImpl;
 struct Obj;
 
+// Representation a Pickled Object
 struct PickledObject {
   std::string data_;
   std::vector<at::Storage> storages_;
@@ -28,6 +29,7 @@ struct PickledObject {
   std::shared_ptr<caffe2::serialize::PyTorchStreamReader> containerFile_;
 };
 
+// The underlying implementation of `Obj` which holds the underlying `py::object`.
 struct InterpreterObj {
   friend struct Obj;
   friend struct ReplicatedObjImpl;
@@ -72,14 +74,26 @@ struct Obj {
       : isDefault_(false), baseObj_(baseObj) {}
   Obj() : isDefault_(true), baseObj_(nullptr) {}
 
+  // convert underlying `py::object` into an `IValue`.
   at::IValue toIValue() const;
+
+  // overwrite `()` to use `call` of the underlying `py::object` with `Obj`s as args.
+  // The output is represented as an `Obj`.
   Obj operator()(at::ArrayRef<Obj> args);
+
+  // overwrite `()` to use `call` of the underlying `py::object` with `IValue`s as args.
+  // The output is represented as an `Obj`.
   Obj operator()(at::ArrayRef<at::IValue> args);
+
+  // calls callKwargs from the underlying `py::object`
   Obj callKwargs(
       std::vector<at::IValue> args,
       std::unordered_map<std::string, c10::IValue> kwargs);
+  // calls callKwargs from the underlying `py::object`. The output is represented as an `Obj`.
   Obj callKwargs(std::unordered_map<std::string, c10::IValue> kwargs);
+  // calls hasattr from the underlying `py::object`. The output is represented as an `Obj`.
   bool hasattr(const char* attr);
+  // calls attr from the underlying `py::object`. The output is represented as an `Obj`.
   Obj attr(const char* attr);
 
  private:
@@ -87,6 +101,7 @@ struct Obj {
   std::shared_ptr<InterpreterObj> baseObj_;
 };
 
+// The underlying implementation of `InterpreterSession`
 struct InterpreterSessionImpl {
   friend struct Package;
   friend struct ReplicatedObj;
@@ -132,6 +147,7 @@ struct InterpreterSessionImpl {
   }
 };
 
+// The underlying implementation of `Interpreter`
 struct InterpreterImpl {
   virtual InterpreterSessionImpl* acquireSession() = 0;
   virtual void setFindModule(

@@ -35,10 +35,11 @@ struct Section {
   }
 };
 
+// TODO: consolidate other ELF file related functions in loader.cpp to this file
+
 /*
  * This class provie utilities to handle ELF file. Only support 64bit ELF file.
  */
-// TODO: consolidate other ELF file related functions in loader.cpp to this file
 class ElfFile {
  public:
   explicit ElfFile(const char* filename);

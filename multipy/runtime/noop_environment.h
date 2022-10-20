@@ -11,6 +11,7 @@
 namespace torch {
 namespace deploy {
 
+// An empty Enviroment
 class NoopEnvironment : public Environment {
  public:
   void configureInterpreter(Interpreter* /* interp */) override {}
