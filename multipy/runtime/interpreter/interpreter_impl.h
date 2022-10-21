@@ -29,8 +29,8 @@ struct PickledObject {
   std::shared_ptr<caffe2::serialize::PyTorchStreamReader> containerFile_;
 };
 
-// The underlying implementation of `Obj` which holds the underlying
-// `py::object`.
+// PickledObject contains a python object that's been pickled with the tensors saved separately.
+// Unpickling this will share the underlying data across multiple copies/interpreters.
 struct InterpreterObj {
   friend struct Obj;
   friend struct ReplicatedObjImpl;
@@ -78,19 +78,19 @@ struct Obj {
   // return `IValue` representation.
   at::IValue toIValue() const;
 
-  // Call an `Obj` callable, with arguments given by the tuple args.
+  // Call an `Obj` callable, with arguments given by the tuple args. Equivalent to `__call__` in python.
   Obj operator()(at::ArrayRef<Obj> args);
 
-  // Call an `Obj` callable, with arguments given by the tuple args.
+  // Call an `Obj` callable, with arguments given by the tuple args. Equivalent to `__call__` in python.
   Obj operator()(at::ArrayRef<at::IValue> args);
 
   // Call an `Obj` callable, with arguments given by the tuple args, and named
-  // arguments given by the dictionary kwargs.
+  // arguments given by the dictionary kwargs. Equivalent to `__call__` in python.
   Obj callKwargs(
       std::vector<at::IValue> args,
       std::unordered_map<std::string, c10::IValue> kwargs);
   // Call an `Obj` callable, with named arguments given by the dictionary
-  // kwargs.
+  // kwargs. Equivalent to `__call__` in python.
   Obj callKwargs(std::unordered_map<std::string, c10::IValue> kwargs);
   // Returns true if `Obj` has attribute with name `attr` and false otherwise.
   bool hasattr(const char* attr);

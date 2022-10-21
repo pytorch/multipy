@@ -245,8 +245,9 @@ struct TORCH_API ReplicatedObjImpl {
   InterpreterManager* manager_;
 };
 
-// A python object which is Replicated from an `Obj` such that it is able to
-// move around to different `InterpreterSessions` by using
+//ReplicatedObj represents a python object that can be used on multiple interpreters. Calling
+// methods on this will pick an arbitrary interpreter to run on, transfer it there if not already
+// and run the method. A replicated object can be converted to an interpreter specific `Obj` using
 // `InterpreterSession::fromMovable(ReplicatedObj)`
 struct TORCH_API ReplicatedObj {
   // Default constructor for `ReplicatedObj`
@@ -263,7 +264,7 @@ struct TORCH_API ReplicatedObj {
   }
 
   // Calls an `ReplicatedObj` callable, with arguments given by the tuple args
-  // and named arguments given by the dictionary kwargs. This is done on an
+  // and named arguments given by the dictionary kwargs (equivalent to python's `__call__`). This is done on an
   // arbitrary `InterpreterSession` which belongs to the `ReplicatedObj`'s
   // manager.
   [[nodiscard]] at::IValue callKwargs(
@@ -274,7 +275,7 @@ struct TORCH_API ReplicatedObj {
   }
 
   // Calls an `ReplicatedObj` callable, with named arguments given by the
-  // dictionary kwargs. This is done on an arbitrary `InterpreterSession` which
+  // dictionary kwargs (equivalent to python's `__call__`). This is done on an arbitrary `InterpreterSession` which
   // belongs to the `ReplicatedObj`'s manager.
   [[nodiscard]] at::IValue callKwargs(
       std::unordered_map<std::string, c10::IValue> kwargs) const {

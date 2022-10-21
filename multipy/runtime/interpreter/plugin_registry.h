@@ -13,7 +13,7 @@ namespace py = pybind11;
 namespace multipy {
 
 // A `Converter` is used in order to convert `PyObject`s/`py::object` into
-// an `IValue` or some other representation usch as storage.
+// an `IValue` or some other representation such as storage.
 class Converter {
  public:
   virtual ~Converter() = default;
