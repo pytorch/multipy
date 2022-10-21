@@ -11,6 +11,7 @@ RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
         ca-certificates \
         ccache \
         curl \
+        cmake-mozilla \
         wget \
         git \
         libjpeg-dev \
@@ -44,11 +45,6 @@ RUN --mount=type=cache,id=apt-dev,target=/var/cache/apt \
         software-properties-common \
         python-pip \
         python3-pip && \
-        wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor -o /usr/share/keyrings/magic-key.gpg && \
-        echo "deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/magic-key.gpg] https://apt.kitware.com/ubuntu/ bionic main" | tee -a /etc/apt/sources.list && \
-        echo "deb http://security.ubuntu.com/ubuntu focal-security main" | tee -a /etc/apt/sources.list && \
-        apt update && \
-        apt install -y binutils cmake && \
     rm -rf /var/lib/apt/lists/*
 RUN /usr/sbin/update-ccache-symlinks
 RUN mkdir /opt/ccache && ccache --set-config=cache_dir=/opt/ccache

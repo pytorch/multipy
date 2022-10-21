@@ -51,16 +51,6 @@ sudo apt update
 xargs sudo apt install -y -qq --no-install-recommends <build-requirements.txt
 ```
 
-We recommend using the latest version of `cmake` and compilers available for your system. On Ubuntu 18.04, for example, these can be updated as follows:
-
-```shell
-wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | sudo gpg --dearmor -o /usr/share/keyrings/magic-key.gpg
-echo "deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/magic-key.gpg] https://apt.kitware.com/ubuntu/ bionic main" | sudo tee -a /etc/apt/sources.list
-echo "deb http://security.ubuntu.com/ubuntu focal-security main" | sudo tee -a /etc/apt/sources.list
-sudo apt update
-sudo apt install -y binutils cmake
-```
-
 #### Installing environment encapsulators
 
 We support both `conda` and `pyenv`+`virtualenv` to create isolated environments to build and run in. Since `multipy` requires a position-independent version of python to launch interpreters with, for `conda` environments we use the prebuilt `libpython-static=3.x` libraries from `conda-forge` to link with at build time, and for `virtualenv`/`pyenv` we compile python with `-fPIC` to create the linkable library.
@@ -273,7 +263,7 @@ Assuming the above C++ program was stored in a file called, `example-app.cpp`, a
 minimal `CMakeLists.txt` file would look like:
 
 ```cmake
-cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 project(multipy_tutorial)
 
 set(MULTIPY_PATH ".." CACHE PATH "The repo where multipy is built or the PYTHONPATH")
