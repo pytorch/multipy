@@ -74,26 +74,24 @@ struct Obj {
       : isDefault_(false), baseObj_(baseObj) {}
   Obj() : isDefault_(true), baseObj_(nullptr) {}
 
-  // convert underlying `py::object` into an `IValue`.
+  // return `IValue` representation.
   at::IValue toIValue() const;
 
-  // overwrite `()` to use `call` of the underlying `py::object` with `Obj`s as args.
-  // The output is represented as an `Obj`.
+  // Call an `Obj` callable, with arguments given by the tuple args.
   Obj operator()(at::ArrayRef<Obj> args);
 
-  // overwrite `()` to use `call` of the underlying `py::object` with `IValue`s as args.
-  // The output is represented as an `Obj`.
+  // Call an `Obj` callable, with arguments given by the tuple args.
   Obj operator()(at::ArrayRef<at::IValue> args);
 
-  // calls callKwargs from the underlying `py::object`
+  // Call an `Obj` callable, with arguments given by the tuple args, and named arguments given by the dictionary kwargs.
   Obj callKwargs(
       std::vector<at::IValue> args,
       std::unordered_map<std::string, c10::IValue> kwargs);
-  // calls callKwargs from the underlying `py::object`. The output is represented as an `Obj`.
+  // Call an `Obj` callable, with named arguments given by the dictionary kwargs.
   Obj callKwargs(std::unordered_map<std::string, c10::IValue> kwargs);
-  // calls hasattr from the underlying `py::object`. The output is represented as an `Obj`.
+  // Returns true if `Obj` has attribute with name `attr` and false otherwise.
   bool hasattr(const char* attr);
-  // calls attr from the underlying `py::object`. The output is represented as an `Obj`.
+  // Returns attribute `attr` from `Obj`. This is equivalent to calling `getattr(Obj, attr)` in python.
   Obj attr(const char* attr);
 
  private:

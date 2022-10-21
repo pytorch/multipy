@@ -89,14 +89,14 @@ class TORCH_API Interpreter {
   multipy::optional<EmbeddedFile> torchPluginFile_;
 
  public:
-  // Create an Interpreter which is managed by `manager` and using the enviroment `env`
+  // Creates an Interpreter which is managed by `manager` and using the environment `env`
   Interpreter(InterpreterManager* manager, std::shared_ptr<Environment> env);
 
-  // Create an Interpreter manager using enviroment `env` which is not tied to an Interpreter Manager.
+  // Creates an Interpreter manager using environment `env` which is not tied to an Interpreter Manager.
   explicit Interpreter(std::shared_ptr<Environment> env)
       : Interpreter(nullptr, env) {}
 
-  // Get a new `InterpreterSession` from this Interpreter.
+  // Gets a new `InterpreterSession` from this Interpreter.
   InterpreterSession acquireSession() const {
     if (manager_) {
       return InterpreterSession(pImpl_->acquireSession(), manager_);
@@ -126,23 +126,23 @@ struct Package;
 // The default LoadBalancer for torch::deploy which handles allocating and freeing subinterpreters.
 struct TORCH_API LoadBalancer {
 
-  // create a Loadbalancer which handles `n` interpreters.
+  // Creates a Loadbalancer which handles `n` interpreters.
   explicit LoadBalancer(size_t n)
       : uses_(new uint64_t[8 * n]), allocated_(n), n_(n) {
     // 8*... to avoid false sharing of atomics on the same cache line
     memset(uses_.get(), 0, 8 * n_ * sizeof(uint64_t));
   }
 
-  // change the amount of subinterpreters which is handled by the load balancer.
+  // Changes the amount of subinterpreters which is handled by the load balancer.
   void setResourceLimit(size_t n) {
     MULTIPY_INTERNAL_ASSERT(n <= allocated_);
     n_ = n;
   }
 
-  // allocate an subinterpreter, and return its ID which is used to free it.
+  // Allocates an subinterpreter, and return its ID which is used to free it.
   int acquire();
 
-  // free the subinterpreter with ID `where`. This ID is returned by `LoadBalancer::acquire()`
+  // Frees the subinterpreter with ID `where`. This ID is returned by `LoadBalancer::acquire()`
   void free(int where);
 
  private:
@@ -158,13 +158,16 @@ struct TORCH_API LoadBalancer {
 struct TORCH_API InterpreterManager {
 
   // constructor for `InterpreterManager` which takes the number of interpreters
-  // (usually correlates to number of cores on your cpu), and a pointer to an `Enviroment`.
+  // (usually correlates to number of cores on your cpu), and a pointer to an `Environment`.
+  // The defualt uses the local python env.
   explicit InterpreterManager(
       size_t nInterp = 2,
       std::shared_ptr<Environment> env = std::make_shared<NoopEnvironment>());
 
   // get a free InterpreterSession, guarenteed that no other user of acquireOne has the same
-  // InterpreterSession. It _is_ possible that other users will be using the interpreter.
+  // InterpreterSession. It _is_ possible that other users will be using the interpreter if there are
+  // no free InterpreterSessions. Unless you are very careful to only use free interpreters, then do not assume
+  // that the `Obj`s are isolated from each other.
   InterpreterSession acquireOne() {
     int where = resources_.acquire();
     InterpreterSession I = instances_[where].acquireSession();
@@ -222,7 +225,6 @@ struct TORCH_API InterpreterManager {
   std::unordered_map<std::string, std::string> registeredModuleSource_;
 };
 
-// Underlying implementation for ReplicatedObj.
 struct TORCH_API ReplicatedObjImpl {
   ReplicatedObjImpl(
       size_t object_id,
@@ -242,10 +244,10 @@ struct TORCH_API ReplicatedObjImpl {
 // by using `InterpreterSession::fromMovable(ReplicatedObj)`
 struct TORCH_API ReplicatedObj {
 
-  // default constructor for `ReplicatedObj`
+  // Default constructor for `ReplicatedObj`
   ReplicatedObj() : pImpl_(nullptr) {}
 
-  // Create an `InterpreterSession` using `onThisInterpreter`. If `onThisInterpreter` is
+  // Creates an `InterpreterSession` using `onThisInterpreter`. If `onThisInterpreter` is
   // a `nullptr', then the associated `InterpreterManager` allocates it.
   InterpreterSession acquireSession(
       const Interpreter* onThisInterpreter = nullptr) const;
@@ -254,7 +256,8 @@ struct TORCH_API ReplicatedObj {
     return I.self(args).toIValue();
   }
 
-  // invokes `callKwargs` using the underlying python object, and returns the output as an `IValue`.
+  // Calls an `ReplicatedObj` callable, with arguments given by the tuple args and named arguments given by the dictionary
+  // kwargs. This is done on an arbitrary `InterpreterSession` which belongs to the `ReplicatedObj`'s manager.
   [[nodiscard]] at::IValue callKwargs(
       std::vector<at::IValue> args,
       std::unordered_map<std::string, c10::IValue> kwargs) const {
@@ -262,21 +265,26 @@ struct TORCH_API ReplicatedObj {
     return I.self.callKwargs(std::move(args), std::move(kwargs)).toIValue();
   }
 
- // invokes `callKwargs` using the underlying python object, and returns the output as an `IValue`.
+  // Calls an `ReplicatedObj` callable, with named arguments given by the dictionary kwargs.
+  // This is done on an arbitrary `InterpreterSession` which belongs to the `ReplicatedObj`'s manager.
   [[nodiscard]] at::IValue callKwargs(
       std::unordered_map<std::string, c10::IValue> kwargs) const {
     auto I = acquireSession();
     return I.self.callKwargs(std::move(kwargs)).toIValue();
   }
 
- // invokes `hasattr` using the underlying python object, and returns the output as an `IValue`.
-  [[nodiscard]] bool hasattr(const char* name) const {
+  // Returns true if `ReplicatedObj` has attribute with name `attr` and false otherwise.
+  // This is done on an arbitrary `InterpreterSession` which belongs to the `ReplicatedObj`'s manager.
+  [[nodiscard]] bool hasattr(const char* attr) const {
     auto I = acquireSession();
-    return I.self.hasattr(name);
+    return I.self.hasattr(attr);
   }
 
-
+  // Deletes `ReplicatedObj` from onThisInterpreter, if onThisInterpreter is `nullptr`,
+  // unload is called on all interpreters belonging to the ReplicatedObject's InterpreterManager
   void unload(const Interpreter* onThisInterpreter = nullptr);
+
+  // Converts `ReplicatedObj` to `Obj` on `InterpreterSession` `I`
   Obj toObj(InterpreterSession* I);
 
  private:
@@ -323,7 +331,7 @@ class PythonMethodWrapper : public torch::IMethod {
   std::string methodName_;
 };
 
-// An object to encapsulate a `torch::package` which can act as part (or entire) enviroment for subinterpreters.
+// An object to encapsulate a `torch::package` which can act as part (or entire) environment for subinterpreters.
 struct TORCH_API Package {
   // shorthand for getting the object as a pickle resource in the package
   ReplicatedObj loadPickle(const std::string& module, const std::string& file) {
@@ -358,7 +366,7 @@ struct TORCH_API Package {
   }
 #endif
 
-  // allocate an `InterpreterSession` and load the appropriate torch.package with it.
+  // Allocates an `InterpreterSession` and load the appropriate torch.package with it.
   InterpreterSession acquireSession() {
     auto I = manager_->acquireOne();
     I.self =
