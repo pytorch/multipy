@@ -10,7 +10,7 @@ exclude_patterns = [
 ]
 command = [
     'python3',
-    'scripts/flake8_linter.py',
+    'scripts/linters/flake8_linter.py',
     '--',
     '@{{PATHSFILE}}'
 ]
@@ -32,8 +32,8 @@ init_command = [
 [[linter]]
 code = 'CLANGFORMAT'
 include_patterns = [
-    'multipy/runtime/**/*.h',
-    'multipy/runtime/**/*.cpp',
+    '**/*.h',
+    '**/*.cpp',
 ]
 exclude_patterns = [
     '.git/**',
@@ -153,17 +153,6 @@ command = [
 
 
 [[linter]]
-code = 'CIRCLECI'
-include_patterns=['.circleci/**']
-command = [
-    'python3',
-    'scripts/linters/circleci_linter.py',
-    '--regen-script-working-dir=.circleci',
-    '--config-yml=.circleci/config.yml',
-    '--regen-script=generate_config_yml.py',
-]
-
-[[linter]]
 code = 'NEWLINE'
 include_patterns=['**']
 exclude_patterns=[
@@ -211,13 +200,16 @@ exclude_patterns = [
     '**/build/**',
     '**/__pycache__/**',
     '**/third_party/**',
+    'scripts/linters/**',
     'multipy/runtime/example/generated/**',
+    '.lintrunner.toml',
+    'README.md',
 ]
 command = [
     'python3',
     'scripts/linters/grep_linter.py',
     # @lint-ignore TXT2
-    '--pattern=	',
+    '--pattern=    ',
     '--linter-name=TABS',
     '--error-name=saw some tabs',
     '--replace-pattern=s/\t/    /',
@@ -416,9 +408,6 @@ code = 'ACTIONLINT'
 include_patterns = [
     '.github/workflows/*.yml',
     '.github/workflows/*.yaml',
-    # actionlint does not support composite actions yet
-    # '.github/actions/**/*.yml',
-    # '.github/actions/**/*.yaml',
 ]
 command = [
     'python3',

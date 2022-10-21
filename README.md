@@ -5,7 +5,7 @@
 
 > :warning: **This is project is still a prototype.** Only Linux x86 is supported, and the API may change without warning. Furthermore, please **USE PYTORCH NIGHTLY** when using `multipy::runtime`!
 
-`MultiPy` (formerly `torch::deploy` and `torch.package`) is a system that allows you to run multi-threaded python code in C++. It offers `multipy.package` (formerly `torch.package`) in order to package code into a mostly hermetic format to deliver to `multipy::runtime` (formerly `torch::deploy`) which is a runtime which takes packaged
+`MultiPy` is a system that allows you to run multiple embedded Python interpreters in a C++ process in order to circumvent the GIL problem. Currently, MultiPy is specialized as `torch::deploy` to work specifically with PyTorch models. It offers `torch.package` (formerly `torch.package`) in order to package code into a mostly hermetic format to deliver to `multipy::runtime` (formerly `torch::deploy`) which is a runtime which takes packaged
 code and runs it using multiple embedded Python interpreters in a C++ process without a shared global interpreter lock (GIL). For more information on how `MultiPy` works
 internally, please see the related [arXiv paper](https://arxiv.org/pdf/2104.00254.pdf).
 
@@ -49,16 +49,6 @@ The runtime system dependencies are specified in `build-requirements.txt`. To in
 ```shell
 sudo apt update
 xargs sudo apt install -y -qq --no-install-recommends <build-requirements.txt
-```
-
-We recommend using the latest version of `cmake` and compilers available for your system. On Ubuntu 18.04, for example, these can be updated as follows:
-
-```shell
-wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | sudo gpg --dearmor -o /usr/share/keyrings/magic-key.gpg
-echo "deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/magic-key.gpg] https://apt.kitware.com/ubuntu/ bionic main" | sudo tee -a /etc/apt/sources.list
-echo "deb http://security.ubuntu.com/ubuntu focal-security main" | sudo tee -a /etc/apt/sources.list
-sudo apt update
-sudo apt install -y binutils cmake
 ```
 
 #### Installing environment encapsulators
@@ -163,7 +153,7 @@ cmake --build . --config Release
 
 ### Running unit tests for `multipy::runtime`
 
-We first need to generate the neccessary examples. First make sure your python environment has [torch](https://pytorch.org). Afterwards, once `multipy::runtime` is built, run the following (executed automatically for `docker` and `pip` above):
+We first need to generate the neccessary examples. First make sure your python enviroment has [torch](https://pytorch.org). Afterwards, once `multipy::runtime` is built, run the following (executed automatically for `docker` and `pip` above):
 
 ```
 cd multipy/multipy/runtime
@@ -232,7 +222,7 @@ int main(int argc, const char* argv[]) {
     multipy::runtime::InterpreterManager manager(4, env);
 
     try {
-        // Load the model from the multipy.package.
+        // Load the model from the torch.package.
         multipy::runtime::Package package = manager.loadPackage(argv[1]);
         multipy::runtime::ReplicatedObj model = package.loadPickle("model", "model.pkl");
     } catch (const c10::Error& e) {
@@ -255,7 +245,7 @@ interpreters, allowing you to load balance across them when running your code.
 packages on your system which are external, but necessary, for your model.
 
 Using the ``InterpreterManager::loadPackage`` method, you can load a
-``multipy.package`` from disk and make it available to all interpreters.
+``torch.package`` from disk and make it available to all interpreters.
 
 ``Package::loadPickle`` allows you to retrieve specific Python objects
 from the package, like the ResNet model we saved earlier.
@@ -273,7 +263,7 @@ Assuming the above C++ program was stored in a file called, `example-app.cpp`, a
 minimal `CMakeLists.txt` file would look like:
 
 ```cmake
-cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 project(multipy_tutorial)
 
 set(MULTIPY_PATH ".." CACHE PATH "The repo where multipy is built or the PYTHONPATH")
