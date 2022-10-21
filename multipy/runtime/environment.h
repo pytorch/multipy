@@ -24,26 +24,25 @@ class Environment {
   // all zipped python libraries will be written
   // under this directory
   std::string extraPythonLibrariesDir_;
-  std::string getZippedArchive(
-      const char* zipped_torch_name,
-      const std::string& pythonAppDir) {
+  std::string getZippedArchive(const char *zipped_torch_name,
+                               const std::string &pythonAppDir) {
     // load the zipped torch modules
     auto zippedTorchSection = searchForSection(zipped_torch_name);
-    MULTIPY_CHECK(
-        zippedTorchSection.has_value(), "Missing the zipped torch section");
-    const char* zippedTorchStart = zippedTorchSection->start;
+    MULTIPY_CHECK(zippedTorchSection.has_value(),
+                  "Missing the zipped torch section");
+    const char *zippedTorchStart = zippedTorchSection->start;
     auto zippedTorchSize = zippedTorchSection->len;
 
     std::string zipArchive = pythonAppDir;
     auto zippedFile = fopen(zipArchive.c_str(), "wb");
-    MULTIPY_CHECK(
-        zippedFile != nullptr, "Fail to create file: ", strerror(errno));
+    MULTIPY_CHECK(zippedFile != nullptr,
+                  "Fail to create file: ", strerror(errno));
     fwrite(zippedTorchStart, 1, zippedTorchSize, zippedFile);
     fclose(zippedFile);
     return zipArchive;
   }
 
-  void setupZippedPythonModules(const std::string& pythonAppDir) {
+  void setupZippedPythonModules(const std::string &pythonAppDir) {
 #ifdef FBCODE_CAFFE2
     extraPythonPaths_.push_back(getZippedArchive(
         ".torch_python_modules",
@@ -56,17 +55,17 @@ class Environment {
     extraPythonLibrariesDir_ = pythonAppDir;
   }
 
- public:
+public:
   // Environment constructor which creates a random temporary directory as
   // a directory for the zipped python modules.
   explicit Environment() {
     char tempDirName[] = "/tmp/torch_deploy_zipXXXXXX";
-    char* tempDirectory = mkdtemp(tempDirName);
+    char *tempDirectory = mkdtemp(tempDirName);
     setupZippedPythonModules(tempDirectory);
   }
-   // Environment constructor which takes a file name for the
+  // Environment constructor which takes a file name for the
   // directory for the zipped python modules.
-  explicit Environment(const std::string& pythonAppDir) {
+  explicit Environment(const std::string &pythonAppDir) {
     setupZippedPythonModules(pythonAppDir);
   }
   // Deconstructor for Environment.
@@ -74,8 +73,8 @@ class Environment {
     auto rmCmd = "rm -rf " + extraPythonLibrariesDir_;
     (void)system(rmCmd.c_str());
   }
-  virtual void configureInterpreter(Interpreter* interp) = 0;
-  virtual const std::vector<std::string>& getExtraPythonPaths() {
+  virtual void configureInterpreter(Interpreter *interp) = 0;
+  virtual const std::vector<std::string> &getExtraPythonPaths() {
     return extraPythonPaths_;
   }
 };

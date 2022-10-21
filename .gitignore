@@ -2,11 +2,7 @@
 .git/**
 **/__pycache__/**
 **.coverage
-.coverage
-multipy/runtime/interpreter/cpython
-multipy/runtime/interpreter/cpython/**
 **/build/**
 **/CMakeFiles/**
-multipy/runtime/interpreter/frozen/**
 multipy/runtime/example/generated/
 *.egg-info

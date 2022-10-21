@@ -13,8 +13,8 @@ namespace deploy {
 
 // The local python Environment
 class NoopEnvironment : public Environment {
- public:
-  void configureInterpreter(Interpreter* /* interp */) override {}
+public:
+  void configureInterpreter(Interpreter * /* interp */) override {}
 };
 
 } // namespace deploy

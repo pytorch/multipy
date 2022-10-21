@@ -12,13 +12,14 @@
 namespace torch {
 namespace deploy {
 
-// An Environment which is defined by a specific path to python code (ie. condas sitepackages)
+// An Environment which is defined by a specific path to python code (ie. condas
+// sitepackages)
 class PathEnvironment : public Environment {
- public:
+public:
   explicit PathEnvironment(std::string path) : path_(std::move(path)) {}
-  void configureInterpreter(Interpreter* interp) override;
+  void configureInterpreter(Interpreter *interp) override;
 
- private:
+private:
   std::string path_;
 };
 
