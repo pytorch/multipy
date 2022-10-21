@@ -13,14 +13,14 @@ namespace deploy {
 
 // Represents an ExeSection of an EmbeddedFile.
 struct ExeSection {
-  const char *sectionName;
+  const char* sectionName;
   bool customLoader;
 };
 
 // These are symbols used by the subinterpreters.
 struct InterpreterSymbol {
-  const char *startSym;
-  const char *endSym;
+  const char* startSym;
+  const char* endSym;
   bool customLoader;
 };
 
@@ -30,13 +30,14 @@ struct EmbeddedFile {
   std::string libraryName{""};
   bool customLoader{false};
 
-  EmbeddedFile(std::string name,
-               const std::initializer_list<ExeSection> &sections,
-               const std::initializer_list<InterpreterSymbol> symbols);
+  EmbeddedFile(
+      std::string name,
+      const std::initializer_list<ExeSection>& sections,
+      const std::initializer_list<InterpreterSymbol> symbols);
 
   ~EmbeddedFile();
 
-  EmbeddedFile &operator=(const EmbeddedFile &) = delete;
+  EmbeddedFile& operator=(const EmbeddedFile&) = delete;
 };
 
 } // namespace deploy
