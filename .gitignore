@@ -6,3 +6,4 @@
 **/CMakeFiles/**
 multipy/runtime/example/generated/
 *.egg-info
+.lintbin/
