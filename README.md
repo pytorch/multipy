@@ -163,7 +163,7 @@ cmake --build . --config Release
 
 ### Running unit tests for `multipy::runtime`
 
-We first need to generate the neccessary examples. First make sure your python enviroment has [torch](https://pytorch.org). Afterwards, once `multipy::runtime` is built, run the following (executed automatically for `docker` and `pip` above):
+We first need to generate the neccessary examples. First make sure your python environment has [torch](https://pytorch.org). Afterwards, once `multipy::runtime` is built, run the following (executed automatically for `docker` and `pip` above):
 
 ```
 cd multipy/multipy/runtime

@@ -19,6 +19,7 @@ namespace deploy {
 struct InterpreterSessionImpl;
 struct Obj;
 
+// Representation a Pickled Object
 struct PickledObject {
   std::string data_;
   std::vector<at::Storage> storages_;
@@ -28,35 +29,37 @@ struct PickledObject {
   std::shared_ptr<caffe2::serialize::PyTorchStreamReader> containerFile_;
 };
 
+// The underlying implementation of `Obj` which holds the underlying
+// `py::object`.
 struct InterpreterObj {
   friend struct Obj;
   friend struct ReplicatedObjImpl;
   friend struct InterpreterSessionImpl;
 
- protected:
-  InterpreterSessionImpl* owningSession_;
+protected:
+  InterpreterSessionImpl *owningSession_;
 
- public:
+public:
   InterpreterObj() : owningSession_(nullptr) {}
-  explicit InterpreterObj(InterpreterSessionImpl* owningSession)
+  explicit InterpreterObj(InterpreterSessionImpl *owningSession)
       : owningSession_(owningSession) {}
-  InterpreterObj(const InterpreterObj& obj) = delete;
-  InterpreterObj& operator=(const InterpreterObj& obj) = delete;
-  InterpreterObj(InterpreterObj&& obj) = default;
-  InterpreterObj& operator=(InterpreterObj&& obj) = default;
+  InterpreterObj(const InterpreterObj &obj) = delete;
+  InterpreterObj &operator=(const InterpreterObj &obj) = delete;
+  InterpreterObj(InterpreterObj &&obj) = default;
+  InterpreterObj &operator=(InterpreterObj &&obj) = default;
   virtual ~InterpreterObj() = default;
 
- private:
+private:
   virtual at::IValue toIValue() const = 0;
   virtual Obj call(at::ArrayRef<std::shared_ptr<InterpreterObj>> args) = 0;
   virtual Obj call(at::ArrayRef<at::IValue> args) = 0;
-  virtual Obj callKwargs(
-      std::vector<at::IValue> args,
-      std::unordered_map<std::string, c10::IValue> kwargs) = 0;
-  virtual Obj callKwargs(
-      std::unordered_map<std::string, c10::IValue> kwargs) = 0;
-  virtual bool hasattr(const char* attr) = 0;
-  virtual Obj attr(const char* attr) = 0;
+  virtual Obj
+  callKwargs(std::vector<at::IValue> args,
+             std::unordered_map<std::string, c10::IValue> kwargs) = 0;
+  virtual Obj
+  callKwargs(std::unordered_map<std::string, c10::IValue> kwargs) = 0;
+  virtual bool hasattr(const char *attr) = 0;
+  virtual Obj attr(const char *attr) = 0;
 };
 
 // this is a wrapper class that refers to a PyObject* instance in a particular
@@ -72,21 +75,34 @@ struct Obj {
       : isDefault_(false), baseObj_(baseObj) {}
   Obj() : isDefault_(true), baseObj_(nullptr) {}
 
+  // return `IValue` representation.
   at::IValue toIValue() const;
-  Obj operator()(at::ArrayRef<Obj> args);
-  Obj operator()(at::ArrayRef<at::IValue> args);
-  Obj callKwargs(
-      std::vector<at::IValue> args,
-      std::unordered_map<std::string, c10::IValue> kwargs);
-  Obj callKwargs(std::unordered_map<std::string, c10::IValue> kwargs);
-  bool hasattr(const char* attr);
-  Obj attr(const char* attr);
 
- private:
+  // Call an `Obj` callable, with arguments given by the tuple args.
+  Obj operator()(at::ArrayRef<Obj> args);
+
+  // Call an `Obj` callable, with arguments given by the tuple args.
+  Obj operator()(at::ArrayRef<at::IValue> args);
+
+  // Call an `Obj` callable, with arguments given by the tuple args, and named
+  // arguments given by the dictionary kwargs.
+  Obj callKwargs(std::vector<at::IValue> args,
+                 std::unordered_map<std::string, c10::IValue> kwargs);
+  // Call an `Obj` callable, with named arguments given by the dictionary
+  // kwargs.
+  Obj callKwargs(std::unordered_map<std::string, c10::IValue> kwargs);
+  // Returns true if `Obj` has attribute with name `attr` and false otherwise.
+  bool hasattr(const char *attr);
+  // Returns attribute `attr` from `Obj`. This is equivalent to calling
+  // `getattr(Obj, attr)` in python.
+  Obj attr(const char *attr);
+
+private:
   bool isDefault_;
   std::shared_ptr<InterpreterObj> baseObj_;
 };
 
+// The underlying implementation of `InterpreterSession`
 struct InterpreterSessionImpl {
   friend struct Package;
   friend struct ReplicatedObj;
@@ -96,46 +112,41 @@ struct InterpreterSessionImpl {
 
   virtual ~InterpreterSessionImpl() = default;
 
- private:
-  virtual Obj global(const char* module, const char* name) = 0;
+private:
+  virtual Obj global(const char *module, const char *name) = 0;
   virtual Obj fromIValue(at::IValue value) = 0;
   virtual Obj createOrGetPackageImporterFromContainerFile(
-      const std::shared_ptr<caffe2::serialize::PyTorchStreamReader>&
-          containerFile_) = 0;
+      const std::shared_ptr<caffe2::serialize::PyTorchStreamReader>
+          &containerFile_) = 0;
   virtual PickledObject pickle(Obj container, Obj obj) = 0;
-  virtual Obj unpickleOrGet(int64_t id, const PickledObject& obj) = 0;
+  virtual Obj unpickleOrGet(int64_t id, const PickledObject &obj) = 0;
   virtual void unload(int64_t id) = 0;
 
   virtual at::IValue toIValue(Obj obj) const = 0;
 
   virtual Obj call(Obj obj, at::ArrayRef<Obj> args) = 0;
   virtual Obj call(Obj obj, at::ArrayRef<at::IValue> args) = 0;
-  virtual Obj callKwargs(
-      Obj obj,
-      std::vector<at::IValue> args,
-      std::unordered_map<std::string, c10::IValue> kwargs) = 0;
-  virtual Obj callKwargs(
-      Obj obj,
-      std::unordered_map<std::string, c10::IValue> kwargs) = 0;
-  virtual Obj attr(Obj obj, const char* attr) = 0;
-  virtual bool hasattr(Obj obj, const char* attr) = 0;
+  virtual Obj
+  callKwargs(Obj obj, std::vector<at::IValue> args,
+             std::unordered_map<std::string, c10::IValue> kwargs) = 0;
+  virtual Obj
+  callKwargs(Obj obj, std::unordered_map<std::string, c10::IValue> kwargs) = 0;
+  virtual Obj attr(Obj obj, const char *attr) = 0;
+  virtual bool hasattr(Obj obj, const char *attr) = 0;
 
- protected:
-  int64_t isDefault(Obj obj) const {
-    return obj.isDefault_;
-  }
+protected:
+  int64_t isDefault(Obj obj) const { return obj.isDefault_; }
   std::shared_ptr<InterpreterObj> getBaseObj(Obj obj) const {
     return obj.baseObj_;
   }
-  bool isOwner(Obj obj) const {
-    return this == obj.baseObj_->owningSession_;
-  }
+  bool isOwner(Obj obj) const { return this == obj.baseObj_->owningSession_; }
 };
 
+// The underlying implementation of `Interpreter`
 struct InterpreterImpl {
-  virtual InterpreterSessionImpl* acquireSession() = 0;
+  virtual InterpreterSessionImpl *acquireSession() = 0;
   virtual void setFindModule(
-      std::function<multipy::optional<std::string>(const std::string&)>
+      std::function<multipy::optional<std::string>(const std::string &)>
           find_module) = 0;
   virtual ~InterpreterImpl() = default; // this will uninitialize python
 };
@@ -143,9 +154,7 @@ struct InterpreterImpl {
 // inline definitions for Objs are necessary to avoid introducing a
 // source file that would need to exist it both the libinterpreter.so and then
 // the libtorchpy library.
-inline at::IValue Obj::toIValue() const {
-  return baseObj_->toIValue();
-}
+inline at::IValue Obj::toIValue() const { return baseObj_->toIValue(); }
 
 inline Obj Obj::operator()(at::ArrayRef<Obj> args) {
   std::vector<std::shared_ptr<torch::deploy::InterpreterObj>> copy;
@@ -159,22 +168,18 @@ inline Obj Obj::operator()(at::ArrayRef<at::IValue> args) {
   return baseObj_->call(args);
 }
 
-inline Obj Obj::callKwargs(
-    std::vector<at::IValue> args,
-    std::unordered_map<std::string, c10::IValue> kwargs) {
+inline Obj
+Obj::callKwargs(std::vector<at::IValue> args,
+                std::unordered_map<std::string, c10::IValue> kwargs) {
   return baseObj_->callKwargs(std::move(args), std::move(kwargs));
 }
-inline Obj Obj::callKwargs(
-    std::unordered_map<std::string, c10::IValue> kwargs) {
+inline Obj
+Obj::callKwargs(std::unordered_map<std::string, c10::IValue> kwargs) {
   return baseObj_->callKwargs(std::move(kwargs));
 }
-inline bool Obj::hasattr(const char* attr) {
-  return baseObj_->hasattr(attr);
-}
+inline bool Obj::hasattr(const char *attr) { return baseObj_->hasattr(attr); }
 
-inline Obj Obj::attr(const char* attr) {
-  return baseObj_->attr(attr);
-}
+inline Obj Obj::attr(const char *attr) { return baseObj_->attr(attr); }
 
 } // namespace deploy
 } // namespace torch
