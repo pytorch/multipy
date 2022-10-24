@@ -16,7 +16,7 @@ int main(int argc, const char* argv[]) {
         std::vector<torch::jit::IValue> constructor_inputs;
         auto model_obj =
         I.global("torch.nn", "Conv2d")({6, 2, 2, 1});
-        auto rObj = I.createMovable(model_obj);
+        auto rObj = m.createMovable(model_obj, &I);
         auto I2 = m.acquireOne();
         auto model_obj2 = I2.fromMovable(rObj);
         rObj.unload(); // free the replicated object
