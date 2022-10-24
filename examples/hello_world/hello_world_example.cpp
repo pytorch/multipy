@@ -1,3 +1,7 @@
+/* Basic example of a single interpreter from `torch::deploy`
+   to invoke python methods directly. Here we specifically
+   invoke `print` to print out `Hello World`.
+*/
 #include <multipy/runtime/deploy.h>
 #include <multipy/runtime/path_environment.h>
 #include <torch/script.h>
