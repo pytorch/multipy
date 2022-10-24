@@ -274,8 +274,9 @@ struct TORCH_API ReplicatedObj {
     return I.self.callKwargs(std::move(args), std::move(kwargs)).toIValue();
   }
 
-  // Invokes the Python function or class on an arbitrary  interpreter.with named arguments given by the
-  // dictionary kwargs (equivalent to python's `__call__`).
+  // Invokes the Python function or class on an arbitrary  interpreter.with
+  // named arguments given by the dictionary kwargs (equivalent to python's
+  // `__call__`).
   [[nodiscard]] at::IValue callKwargs(
       std::unordered_map<std::string, c10::IValue> kwargs) const {
     auto I = acquireSession();
