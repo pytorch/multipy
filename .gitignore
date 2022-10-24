@@ -9,4 +9,5 @@ multipy/runtime/interpreter/cpython/**
 **/CMakeFiles/**
 multipy/runtime/interpreter/frozen/**
 multipy/runtime/example/generated/
+examples/**/*.pt
 *.egg-info

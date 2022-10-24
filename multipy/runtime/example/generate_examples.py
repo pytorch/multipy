@@ -56,7 +56,15 @@ def generate_fx_example():
     model_jit.save(str(p / (name + "_jit")))
 
 
-def save(name, model, model_jit=None, eg=None, featurestore_meta=None):
+def save(
+    name,
+    model,
+    model_jit=None,
+    eg=None,
+    featurestore_meta=None,
+    text_in_extra_file=None,
+    binary_in_extra_file=None,
+):
     with PackageExporter(str(p / name)) as e:
         e.mock("iopath.**")
         e.intern("**")
@@ -67,6 +75,10 @@ def save(name, model, model_jit=None, eg=None, featurestore_meta=None):
             # TODO(whc) can this name come from buck somehow,
             # so it's consistent with predictor_config_constants::METADATA_FILE_NAME()?
             e.save_text("extra_files", "metadata.json", featurestore_meta)
+        if text_in_extra_file:
+            e.save_text("extra_files", "text", text_in_extra_file)
+        if binary_in_extra_file:
+            e.save_binary("extra_files", "binary", binary_in_extra_file)
 
     if model_jit:
         model_jit.save(str(p / (name + "_jit")))
@@ -91,7 +103,14 @@ if __name__ == "__main__":
     save("resnet", resnet, resnet_traced, (resnet_eg,))
 
     simple = Simple(10, 20)
-    save("simple", simple, torch.jit.script(simple), (torch.rand(10, 20),))
+    save(
+        name="simple",
+        model=simple,
+        model_jit=torch.jit.script(simple),
+        eg=(torch.rand(10, 20),),
+        text_in_extra_file="hello",
+        binary_in_extra_file=b"hello",
+    )
 
     multi_return = MultiReturn()
     save(

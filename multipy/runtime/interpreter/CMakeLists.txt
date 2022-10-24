@@ -9,14 +9,11 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" )
 SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" PARENT_SCOPE)
 
-set(PYTORCH_ROOT "${DEPLOY_DIR}/third-party/pytorch")
-include_directories(BEFORE "${PYTORCH_ROOT}/torch/include")
-include_directories(BEFORE "${PYTORCH_ROOT}/torch/include/torch/csrc/api/include/")
+include(${DEPLOY_DIR}/utils.cmake)
+
 SET(MULTIPY_UTILS "${CMAKE_CURRENT_SOURCE_DIR}/../../utils")
 
 OPTION(LEGACY_PYTHON_PRE_3_8 "Whether to use Python 3.7 codepaths." OFF)
-
-find_package (Python3 COMPONENTS Interpreter Development)
 
 message(STATUS "Python3_EXECUTABLE - ${Python3_EXECUTABLE}" )
 message(STATUS "Python3_SITELIB - ${Python3_SITELIB}" )
@@ -30,9 +27,6 @@ if (NOT EXISTS ${Python3_STATIC_LIBRARIES})
 endif()
 message(STATUS "Python3_STATIC_LIBRARIES - ${Python3_STATIC_LIBRARIES}" )
 
-include_directories(BEFORE "${Python3_SITELIB}/torch/include")
-link_directories(BEFORE "${Python3_SITELIB}/torch/lib")
-include_directories(BEFORE "${Python3_INCLUDE_DIRS}")
 include_directories(BEFORE ${CMAKE_SOURCE_DIR}/../..)
 
 if (${LEGACY_PYTHON_PRE_3_8})
@@ -49,13 +43,22 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(googletest)
 include(GoogleTest)
 
+IF(CMAKE_BUILD_TYPE MATCHES Debug)
+  set(OBJCOPY_FLAGS "")
+else()
+  # binutils prior to 2.32 have issues linking against newer libraries due to
+  # debug info changes. By default we can strip these out to ensure it
+  # compiles.
+  set(OBJCOPY_FLAGS "--strip-debug")
+endif()
+
 # instantiate a library based on the objects that make up torch_python
 # make sure system python isn't used here
 add_custom_command(
   OUTPUT libpython_multipy.a
   COMMAND cp ${Python3_STATIC_LIBRARIES} libpython_multipy.a
   COMMAND chmod +w libpython_multipy.a
-  COMMAND "${CMAKE_OBJCOPY}" --weaken-symbol=_PyImport_FindSharedFuncptr libpython_multipy.a
+  COMMAND "${CMAKE_OBJCOPY}" ${OBJCOPY_FLAGS} --weaken-symbol=_PyImport_FindSharedFuncptr libpython_multipy.a
 )
 add_custom_target(libpython_multipy DEPENDS libpython_multipy.a)
 
