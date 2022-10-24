@@ -7,6 +7,22 @@
 # prefer the active Python version instead of the latest -- only works on cmake
 # 3.15+
 # https://cmake.org/cmake/help/latest/module/FindPython3.html#hints
+if (NOT DEFINED _GLIBCXX_USE_CXX11_ABI)
+  # infer the ABI setting from the installed version of PyTorch
+  execute_process(
+    COMMAND python -c "import torch; print(1 if torch._C._GLIBCXX_USE_CXX11_ABI else 0)"
+    OUTPUT_VARIABLE _GLIBCXX_USE_CXX11_ABI
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    RESULT_VARIABLE ret
+  )
+  if(ret EQUAL "1")
+    message(FATAL_ERROR "Failed to detect ABI version")
+  endif()
+endif()
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${_GLIBCXX_USE_CXX11_ABI}")
+add_definitions(-D_GLIBCXX_USE_CXX11_ABI=${_GLIBCXX_USE_CXX11_ABI})
+message(STATUS "_GLIBCXX_USE_CXX11_ABI - ${_GLIBCXX_USE_CXX11_ABI}")
+
 set(Python3_FIND_STRATEGY LOCATION)
 
 find_package (Python3 COMPONENTS Interpreter Development)

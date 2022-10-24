@@ -102,6 +102,7 @@ jobs:
       - name: Run pip install with conda for 3.8+
         run: |
           set -eux
-          if [[ ${{ matrix.python-minor-version }} -gt 7 ]]; then \
-          pip install -e .
+          if [[ ${{ matrix.python-minor-version }} -gt 7 ]]; then
+            source /opt/conda/bin/activate
+            pip install -e .
           fi
