@@ -76,7 +76,7 @@ struct Obj {
       : isDefault_(false), baseObj_(baseObj) {}
   Obj() : isDefault_(true), baseObj_(nullptr) {}
 
-  // return `IValue` representation.
+  // Converts the python object to a C++ at::IValue.
   at::IValue toIValue() const;
 
   // Call an `Obj` callable, with arguments given by the tuple args. Equivalent
