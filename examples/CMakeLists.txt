@@ -26,3 +26,7 @@ target_link_libraries(hello_world_example PUBLIC "-Wl,--no-as-needed -rdynamic" 
 
 add_executable(quickstart quickstart/quickstart.cpp)
 target_link_libraries(quickstart PUBLIC "-Wl,--no-as-needed -rdynamic" dl pthread util multipy c10 torch_cpu)
+
+add_executable(movable_example movable_example/movable_example.cpp)
+target_link_libraries(movable_example PUBLIC "-Wl,--no-as-needed -rdynamic" dl pthread util multipy c10 torch_cpu)
+
