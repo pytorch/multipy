@@ -46,7 +46,8 @@ struct TORCH_API InterpreterSession {
   // NOLINTNEXTLINE(bugprone-exception-escape)
   ~InterpreterSession();
 
-  // global imports a python object from the specified module.
+  // `global` imports a python object from the specified module.
+  // Specifically `global` is analogous to "import `name` from `module`" in python.
   Obj global(const char* module, const char* name) {
     return impl_->global(module, name);
   }
