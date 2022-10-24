@@ -11,28 +11,9 @@ internally, please see the related [arXiv paper](https://arxiv.org/pdf/2104.0025
 
 ## Installation
 
-You'll first need to install the `multipy` python module which includes
-`multipy.package`.
-
-```shell
-pip install "git+https://github.com/pytorch/multipy.git"
-```
-
-### Installing `multipy::runtime` **(recommended)**
-
-The C++ binaries (`libtorch_interpreter.so`,`libtorch_deploy.a`, `utils.cmake`), and the header files of `multipy::runtime` can be installed from our [nightly release](https://github.com/pytorch/multipy/releases/tag/nightly-runtime-abi-0). The ABI for the nightly release is 0. You can find a version of the release with ABI=1 [here](https://github.com/pytorch/multipy/releases/tag/nightly-runtime-abi-1).
-
-```
-wget https://github.com/pytorch/multipy/releases/download/nightly-runtime-abi-0/multipy_runtime.tar.gz
-tar -xvzf multipy_runtime.tar.gz
-```
-
-In order to run PyTorch models, we need to link to libtorch (PyTorch's C++ distribution) which is provided when you [pip or conda install pytorch](https://pytorch.org/).
-If you're not sure which ABI value to use, it's important to note that the pytorch C++ binaries, provided when you pip or conda install, are compiled with an ABI value of 0. If you're using libtorch from the pip or conda distribution of pytorch then ensure to use multipy installation with an ABI of 0 (`nightly-runtime-abi-0`).
-
 ### Building `multipy::runtime` via Docker
 
-The easiest way to build multipy from source is to build it via docker.
+The easiest way to build multipy, along with fetching all interpreter dependencies, is to do so via docker.
 
 ```shell
 git clone https://github.com/pytorch/multipy.git
@@ -41,7 +22,7 @@ export DOCKER_BUILDKIT=1
 docker build -t multipy .
 ```
 
-The built artifacts will be located in `/opt/dist`
+The built artifacts are located in `multipy/runtime/build`.
 
 To run the tests:
 
@@ -49,15 +30,61 @@ To run the tests:
 docker run --rm multipy multipy/runtime/build/test_deploy
 ```
 
-### Installing `multipy::runtime` from source
+### Installing via `pip install`
 
-Multipy needs a local copy of python with `-fPIC` enabled as well as a recent copy of pytorch.
+We support installing both python modules and the runtime libs using `pip install`, with the caveat of having to manually install the dependencies first.
 
-#### Dependencies: Conda
+To start with, the multipy repo should be cloned first:
+```shell
+git clone https://github.com/pytorch/multipy.git
+cd multipy
+git submodule sync && git submodule update --init --recursive
+```
+
+
+#### Installing system dependencies
+
+The runtime system dependencies are specified in `build-requirements.txt`. To install them on Debian-based systems, one could run:
 
 ```shell
+sudo apt update
+xargs sudo apt install -y -qq --no-install-recommends <build-requirements.txt
+```
+
+#### Installing environment encapsulators
+
+We support both `conda` and `pyenv`+`virtualenv` to create isolated environments to build and run in. Since `multipy` requires a position-independent version of python to launch interpreters with, for `conda` environments we use the prebuilt `libpython-static=3.x` libraries from `conda-forge` to link with at build time, and for `virtualenv`/`pyenv` we compile python with `-fPIC` to create the linkable library.
+
+> **NOTE** We support Python versions 3.7 through 3.10 for `multipy`; note that for `conda` environments the `libpython-static` libraries are available for `3.8` onwards. With `virtualenv`/`pyenv` any version from 3.7 through 3.10 can be used, as the PIC library is built explicitly.
+
+<details>
+<summary>Click to expand</summary>
+
+Example commands for installing conda:
+```shell
+curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
+chmod +x ~/miniconda.sh && \
+~/miniconda.sh -b -p /opt/conda && \
+rm ~/miniconda.sh
+```
+Virtualenv / pyenv can be installed as follows:
+```shell
+pip3 install virtualenv
+git clone https://github.com/pyenv/pyenv.git ~/.pyenv
+```
+</details>
+
+
+#### Installing python, pytorch and related dependencies
+
+Multipy requires the latest version of pytorch to run models successfully, and we recommend fetching the latest _nightlies_ for pytorch and also cuda, if required.
+
+##### In a `conda` environment, we would do the following:
+```shell
+conda create -n newenv
+conda activate newenv
 conda install python=3.8
-conda install -c conda-forge libpython-static=3.8 # libpython.a
+conda install -c conda-forge libpython-static=3.8
 
 # cuda
 conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly
@@ -66,21 +93,42 @@ conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly
 conda install pytorch torchvision torchaudio cpuonly -c pytorch-nightly
 ```
 
-#### Dependencies: PyEnv
-
+##### For a `pyenv` / `virtualenv` setup, one could do:
 ```shell
-# install libpython.a with -fPIC enabled
 export CFLAGS="-fPIC -g"
-pyenv install --force 3.8.6
+~/.pyenv/bin/pyenv install --force 3.8.6
 virtualenv -p ~/.pyenv/versions/3.8.6/bin/python3 ~/venvs/multipy
 source ~/venvs/multipy/bin/activate
+pip install -r dev-requirements.txt
 
 # cuda
 pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cu113
 
 # cpu only
 pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cpu
+
 ```
+
+#### Running `pip install`
+
+Once all the dependencies are successfully installed, most importantly including a PIC-library of python and the latest nightly of pytorch, we can run the following, in either `conda` or `virtualenv`, to install both the python modules and the runtime/interpreter libraries:
+```shell
+# from base multipy directory
+pip install -e .
+```
+The C++ binaries should be available in `/opt/dist`.
+
+Alternatively, one can install only the python modules without invoking `cmake` as follows:
+```shell
+pip install  -e . --install-option="--cmakeoff"
+```
+
+> **NOTE** As of 10/11/2022 the linking of prebuilt static fPIC versions of python downloaded from `conda-forge` can be problematic on certain systems (for example Centos 8), with linker errors like `libpython_multipy.a: error adding symbols: File format not recognized`. This seems to be an issue with `binutils`, and the steps in https://wiki.gentoo.org/wiki/Project:Toolchain/Binutils_2.32_upgrade_notes/elfutils_0.175:_unable_to_initialize_decompress_status_for_section_.debug_info can help. Alternatively, the user can go with the `virtualenv`/`pyenv` flow above.
+
+
+### Running `multipy::runtime` build steps from source
+
+Both `docker` and `pip install` options above are wrappers around the `cmake build` of multipy's runtime. If the user wishes to run the build steps manually instead, as before the dependencies would have to be installed in the user's (isolated) environment of choice first. After that the following steps can be executed:
 
 #### Building
 
@@ -89,7 +137,11 @@ pip3 install --pre torch torchvision torchaudio --extra-index-url https://downlo
 git checkout https://github.com/pytorch/multipy.git
 git submodule sync && git submodule update --init --recursive
 
-cd multipy/multipy/runtime
+cd multipy
+# install python parts of `torch::deploy` in multipy/multipy/utils
+pip install -e . --install-option="--cmakeoff"
+
+cd multipy/runtime
 
 # build runtime
 mkdir build
@@ -101,7 +153,7 @@ cmake --build . --config Release
 
 ### Running unit tests for `multipy::runtime`
 
-We first need to generate the neccessary examples. First make sure your python enviroment has [torch](https://pytorch.org). Afterwards, once `multipy::runtime` is built
+We first need to generate the neccessary examples. First make sure your python enviroment has [torch](https://pytorch.org). Afterwards, once `multipy::runtime` is built, run the following (executed automatically for `docker` and `pip` above):
 
 ```
 cd multipy/multipy/runtime
@@ -110,7 +162,9 @@ cd build
 ./test_deploy
 ```
 
-## Example
+## Examples
+
+See the [examples directory](./examples) for complete examples.
 
 ### Packaging a model `for multipy::runtime`
 
@@ -209,30 +263,30 @@ Assuming the above C++ program was stored in a file called, `example-app.cpp`, a
 minimal `CMakeLists.txt` file would look like:
 
 ```cmake
-cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 project(multipy_tutorial)
 
-find_package(Torch REQUIRED)
+set(MULTIPY_PATH ".." CACHE PATH "The repo where multipy is built or the PYTHONPATH")
+
+# include the multipy utils to help link against
+include(${MULTIPY_PATH}/multipy/runtime/utils.cmake)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=0")
 set(TORCH_CXX_FLAGS "-D_GLIBCXX_USE_CXX11_ABI=0")
 
 # add headers from multipy
-include_directories(${PATH_TO_MULTIPY_DIR})
+include_directories(${MULTIPY_PATH})
 
-add_library(torch_deploy_internal STATIC IMPORTED)
-
+# link the multipy prebuilt binary
+add_library(multipy_internal STATIC IMPORTED)
 set_target_properties(multipy_internal
     PROPERTIES
     IMPORTED_LOCATION
-    ${PATH_TO_MULTIPY_DIR}/multipy/runtime/lib/libtorch_deploy.a)
-
+    ${MULTIPY_PATH}/multipy/runtime/build/libtorch_deploy.a)
 caffe2_interface_library(multipy_internal multipy)
 
 add_executable(example-app example-app.cpp)
-target_link_libraries(example-app PUBLIC
-    "-Wl,--no-as-needed -rdynamic"
-    shm crypt pthread dl util m ffi lzma readline nsl ncursesw panelw z multipy "${TORCH_LIBRARIES}")
+target_link_libraries(example-app PUBLIC "-Wl,--no-as-needed -rdynamic" dl pthread util multipy c10 torch_cpu)
 ```
 
 Currently, it is necessary to build ``multipy::runtime`` as a static library.
@@ -254,6 +308,7 @@ export LIBRARY_PATH="$LIBRARY_PATH:/home/user/anaconda3/envs/multipy-example/lib
 
 The last step is configuring and building the project. Assuming that our code
 directory is laid out like this:
+
 ```
 example-app/
     CMakeLists.txt
@@ -265,12 +320,8 @@ We can now run the following commands to build the application from within the
 ``example-app/`` folder:
 
 ```bash
-cmake -S . -B build/
-    -DCMAKE_PREFIX_PATH="$(python -c 'import torch.utils; print(torch.utils.cmake_prefix_path)')" \
-    -DPATH_TO_MULTIPY_DIR="/home/user/repos/" # whereever the multipy release was unzipped during installation
-
-cd build
-make -j
+cmake -S . -B build -DMULTIPY_PATH="/home/user/repos/multipy" # the parent directory of multipy (i.e. the git repo)
+cmake --build build --config Release -j
 ```
 
 Now we can run our app:

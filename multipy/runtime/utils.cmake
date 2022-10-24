@@ -4,6 +4,27 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
+# prefer the active Python version instead of the latest -- only works on cmake
+# 3.15+
+# https://cmake.org/cmake/help/latest/module/FindPython3.html#hints
+set(Python3_FIND_STRATEGY LOCATION)
+
+find_package (Python3 COMPONENTS Interpreter Development)
+set(PYTORCH_ROOT "${Python3_SITELIB}")
+
+# if pytorch was installed in develop mode we need to resolve the egg-link
+set(PYTORCH_EGG_LINK "${PYTORCH_ROOT}/torch.egg-link")
+if (EXISTS "${PYTORCH_EGG_LINK}")
+  file (STRINGS "${PYTORCH_EGG_LINK}" PYTORCH_ROOT LIMIT_COUNT 1)
+endif()
+
+message(STATUS "PYTORCH_ROOT - ${PYTORCH_ROOT}" )
+
+include_directories(BEFORE "${PYTORCH_ROOT}/torch/include")
+include_directories(BEFORE "${PYTORCH_ROOT}/torch/include/torch/csrc/api/include/")
+include_directories(BEFORE "${Python3_INCLUDE_DIRS}")
+LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
+
 macro(caffe2_interface_library SRC DST)
   add_library(${DST} INTERFACE)
   add_dependencies(${DST} ${SRC})

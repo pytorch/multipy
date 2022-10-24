@@ -4,13 +4,14 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-cmake_minimum_required(VERSION 3.19)
+cmake_minimum_required(VERSION 3.12)
 project(MultipyRuntime)
 
 # set ABI by default to 0
 
 option(ABI_EQUALS_1 "Set ABI value to 1, by default it is set to 0. Pytorch by default builds with ABI set to 1." OFF)
 option(BUILD_CUDA_TESTS "Set to ON in order to build cuda tests. By default we do not" OFF)
+option(GDB_ON "Sets to debug mode (for gdb), defaults to OFF" OFF)
 
 OPTION(LEGACY_PYTHON_PRE_3_8 "Whether to use Python 3.7 codepaths." OFF)
 
@@ -19,6 +20,12 @@ if(ABI_EQUALS_1)
 else()
   set(ABI_VALUE 0)
 endif()
+
+if(GDB_ON)
+  set(CMAKE_BUILD_TYPE Debug)
+endif()
+
+message(STATUS "CMAKE_BUILD_TYPE - ${CMAKE_BUILD_TYPE}" )
 
 add_definitions(-D_GLIBCXX_USE_CXX11_ABI=${ABI_VALUE})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${ABI_VALUE} -fabi-version=11 -fno-lto")
@@ -29,15 +36,8 @@ SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" PARENT_SCOPE)
 set(DEPLOY_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 get_filename_component(MULTIPY_DIR ${CMAKE_CURRENT_SOURCE_DIR} DIRECTORY)
 
-find_package (Python3 COMPONENTS Interpreter Development)
-set(PYTORCH_ROOT "${Python3_SITELIB}")
-
 add_subdirectory(interpreter)
 add_subdirectory(third-party/fmt)
-include_directories(BEFORE "${PYTORCH_ROOT}/torch/include")
-include_directories(BEFORE "${PYTORCH_ROOT}/torch/include/torch/csrc/api/include/")
-include_directories(BEFORE "${Python3_INCLUDE_DIRS}")
-
 
 include(${DEPLOY_DIR}/utils.cmake)
 
@@ -105,7 +105,6 @@ set(INTERPRETER_TEST_SOURCES_GPU
 # TODO: Currently tests can only be done when ABI=1 as the testing infrustructure
 # used by ASSERT_TRUE requires ABI=1 in Github actions, we should fix this!
 
-LINK_DIRECTORIES("${PYTORCH_ROOT}/torch/lib")
 add_executable(test_deploy ${INTERPRETER_TEST_SOURCES})
 # target_compile_definitions(test_deploy PUBLIC TEST_CUSTOM_LIBRARY)
 if (${LEGACY_PYTHON_PRE_3_8})

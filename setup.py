@@ -7,10 +7,152 @@
 
 import os
 import re
+import subprocess
 import sys
 from datetime import date
 
-from setuptools import find_packages, setup
+from setuptools import Extension, find_packages, setup
+from setuptools.command.build_ext import build_ext
+from setuptools.command.develop import develop
+from setuptools.command.install import install
+
+
+class MultipyRuntimeExtension(Extension):
+    def __init__(self, name):
+        Extension.__init__(self, name, sources=[])
+
+
+def get_cmake_version():
+    output = subprocess.check_output(["cmake", "--version"]).decode("utf-8")
+    return output.splitlines()[0].split()[2]
+
+
+class MultipyRuntimeCmake(object):
+    user_options = [("cmakeoff", None, None), ("abicxx", None, None)]
+
+
+class MultipyRuntimeDevelop(MultipyRuntimeCmake, develop):
+    user_options = develop.user_options + MultipyRuntimeCmake.user_options
+
+    def initialize_options(self):
+        develop.initialize_options(self)
+        self.cmakeoff = None
+        self.abicxx = None
+
+    def finalize_options(self):
+        develop.finalize_options(self)
+        if self.cmakeoff is not None:
+            self.distribution.get_command_obj("build_ext").cmake_off = True
+        if self.abicxx is not None:
+            self.distribution.get_command_obj("build_ext").abicxx = True
+
+
+class MultipyRuntimeBuild(MultipyRuntimeCmake, build_ext):
+    user_options = build_ext.user_options + MultipyRuntimeCmake.user_options
+    cmake_off = False
+    abicxx = False
+
+    def run(self):
+        if self.cmake_off:
+            return
+        try:
+            cmake_version_comps = get_cmake_version().split(".")
+            if cmake_version_comps[0] < "3" or cmake_version_comps[1] < "19":
+                raise RuntimeError(
+                    "CMake 3.19 or later required for multipy runtime installation."
+                )
+        except OSError:
+            raise RuntimeError(
+                "Error fetching cmake version. Please ensure cmake is installed correctly."
+            ) from None
+        base_dir = os.path.abspath(os.path.dirname(__file__))
+        build_dir = "multipy/runtime/build"
+        build_dir_abs = base_dir + "/" + build_dir
+        if not os.path.exists(build_dir_abs):
+            os.makedirs(build_dir_abs)
+        legacy_python_cmake_flag = "OFF" if sys.version_info.minor > 7 else "ON"
+        cxx_abi_flag = "ON" if self.abicxx else "OFF"
+
+        print(f"-- Running multipy runtime makefile in dir {build_dir_abs}")
+        try:
+            subprocess.run(
+                [
+                    f"cmake -DLEGACY_PYTHON_PRE_3_8={legacy_python_cmake_flag} -DABI_EQUALS_1={cxx_abi_flag} .."
+                ],
+                cwd=build_dir_abs,
+                shell=True,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            )
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(e.output.decode("utf-8")) from None
+
+        print(f"-- Running multipy runtime build in dir {build_dir_abs}")
+        try:
+            subprocess.run(
+                ["cmake --build . --config Release"],
+                cwd=build_dir_abs,
+                shell=True,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            )
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(e.output.decode("utf-8")) from None
+
+        print(f"-- Running multipy runtime install in dir {build_dir_abs}")
+        try:
+            subprocess.run(
+                ['cmake --install . --prefix "."'],
+                cwd=build_dir_abs,
+                shell=True,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            )
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(e.output.decode("utf-8")) from None
+
+
+class MultipyRuntimeInstall(MultipyRuntimeCmake, install):
+    user_options = install.user_options + MultipyRuntimeCmake.user_options
+
+    def initialize_options(self):
+        install.initialize_options(self)
+        self.cmakeoff = None
+
+    def finalize_options(self):
+        install.finalize_options(self)
+        if self.cmakeoff is not None:
+            self.distribution.get_command_obj("build_ext").cmake_off = True
+
+    def run(self):
+        # Setuptools/setup.py on docker image has some interesting behavior, in that the
+        # optional "--cmakeoff" flag gets applied to dependencies specified in
+        # requirements.txt as well (installed using "install-requires" argument of setup()).
+        # Since we obviously don't want things like "pip install numpy --install-option=--cmakeoff",
+        # we install these deps directly in this overridden install command without
+        # spurious options, instead of using "install-requires".
+        base_dir = os.path.abspath(os.path.dirname(__file__))
+        try:
+            reqs_filename = "requirements.txt"
+            subprocess.run(
+                [f"pip install -r {reqs_filename}"],
+                cwd=base_dir,
+                shell=True,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            )
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(e.output.decode("utf-8")) from None
+        install.run(self)
+
+
+ext_modules = [
+    MultipyRuntimeExtension("multipy.so"),
+]
 
 
 def get_version():
@@ -43,9 +185,6 @@ if __name__ == "__main__":
     with open("README.md", encoding="utf8") as f:
         readme = f.read()
 
-    with open("requirements.txt") as f:
-        reqs = f.read()
-
     with open("dev-requirements.txt") as f:
         dev_reqs = f.read()
 
@@ -66,7 +205,6 @@ if __name__ == "__main__":
         license="BSD-3",
         keywords=["pytorch", "machine learning"],
         python_requires=">=3.7",
-        install_requires=reqs.strip().split("\n"),
         include_package_data=True,
         packages=find_packages(exclude=()),
         extras_require={
@@ -75,9 +213,13 @@ if __name__ == "__main__":
                 # latest numpy doesn't support 3.7
                 "numpy<=1.21.6",
             ],
-            ':python_version < "3.12"': [
-                "setuptools<60.0",
-            ],
+        },
+        # Cmake invocation for runtime build.
+        ext_modules=ext_modules,
+        cmdclass={
+            "build_ext": MultipyRuntimeBuild,
+            "develop": MultipyRuntimeDevelop,
+            "install": MultipyRuntimeInstall,
         },
         # PyPI package information.
         classifiers=[

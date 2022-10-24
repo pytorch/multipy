@@ -51,7 +51,7 @@ struct MemFile {
   [[nodiscard]] const char* data() const {
     return (const char*)mem_;
   }
-  int valid(int fd) {
+  int valid() {
     return fcntl(fd_, F_GETFD) != -1 || errno != EBADF;
   }
   ~MemFile() {
