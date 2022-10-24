@@ -1,5 +1,5 @@
-from torch.package import PackageExporter
 import torchvision
+from torch.package import PackageExporter
 
 # Instantiate some model
 model = torchvision.models.resnet.resnet18()
