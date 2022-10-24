@@ -143,12 +143,13 @@ pip install -e . --install-option="--cmakeoff"
 
 cd multipy/runtime
 
-# build runtime
-mkdir build
-cd build
-# use cmake -DABI_EQUALS_1=ON .. instead if you want ABI=1
-cmake ..
-cmake --build . --config Release
+# configure runtime to build/
+cmake -S . -B build
+# if you need to override the ABI setting you can pass
+cmake -S . -B build -D_GLIBCXX_USE_CXX11_ABI=<0/1>
+
+# compile the files in build/
+cmake --build build --config Release -j
 ```
 
 ### Running unit tests for `multipy::runtime`
@@ -270,9 +271,6 @@ set(MULTIPY_PATH ".." CACHE PATH "The repo where multipy is built or the PYTHONP
 
 # include the multipy utils to help link against
 include(${MULTIPY_PATH}/multipy/runtime/utils.cmake)
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=0")
-set(TORCH_CXX_FLAGS "-D_GLIBCXX_USE_CXX11_ABI=0")
 
 # add headers from multipy
 include_directories(${MULTIPY_PATH})
