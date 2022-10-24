@@ -6,9 +6,6 @@ set(MULTIPY_PATH ".." CACHE PATH "The repo where multipy is built or the PYTHONP
 # include the multipy utils to help link against
 include(${MULTIPY_PATH}/multipy/runtime/utils.cmake)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=0")
-set(TORCH_CXX_FLAGS "-D_GLIBCXX_USE_CXX11_ABI=0")
-
 # add headers from multipy
 include_directories(${MULTIPY_PATH})
 
