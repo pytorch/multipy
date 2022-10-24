@@ -1,3 +1,6 @@
+# An example usage of `torch.package` which is
+# used for our quickstart example.
+
 import torchvision
 from torch.package import PackageExporter
 

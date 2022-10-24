@@ -39,8 +39,8 @@ jobs:
       - name: Examples
         run: |
           docker run --rm multipy bash -c "if [[ ${{ matrix.python-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && examples/build/hello_world_example"
-          docker run --rm multipy bash -c "if [[ ${{ matrix.python-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && python examples/quickstart/gen_package.py && PATH_TO_EXTERN_PYTHON_PACKAGES=$( python -c 'import site; print(site.getsitepackages())') ./examples/build/quickstart my_package.pt
-          docker run --rm multipy bash -c "if [[ ${{ matrix.python-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && ./examples/build/movable_example
+          docker run --rm multipy bash -c "if [[ ${{ matrix.python-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && python examples/quickstart/gen_package.py && PATH_TO_EXTERN_PYTHON_PACKAGES=$( python -c 'import site; print(site.getsitepackages())') ./examples/build/quickstart my_package.pt"
+          docker run --rm multipy bash -c "if [[ ${{ matrix.python-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && ./examples/build/movable_example"
 
 
       - name: Compat Tests

@@ -1,3 +1,13 @@
+/* quickstart.cpp highlights some of the most basic concepts of `torch::deploy`.
+Specifically loading a pytorch model which was serialized by `torch.package`
+and running it.
+
+In order to run this file, one needs to provide an archive produced by
+`torch.package`. The one used in our example is created by `gen_package.py`
+which produces my_package.pt. This program takes the path to the archive as
+an argument.
+*/
+
 #include <multipy/runtime/deploy.h>
 #include <multipy/runtime/path_environment.h>
 #include <torch/script.h>

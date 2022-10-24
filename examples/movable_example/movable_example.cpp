@@ -1,3 +1,4 @@
+// Basic example of using `ReplicatedObject` in `torch::deploy`.
 #include <multipy/runtime/deploy.h>
 #include <multipy/runtime/path_environment.h>
 #include <torch/script.h>
