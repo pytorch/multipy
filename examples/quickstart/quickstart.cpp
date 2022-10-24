@@ -23,13 +23,7 @@ int main(int argc, const char* argv[]) {
   }
 
   // Start an interpreter manager governing 4 embedded interpreters.
-  std::shared_ptr<torch::deploy::Environment> env = std::make_shared<
-      torch::deploy::PathEnvironment>(std::getenv(
-      "PATH_TO_EXTERN_PYTHON_PACKAGES") // Ensure to set this environment
-                                        // variable (e.g.
-                                        // /home/user/anaconda3/envs/multipy-example/lib/python3.8/site-packages)
-  );
-  torch::deploy::InterpreterManager manager(4, env);
+  torch::deploy::InterpreterManager manager(4);
   torch::deploy::ReplicatedObj model;
   try {
     // Load the model from the multipy.package.
