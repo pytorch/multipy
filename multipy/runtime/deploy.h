@@ -47,7 +47,8 @@ struct TORCH_API InterpreterSession {
   ~InterpreterSession();
 
   // `global` imports a python object from the specified module.
-  // Specifically `global` is analogous to "import `name` from `module`" in python.
+  // Specifically `global` is analogous to "from `module` import `name`"
+  // in python.
   Obj global(const char* module, const char* name) {
     return impl_->global(module, name);
   }
@@ -168,9 +169,10 @@ struct TORCH_API InterpreterManager {
       size_t nInterp = 2,
       std::shared_ptr<Environment> env = std::make_shared<NoopEnvironment>());
 
-  // Returns a free interpreter or an arbitrary interpreter if there are none free.
-  // To ensure data safety it's best to match the number of calling threads to the size of the interpreter
-  // pool to avoid sharing an interpreter.
+  // Returns a free interpreter or an arbitrary interpreter if there are
+  // none free. To ensure data safety it's best to match the number of
+  // calling threads to the size of the interpreter pool to avoid
+  // sharing an interpreter.
   InterpreterSession acquireOne() {
     int where = resources_.acquire();
     InterpreterSession I = instances_[where].acquireSession();
@@ -244,10 +246,11 @@ struct TORCH_API ReplicatedObjImpl {
   InterpreterManager* manager_;
 };
 
-// ReplicatedObj represents a python object that can be used on multiple interpreters. Calling
-// methods on this will pick an arbitrary interpreter to run on, transfer it there if not already
-// and run the method. A replicated object can be converted to an interpreter specific `Obj` using
-// `InterpreterSession::fromMovable(ReplicatedObj)`
+// ReplicatedObj represents a python object that can be used on multiple
+// interpreters. Calling methods on this will pick an arbitrary interpreter
+// to run on, transfer it there if not already and run the method. A
+// replicated object can be converted to an interpreter specific `Obj`
+// using `InterpreterSession::fromMovable(ReplicatedObj)`
 struct TORCH_API ReplicatedObj {
   // Default constructor for `ReplicatedObj`
   ReplicatedObj() : pImpl_(nullptr) {}
@@ -261,9 +264,9 @@ struct TORCH_API ReplicatedObj {
     return I.self(args).toIValue();
   }
 
-  // Invokes the Python function or class on an arbitrary  interpreter with arguments
-  // given by the tuple args and named arguments given by the dictionary kwargs
-  // (equivalent to python's `__call__`).
+  // Invokes the Python function or class on an arbitrary interpreter with
+  // arguments given by the tuple args and named arguments given by the
+  // dictionary kwargs (equivalent to python's `__call__`).
   [[nodiscard]] at::IValue callKwargs(
       std::vector<at::IValue> args,
       std::unordered_map<std::string, c10::IValue> kwargs) const {

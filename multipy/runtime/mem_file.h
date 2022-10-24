@@ -52,7 +52,8 @@ struct MemFile {
     return (const char*)mem_;
   }
 
-  // return the file descriptor of the underlying file.
+  // returns if the file descriptor of the underlying file
+  // is valid.
   int valid() {
     return fcntl(fd_, F_GETFD) != -1 || errno != EBADF;
   }
