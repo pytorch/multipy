@@ -21,6 +21,8 @@ class XarEnvironment : public Environment {
       std::string exePath,
       std::string pythonAppDir = DEFAULT_PYTHON_APP_DIR);
   ~XarEnvironment() override;
+
+ protected:
   void configureInterpreter(Interpreter* interp) override;
 
  private:

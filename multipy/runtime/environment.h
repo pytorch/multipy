@@ -14,7 +14,7 @@ namespace deploy {
 
 class Interpreter;
 
-/*
+/**
  * An environment is the concept to decribe the circumstances in which a
  * torch::deploy interpreter runs. In can be an xar file embedded in the binary,
  * a filesystem path for the installed libraries etc.
@@ -57,27 +57,29 @@ class Environment {
   }
 
  public:
-  // Environment constructor which creates a random temporary directory as
-  // a directory for the zipped python modules.
+  /// Environment constructor which creates a random temporary directory as
+  /// a directory for the zipped python modules.
   explicit Environment() {
     char tempDirName[] = "/tmp/torch_deploy_zipXXXXXX";
     char* tempDirectory = mkdtemp(tempDirName);
     setupZippedPythonModules(tempDirectory);
   }
-  // Environment constructor which takes a file name for the
-  // directory for the zipped python modules.
+  /// Environment constructor which takes a file name for the
+  /// directory for the python modules.
   explicit Environment(const std::string& pythonAppDir) {
     setupZippedPythonModules(pythonAppDir);
   }
-  // Deconstructor for Environment.
+
   virtual ~Environment() {
     auto rmCmd = "rm -rf " + extraPythonLibrariesDir_;
     (void)system(rmCmd.c_str());
   }
-  virtual void configureInterpreter(Interpreter* interp) = 0;
   virtual const std::vector<std::string>& getExtraPythonPaths() {
     return extraPythonPaths_;
   }
+  /// Gives information to the interpreter about the
+  /// Environment if necessary
+  virtual void configureInterpreter(Interpreter* interp) = 0;
 };
 
 } // namespace deploy

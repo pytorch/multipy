@@ -63,12 +63,12 @@ struct InterpreterObj {
   virtual Obj attr(const char* attr) = 0;
 };
 
-// this is a wrapper class that refers to a PyObject* instance in a particular
-// interpreter. We can't use normal PyObject or pybind11 objects here
-// because these objects get used in a user application which will not directly
-// link against libpython. Instead all owningSession with the Python state in
-// each interpreter is done via this wrapper class, and methods on
-// InterpreterSession.
+/// this is a wrapper class that refers to a PyObject* instance in a particular
+/// interpreter. We can't use normal PyObject or pybind11 objects here
+/// because these objects get used in a user application which will not directly
+/// link against libpython. Instead all owningSession with the Python state in
+/// each interpreter is done via this wrapper class, and methods on
+/// InterpreterSession.
 struct Obj {
   friend struct InterpreterSessionImpl;
   friend struct InterpreterObj;
@@ -76,30 +76,30 @@ struct Obj {
       : isDefault_(false), baseObj_(baseObj) {}
   Obj() : isDefault_(true), baseObj_(nullptr) {}
 
-  // Converts the python object to a C++ at::IValue.
+  /// Converts the python object to a C++ at::IValue.
   at::IValue toIValue() const;
 
-  // Call an `Obj` callable, with arguments given by the tuple args. Equivalent
-  // to `__call__` in python.
+  /// Call an `Obj` callable, with arguments given by the tuple args. Equivalent
+  /// to `__call__` in python.
   Obj operator()(at::ArrayRef<Obj> args);
 
-  // Call an `Obj` callable, with arguments given by the tuple args. Equivalent
-  // to `__call__` in python.
+  /// Call an `Obj` callable, with arguments given by the tuple args. Equivalent
+  /// to `__call__` in python.
   Obj operator()(at::ArrayRef<at::IValue> args);
 
-  // Call an `Obj` callable, with arguments given by the tuple args, and named
-  // arguments given by the dictionary kwargs. Equivalent to `__call__` in
-  // python.
+  /// Call an `Obj` callable, with arguments given by the tuple args, and named
+  /// arguments given by the dictionary kwargs. Equivalent to `__call__` in
+  /// python.
   Obj callKwargs(
       std::vector<at::IValue> args,
       std::unordered_map<std::string, c10::IValue> kwargs);
-  // Call an `Obj` callable, with named arguments given by the dictionary
-  // kwargs. Equivalent to `__call__` in python.
+  /// Call an `Obj` callable, with named arguments given by the dictionary
+  /// kwargs. Equivalent to `__call__` in python.
   Obj callKwargs(std::unordered_map<std::string, c10::IValue> kwargs);
-  // Returns true if `Obj` has attribute with name `attr` and false otherwise.
+  /// Returns true if `Obj` has attribute with name `attr` and false otherwise.
   bool hasattr(const char* attr);
-  // Returns attribute `attr` from `Obj`. This is equivalent to calling
-  // `getattr(Obj, attr)` in python.
+  /// Returns attribute `attr` from `Obj`. This is equivalent to calling
+  /// `getattr(Obj, attr)` in python.
   Obj attr(const char* attr);
 
  private:

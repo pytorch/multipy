@@ -11,23 +11,23 @@
 namespace torch {
 namespace deploy {
 
-// Specifies which ELF section to load the interpreter from and the associated
-// config.
+/// Specifies which ELF section to load the interpreter from and the associated
+/// config.
 struct ExeSection {
   const char* sectionName;
   bool customLoader;
 };
 
-// Specifies which ELF symbols to load the interpreter from and the associated
-// config.
+/// Specifies which ELF symbols to load the interpreter from and the associated
+/// config.
 struct InterpreterSymbol {
   const char* startSym;
   const char* endSym;
   bool customLoader;
 };
 
-// EmbeddedFile makes it easier to load a custom interpreter embedded within the
-// binary.
+/// EmbeddedFile makes it easier to load a custom interpreter embedded within
+/// the binary.
 struct EmbeddedFile {
   std::string libraryName{""};
   bool customLoader{false};
