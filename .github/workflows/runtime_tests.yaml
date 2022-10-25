@@ -40,6 +40,7 @@ jobs:
         run: |
           docker run --rm multipy bash -c "if [[ ${{ matrix.python-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && examples/build/hello_world_example"
           docker run --rm multipy bash -c "if [[ ${{ matrix.python-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && python3 examples/quickstart/gen_package.py && ./examples/build/quickstart my_package.pt"
+          docker run --rm multipy bash -c "if [[ ${{ matrix.python-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && ./examples/build/movable_example"
 
       - name: Compat Tests
         run: |
