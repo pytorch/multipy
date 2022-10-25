@@ -18,5 +18,8 @@ set_target_properties(multipy_internal
 caffe2_interface_library(multipy_internal multipy)
 
 # build our examples
-add_executable(hello_world_example hello_world_example.cpp)
+add_executable(hello_world_example hello_world/hello_world_example.cpp)
 target_link_libraries(hello_world_example PUBLIC "-Wl,--no-as-needed -rdynamic" dl pthread util multipy c10 torch_cpu)
+
+add_executable(quickstart quickstart/quickstart.cpp)
+target_link_libraries(quickstart PUBLIC "-Wl,--no-as-needed -rdynamic" dl pthread util multipy c10 torch_cpu)
