@@ -32,9 +32,9 @@ docker run --rm multipy multipy/runtime/build/test_deploy
 
 ### Installing via `pip install`
 
-We support installing both python modules and the runtime libs using `pip install`, with the caveat of having to manually install the dependencies first.
+We support installing both python modules and the runtime libs using `pip install`, with the caveat of having to manually install the C++ dependencies first. This also serves as a single-command source build, essentially being a wrapper around `python setup.py develop`, once all the dependencies have been installed.
 
-To start with, the multipy repo should be cloned first:
+To start with, the multipy repo should be cloned:
 ```shell
 git clone https://github.com/pytorch/multipy.git
 cd multipy
