@@ -32,9 +32,9 @@ docker run --rm multipy multipy/runtime/build/test_deploy
 
 ### Installing via `pip install`
 
-We support installing both python modules and the runtime libs using `pip install`, with the caveat of having to manually install the dependencies first.
+We support installing both python modules and the runtime libs using `pip install`, with the caveat of having to manually install the dependencies first. This also serves as a single-command source build, essentially being a wrapper around `setup.py develop`, once all the dependencies have been installed.
 
-To start with, the multipy repo should be cloned first:
+To start with, the multipy repo should be cloned:
 ```shell
 git clone https://github.com/pytorch/multipy.git
 cd multipy
@@ -294,15 +294,6 @@ is used to appropriately set and unset ``--whole-archive`` flag.
 Furthermore, the ``-rdynamic`` flag is needed when linking to the executable
 to ensure that symbols are exported to the dynamic table, making them accessible
 to the deploy interpreters (which are dynamically loaded).
-
-**Updating LIBRARY_PATH and LD_LIBRARY_PATH**
-
-In order to locate dependencies provided by PyTorch (e.g. `libshm`), we need to update the `LIBRARY_PATH` and `LD_LIBRARY_PATH` environment variables to include the path to PyTorch's C++ libraries. If you installed PyTorch using pip or conda, this path is usually in the site-packages. An example of this is provided below.
-
-```bash
-export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/home/user/anaconda3/envs/multipy-example/lib/python3.8/site-packages/torch/lib"
-export LIBRARY_PATH="$LIBRARY_PATH:/home/user/anaconda3/envs/multipy-example/lib/python3.8/site-packages/torch/lib"
-```
 
 The last step is configuring and building the project. Assuming that our code
 directory is laid out like this:
