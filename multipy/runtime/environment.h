@@ -42,6 +42,7 @@ class Environment {
     fclose(zippedFile);
     return zipArchive;
   }
+
   void setupZippedPythonModules(const std::string& pythonAppDir) {
 #ifdef FBCODE_CAFFE2
     extraPythonPaths_.push_back(getZippedArchive(
@@ -56,14 +57,19 @@ class Environment {
   }
 
  public:
+  // Environment constructor which creates a random temporary directory as
+  // a directory for the zipped python modules.
   explicit Environment() {
     char tempDirName[] = "/tmp/torch_deploy_zipXXXXXX";
     char* tempDirectory = mkdtemp(tempDirName);
     setupZippedPythonModules(tempDirectory);
   }
+  // Environment constructor which takes a file name for the
+  // directory for the zipped python modules.
   explicit Environment(const std::string& pythonAppDir) {
     setupZippedPythonModules(pythonAppDir);
   }
+  // Deconstructor for Environment.
   virtual ~Environment() {
     auto rmCmd = "rm -rf " + extraPythonLibrariesDir_;
     (void)system(rmCmd.c_str());

@@ -19,6 +19,7 @@ namespace deploy {
 struct InterpreterSessionImpl;
 struct Obj;
 
+// Representation a Pickled Object
 struct PickledObject {
   std::string data_;
   std::vector<at::Storage> storages_;
@@ -28,6 +29,9 @@ struct PickledObject {
   std::shared_ptr<caffe2::serialize::PyTorchStreamReader> containerFile_;
 };
 
+// PickledObject contains a python object that's been pickled with the tensors
+// saved separately. Unpickling this will share the underlying data across
+// multiple copies/interpreters.
 struct InterpreterObj {
   friend struct Obj;
   friend struct ReplicatedObjImpl;
@@ -72,14 +76,30 @@ struct Obj {
       : isDefault_(false), baseObj_(baseObj) {}
   Obj() : isDefault_(true), baseObj_(nullptr) {}
 
+  // Converts the python object to a C++ at::IValue.
   at::IValue toIValue() const;
+
+  // Call an `Obj` callable, with arguments given by the tuple args. Equivalent
+  // to `__call__` in python.
   Obj operator()(at::ArrayRef<Obj> args);
+
+  // Call an `Obj` callable, with arguments given by the tuple args. Equivalent
+  // to `__call__` in python.
   Obj operator()(at::ArrayRef<at::IValue> args);
+
+  // Call an `Obj` callable, with arguments given by the tuple args, and named
+  // arguments given by the dictionary kwargs. Equivalent to `__call__` in
+  // python.
   Obj callKwargs(
       std::vector<at::IValue> args,
       std::unordered_map<std::string, c10::IValue> kwargs);
+  // Call an `Obj` callable, with named arguments given by the dictionary
+  // kwargs. Equivalent to `__call__` in python.
   Obj callKwargs(std::unordered_map<std::string, c10::IValue> kwargs);
+  // Returns true if `Obj` has attribute with name `attr` and false otherwise.
   bool hasattr(const char* attr);
+  // Returns attribute `attr` from `Obj`. This is equivalent to calling
+  // `getattr(Obj, attr)` in python.
   Obj attr(const char* attr);
 
  private:
@@ -87,6 +107,7 @@ struct Obj {
   std::shared_ptr<InterpreterObj> baseObj_;
 };
 
+// The underlying implementation of `InterpreterSession`
 struct InterpreterSessionImpl {
   friend struct Package;
   friend struct ReplicatedObj;
@@ -132,6 +153,7 @@ struct InterpreterSessionImpl {
   }
 };
 
+// The underlying implementation of `Interpreter`
 struct InterpreterImpl {
   virtual InterpreterSessionImpl* acquireSession() = 0;
   virtual void setFindModule(

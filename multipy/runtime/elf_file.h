@@ -16,6 +16,7 @@
 namespace torch {
 namespace deploy {
 
+// A representation of a section of an ElfFile.
 struct Section {
   Section() {}
   explicit Section(
@@ -35,13 +36,18 @@ struct Section {
   }
 };
 
+// TODO: consolidate other ELF file related functions in loader.cpp to this file
+
 /*
  * This class provie utilities to handle ELF file. Only support 64bit ELF file.
  */
-// TODO: consolidate other ELF file related functions in loader.cpp to this file
 class ElfFile {
  public:
+  // Constructs an Elffile with the corresponding `filename`
   explicit ElfFile(const char* filename);
+
+  // Finds and return a `Section` with the corresponding `name`.  If nothing is
+  // found, then a `multipy::nullopt` is returned.
   multipy::optional<Section> findSection(const char* name) const;
 
  private:
