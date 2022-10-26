@@ -29,7 +29,7 @@ jobs:
           set -eux
           sudo yum makecache
           sudo yum install -y doxygen
-          python -m pip3 install -r docs/requirements.txt
+          python -m pip install -r docs/requirements.txt
       - name: Setup SSH (Click me for login details)
         uses: ./.github/actions/setup-ssh
         with:
@@ -80,8 +80,8 @@ jobs:
           set -eux
           sudo yum makecache
           sudo yum install -y doxygen
-          python -m python -m pip3 install --upgrade pip
-          python -m pip3 install -r docs/requirements.txt
+          python -m python -m pip install --upgrade pip
+          python -m pip install -r docs/requirements.txt
       - name: Build
         run: |
           set -ex
