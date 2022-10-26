@@ -69,7 +69,7 @@ jobs:
       - name: Build
         run: |
           set -ex
-          sudo bash docs/doc_push.sh --dry-run
+          bash docs/doc_push.sh --dry-run
       - name: Push
         run: |
           set -ex
