@@ -63,7 +63,7 @@ echo "Building multipy-$multipy_ver docs..."
 docs_dir=$repo_root/docs
 build_dir=$docs_dir/build
 cd "$docs_dir" || exit
-pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
 make clean html
 echo "Doc build complete"
 
