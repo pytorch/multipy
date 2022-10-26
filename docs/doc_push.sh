@@ -87,8 +87,6 @@ for redirect in "${redirects[@]}"; do
   ln -s "$multipy_ver" "$redirect"
 done
 
-"$docs_dir"/versions_html.py
-
 git add .
 git commit --quiet -m "[doc_push][$release_tag] built from $commit_id ($branch). Redirects: ${redirects[*]} -> $multipy_ver."
 
