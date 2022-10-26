@@ -28,7 +28,11 @@ def get_cmake_version():
 
 
 class MultipyRuntimeCmake(object):
-    user_options = [("cmakeoff", None, None), ("cudatests", None, None), ("abicxx", None, None)]
+    user_options = [
+        ("cmakeoff", None, None),
+        ("cudatests", None, None),
+        ("abicxx", None, None),
+    ]
 
 
 class MultipyRuntimeDevelop(MultipyRuntimeCmake, develop):
@@ -42,6 +46,7 @@ class MultipyRuntimeDevelop(MultipyRuntimeCmake, develop):
         self.abicxx = None
 
         self.cudatests = None
+
     def finalize_options(self):
         develop.finalize_options(self)
         if self.cmakeoff is not None:
@@ -78,7 +83,9 @@ class MultipyRuntimeBuild(MultipyRuntimeCmake, build_ext):
         print(f"-- Running multipy runtime makefile in dir {build_dir_abs}")
         try:
             subprocess.run(
-                [f"cmake -DBUILD_CUDA_TESTS={self.cuda_tests_flag} -DLEGACY_PYTHON_PRE_3_8={legacy_python_cmake_flag} .."],
+                [
+                    f"cmake -DBUILD_CUDA_TESTS={self.cuda_tests_flag} -DLEGACY_PYTHON_PRE_3_8={legacy_python_cmake_flag} .."
+                ],
                 cwd=build_dir_abs,
                 shell=True,
                 check=True,

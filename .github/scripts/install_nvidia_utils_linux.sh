@@ -86,4 +86,3 @@ case "${DISTRIBUTION}" in
         exit 1
         ;;
 esac
-
