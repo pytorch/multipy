@@ -1,0 +1,33 @@
+:github_url: https://github.com/pytorch/multipy
+
+.. _exhale_class_classtorch_1_1deploy_1_1_environment:
+
+Class Environment
+=================
+
+- Defined in :ref:`file_multipy_runtime_environment.h`
+
+
+.. contents:: Page Contents
+   :local:
+   :backlinks: none
+
+
+Inheritance Relationships
+-------------------------
+
+Derived Types
+*************
+
+- ``public torch::deploy::NoopEnvironment`` (:ref:`exhale_class_classtorch_1_1deploy_1_1_noop_environment`)
+- ``public torch::deploy::PathEnvironment`` (:ref:`exhale_class_classtorch_1_1deploy_1_1_path_environment`)
+
+
+Class Documentation
+-------------------
+
+
+.. doxygenclass:: torch::deploy::Environment
+   :members:
+   :protected-members:
+   :undoc-members:

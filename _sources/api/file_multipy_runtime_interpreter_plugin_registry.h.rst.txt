@@ -1,0 +1,59 @@
+:github_url: https://github.com/pytorch/multipy
+
+
+.. _file_multipy_runtime_interpreter_plugin_registry.h:
+
+File plugin_registry.h
+======================
+
+.. contents:: Page Contents
+   :local:
+   :backlinks: none
+
+Definition (``multipy/runtime/interpreter/plugin_registry.h``)
+--------------------------------------------------------------
+
+
+.. toctree::
+   :maxdepth: 1
+
+   program_listing_file_multipy_runtime_interpreter_plugin_registry.h.rst
+
+
+
+
+
+Includes
+--------
+
+
+- ``ATen/core/ivalue.h``
+
+- ``multipy/runtime/interpreter/Optional.hpp``
+
+- ``pybind11/embed.h``
+
+- ``pybind11/functional.h``
+
+- ``torch/csrc/Dtype.h``
+
+- ``torch/csrc/utils/pybind.h``
+
+
+
+
+
+
+Namespaces
+----------
+
+
+- :ref:`namespace_multipy`
+
+
+Classes
+-------
+
+
+- :ref:`exhale_class_classmultipy_1_1_converter`
+

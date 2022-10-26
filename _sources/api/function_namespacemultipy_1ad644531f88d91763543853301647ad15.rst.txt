@@ -1,0 +1,15 @@
+:github_url: https://github.com/pytorch/multipy
+
+.. _exhale_function_namespacemultipy_1ad644531f88d91763543853301647ad15:
+
+Function multipy::createPyObject
+================================
+
+- Defined in :ref:`file_multipy_runtime_interpreter_plugin_registry.h`
+
+
+Function Documentation
+----------------------
+
+
+.. doxygenfunction:: multipy::createPyObject(const at::Storage&)

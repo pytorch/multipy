@@ -1,2 +1,0 @@
-tokenizers
-git+https://github.com/facebookresearch/pytorch3d.git
