@@ -22,6 +22,10 @@ jobs:
           set -eux
           sudo apt-get install -y pandoc doxygen
           pip install -r docs/requirements.txt
+      - name: Setup SSH (Click me for login details)
+        uses: ./.github/actions/setup-ssh
+        with:
+          github-secret: ${{ secrets.GITHUB_TOKEN }}
       - name: Doc Test
         run: |
           cd docs
@@ -52,6 +56,10 @@ jobs:
           set -ex
           git config --global user.email "runner@github.com"
           git config --global user.name "MultiPy CI Runner"
+      - name: Setup SSH (Click me for login details)
+        uses: ./.github/actions/setup-ssh
+        with:
+          github-secret: ${{ secrets.GITHUB_TOKEN }}
       - name: Install Dependencies
         run: |
           set -eux
@@ -60,7 +68,7 @@ jobs:
       - name: Build
         run: |
           set -ex
-          sudo ./docs/doc_push.sh --dry-run
+          sudo bash docs/doc_push.sh --dry-run
       - name: Push
         run: |
           set -ex
