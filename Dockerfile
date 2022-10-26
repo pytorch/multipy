@@ -100,9 +100,9 @@ WORKDIR /opt/multipy
 # Build Multipy
 RUN ls && pwd && rm -rf multipy/runtime/build && \
     if [[ ${BUILD_CUDA_TESTS} -eq 1 ]]; then \
-    python -m pip install -e . --install-option="--cudatests"; \
+    python3 -m pip install -e . --install-option="--cudatests"; \
     else \
-    python -m pip install -e .; \
+    python3 -m pip install -e .; \
     fi && \
     python multipy/runtime/example/generate_examples.py
 
