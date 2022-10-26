@@ -46,7 +46,7 @@ jobs:
 
       - name: Test
         run: |
-          docker run --rm multipy bash -c "if [[ ${{ matrix.python-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && multipy/runtime/build/test_deploy"
+          nvidia-docker run --rm multipy bash -c "if [[ ${{ matrix.python-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && multipy/runtime/build/test_deploy"
           nvidia-docker run --rm multipy bash -c "if [[ ${{ matrix.python-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && multipy/runtime/build/test_deploy_gpu"
 
 
