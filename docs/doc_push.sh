@@ -56,7 +56,7 @@ fi
 
 echo "Installing multipy from $repo_root..."
 cd "$repo_root" || exit
-pip install -r dev-requirements.txt
+pip install -r requirements.txt
 pip install -e . --install-option="--cmakeoff"
 
 multipy_ver=$(python -c "import multipy; print(multipy.__version__)")
