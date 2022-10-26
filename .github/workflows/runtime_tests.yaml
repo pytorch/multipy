@@ -41,7 +41,7 @@ jobs:
       - name: Build
         env:
           DOCKER_BUILDKIT: 1
-        run: nvidia-docker build -t multipy --progress=plain --build-arg --build-arg PYTHON_3_MINOR_VERSION=${{ matrix.python3-minor-version }} --build-arg BUILD_CUDA_TESTS=1 .
+        run: nvidia-docker build -t multipy --progress=plain --build-arg PYTHON_3_MINOR_VERSION=${{ matrix.python3-minor-version }} --build-arg BUILD_CUDA_TESTS=1 .
 
       - name: Test
         run: |
