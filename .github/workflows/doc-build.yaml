@@ -19,12 +19,17 @@ jobs:
     steps:
       - name: Checkout MultiPy
         uses: actions/checkout@v2
+      - name: Update pip
+        run: |
+          sudo yum update -y
+          sudo yum -y install git python3-pip
+          sudo pip3 install --upgrade pip
       - name: Install Dependencies
         run: |
           set -eux
           sudo yum makecache
           sudo yum install -y doxygen
-          python -m pip install -r docs/requirements.txt
+          python -m pip3 install -r docs/requirements.txt
       - name: Setup SSH (Click me for login details)
         uses: ./.github/actions/setup-ssh
         with:
@@ -56,6 +61,11 @@ jobs:
     steps:
       - name: Checkout MultiPy
         uses: actions/checkout@v2
+      - name: Update pip
+        run: |
+          sudo yum update -y
+          sudo yum -y install git python3-pip
+          sudo pip3 install --upgrade pip
       - name: Set Identity
         run: |
           set -ex
@@ -70,8 +80,8 @@ jobs:
           set -eux
           sudo yum makecache
           sudo yum install -y doxygen
-          python -m python -m pip install --upgrade pip
-          python -m pip install-r docs/requirements.txt
+          python -m python -m pip3 install --upgrade pip
+          python -m pip3 install -r docs/requirements.txt
       - name: Build
         run: |
           set -ex
