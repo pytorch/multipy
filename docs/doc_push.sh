@@ -76,7 +76,6 @@ gh_pages_dir="$tmp_dir/multipy_gh_pages"
 git clone -b gh-pages --single-branch "$repo_origin"  $gh_pages_dir
 
 echo "Copying doc pages for $multipy_ver into $gh_pages_dir..."
-rm -rf "${gh_pages_dir:?}/*"
 rm -rf "${gh_pages_dir:?}/${multipy_ver:?}"
 cp -R "$build_dir/html" "$gh_pages_dir/$multipy_ver"
 

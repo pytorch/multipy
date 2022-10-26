@@ -7,37 +7,37 @@ on:
   pull_request:
 
 jobs:
-#   docbuild:
-#     runs-on: ubuntu-18.04
-#     steps:
-#       - name: Setup Python
-#         uses: actions/setup-python@v2
-#         with:
-#           python-version: 3.8
-#           architecture: x64
-#       - name: Checkout MultiPy
-#         uses: actions/checkout@v2
-#       - name: Install Dependencies
-#         run: |
-#           set -eux
-#           sudo apt-get install -y pandoc doxygen
-#           pip install -r docs/requirements.txt
-#       - name: Doc Test
-#         run: |
-#           cd docs
-#           make doctest
-#       - name: Linkcheck
-#         run: |
-#           cd docs
-#           make linkcheck
-#       - name: Doc Build
-#         run: |
-#           cd docs
-#           make html
+  docbuild:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+          architecture: x64
+      - name: Checkout MultiPy
+        uses: actions/checkout@v2
+      - name: Install Dependencies
+        run: |
+          set -eux
+          sudo apt-get install -y pandoc doxygen
+          pip install -r docs/requirements.txt
+      - name: Doc Test
+        run: |
+          cd docs
+          make doctest
+      - name: Linkcheck
+        run: |
+          cd docs
+          make linkcheck
+      - name: Doc Build
+        run: |
+          cd docs
+          make html
 
   docpush:
     runs-on: ubuntu-18.04
-    # needs: docbuild
+    needs: docbuild
     # if: ${{ github.ref == 'refs/heads/main' }}
     steps:
       - name: Setup Python
