@@ -1,4 +1,5 @@
-# This workflow builds the torchrec docs and deploys them to gh-pages.
+# This workflow builds the multipy docs and deploys them to gh-pages.
+# It is very heavily inspired by torchrec's script to deploy to gh-pages.
 name: Generate documentation
 on:
   push:
@@ -18,11 +19,15 @@ jobs:
       run: ldd --version
     - name: Checkout
       uses: actions/checkout@v2
+    - name: Setup SSH (Click me for login details)
+      uses: ./.github/actions/setup-ssh
+      with:
+        github-secret: ${{ secrets.GITHUB_TOKEN }}
     # Update references
     - name: Update pip
       run: |
         sudo yum update -y
-        sudo yum -y install git python3-pip
+        sudo yum -y install git python3-pip doxygen
         sudo pip3 install --upgrade pip
     - name: Setup conda
       run: |
