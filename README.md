@@ -1,22 +1,30 @@
-[![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](LICENSE) ![Runtime Tests](https://github.com/pytorch/multipy/actions/workflows/runtime_tests.yaml/badge.svg)
 
 
-# \[experimental\] MultiPy
+# `torch::deploy` (MultiPy)
 
-> :warning: **This is project is still a prototype.** Only Linux x86 is supported, and the API may change without warning. Furthermore, please **USE PYTORCH NIGHTLY** when using `multipy::runtime`!
-
-`MultiPy` (formerly `torch::deploy` and `torch.package`) is a system that allows you to run multi-threaded python code in C++. It offers `multipy.package` (formerly `torch.package`) in order to package code into a mostly hermetic format to deliver to `multipy::runtime` (formerly `torch::deploy`) which is a runtime which takes packaged
-code and runs it using multiple embedded Python interpreters in a C++ process without a shared global interpreter lock (GIL). For more information on how `MultiPy` works
+`torch::deploy` (MultiPy for non-PyTorch use cases) is a C++ library that enables you to run eager mode PyTorch models in production without any modifications to your model to support tracing. `torch::deploy` provides a way to run using multiple independent Python interpreters in a single process without a shared global interpreter lock (GIL). For more information on how `torch::deploy` works
 internally, please see the related [arXiv paper](https://arxiv.org/pdf/2104.00254.pdf).
+
+To learn how to use `torch::deploy` see [Installation](#installation) and [Examples](#examples).
+
+Requirements:
+
+* PyTorch 1.13+ or PyTorch nightly
+* Linux (ELF based)
+  * x86_64 (Beta)
+  * arm64/aarch64 (Prototype)
+
+> ℹ️ This is project is in Beta. `torch::deploy` is ready for use in production environments but may have some rough edges that we're continuously working on improving. We're always interested in hearing feedback and usecases that you might have. Feel free to reach out!
 
 ## Installation
 
-### Building `multipy::runtime` via Docker
+### Building via Docker
 
-The easiest way to build multipy, along with fetching all interpreter dependencies, is to do so via docker.
+The easiest way to build deploy and install the interpreter dependencies is to do so via docker.
 
 ```shell
-git clone https://github.com/pytorch/multipy.git
+git clone --recurse-submodules https://github.com/pytorch/multipy.git
 cd multipy
 export DOCKER_BUILDKIT=1
 docker build -t multipy .
@@ -32,17 +40,23 @@ docker run --rm multipy multipy/runtime/build/test_deploy
 
 ### Installing via `pip install`
 
-We support installing both python modules and the runtime libs using `pip install`, with the caveat of having to manually install the dependencies first.
+We support installing both python modules and the runtime libs using `pip
+install`, with the caveat of having to manually install the C++ dependencies
+first. This serves as a single-command source build, essentially being a wrapper
+around `python setup.py develop`, once all the dependencies have been installed.
+
 
 To start with, the multipy repo should be cloned first:
+
 ```shell
-git clone https://github.com/pytorch/multipy.git
+git clone --recurse-submodules https://github.com/pytorch/multipy.git
 cd multipy
+
+# (optional) if using existing checkout
 git submodule sync && git submodule update --init --recursive
 ```
 
-
-#### Installing system dependencies
+#### Installing System Dependencies
 
 The runtime system dependencies are specified in `build-requirements.txt`. To install them on Debian-based systems, one could run:
 
@@ -51,7 +65,7 @@ sudo apt update
 xargs sudo apt install -y -qq --no-install-recommends <build-requirements.txt
 ```
 
-#### Installing environment encapsulators
+#### Python Environment Setup
 
 We support both `conda` and `pyenv`+`virtualenv` to create isolated environments to build and run in. Since `multipy` requires a position-independent version of python to launch interpreters with, for `conda` environments we use the prebuilt `libpython-static=3.x` libraries from `conda-forge` to link with at build time, and for `virtualenv`/`pyenv` we compile python with `-fPIC` to create the linkable library.
 
@@ -125,16 +139,22 @@ pip install  -e . --install-option="--cmakeoff"
 
 > **NOTE** As of 10/11/2022 the linking of prebuilt static fPIC versions of python downloaded from `conda-forge` can be problematic on certain systems (for example Centos 8), with linker errors like `libpython_multipy.a: error adding symbols: File format not recognized`. This seems to be an issue with `binutils`, and the steps in https://wiki.gentoo.org/wiki/Project:Toolchain/Binutils_2.32_upgrade_notes/elfutils_0.175:_unable_to_initialize_decompress_status_for_section_.debug_info can help. Alternatively, the user can go with the `virtualenv`/`pyenv` flow above.
 
+## Development
 
-### Running `multipy::runtime` build steps from source
+### Manually building `multipy::runtime` from source
 
-Both `docker` and `pip install` options above are wrappers around the `cmake build` of multipy's runtime. If the user wishes to run the build steps manually instead, as before the dependencies would have to be installed in the user's (isolated) environment of choice first. After that the following steps can be executed:
+Both `docker` and `pip install` options above are wrappers around the `cmake`
+build of multipy's runtime. For development purposes it's often helpful to
+invoke `cmake` separately.
 
-#### Building
+See the install section for how to correctly setup the Python environment.
 
 ```bash
 # checkout repo
-git checkout https://github.com/pytorch/multipy.git
+git clone --recurse-submodules https://github.com/pytorch/multipy.git
+cd multipy
+
+# (optional) if using existing checkout
 git submodule sync && git submodule update --init --recursive
 
 cd multipy
