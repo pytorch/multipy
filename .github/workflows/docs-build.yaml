@@ -6,7 +6,7 @@ on:
       - main
   pull_request:
 
-# jobs:
+jobs:
 #   docbuild:
 #     runs-on: ubuntu-18.04
 #     steps:
