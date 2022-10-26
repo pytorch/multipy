@@ -1,0 +1,16 @@
+:github_url: https://github.com/pytorch/multipy
+
+.. _exhale_function_namespacemultipy_1a91ba25aa11c6b16445058a26aac52410:
+
+Function multipy::getTHPDtype
+=============================
+
+- Defined in :ref:`file_multipy_multipy_runtime_interpreter_plugin_registry.h`
+
+
+Function Documentation
+----------------------
+
+
+.. doxygenfunction:: multipy::getTHPDtype(at::ScalarType)
+   :project: MultiPy
