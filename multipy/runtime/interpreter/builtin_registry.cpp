@@ -64,7 +64,7 @@ void BuiltinRegistry::runPreInitialization() {
   appendCPythonInittab();
 }
 
-#ifndef LEGACY_PYTHON_PRE_3_8
+#if PY_VERSION_HEX >= 0x03080100
 const char* metaPathSetupTemplate = R"PYTHON(
 import sys
 from importlib.metadata import DistributionFinder, Distribution
