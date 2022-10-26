@@ -8,12 +8,13 @@ on:
 
 jobs:
   docbuild:
-    runs-on: linux.2xlarge
+    runs-on: ubuntu-18.04
     steps:
       - name: Setup Python
         uses: actions/setup-python@v2
         with:
           python-version: 3.8
+          architecture: x64
       - name: Checkout MultiPy
         uses: actions/checkout@v2
       - name: Install Dependencies
@@ -39,7 +40,7 @@ jobs:
           make html
 
   docpush:
-    runs-on: linux.2xlarge
+    runs-on: ubuntu-18.04
     needs: docbuild
     # if: ${{ github.ref == 'refs/heads/main' }}
     steps:
@@ -47,6 +48,7 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.8
+          architecture: x64
       - name: Checkout MultiPy
         uses: actions/checkout@v2
       - name: Set Identity
