@@ -28,7 +28,11 @@ def get_cmake_version():
 
 
 class MultipyRuntimeCmake(object):
-    user_options = [("cmakeoff", None, None), ("abicxx", None, None)]
+    user_options = [
+        ("cmakeoff", None, None),
+        ("cudatests", None, None),
+        ("abicxx", None, None),
+    ]
 
 
 class MultipyRuntimeDevelop(MultipyRuntimeCmake, develop):
@@ -41,24 +45,29 @@ class MultipyRuntimeDevelop(MultipyRuntimeCmake, develop):
         # TODO(tristanr): remove once unused
         self.abicxx = None
 
+        self.cudatests = None
+
     def finalize_options(self):
         develop.finalize_options(self)
         if self.cmakeoff is not None:
             self.distribution.get_command_obj("build_ext").cmake_off = True
+        if self.cudatests is not None:
+            self.distribution.get_command_obj("build_ext").cuda_tests_flag = "ON"
 
 
 class MultipyRuntimeBuild(MultipyRuntimeCmake, build_ext):
     user_options = build_ext.user_options + MultipyRuntimeCmake.user_options
     cmake_off = False
+    cuda_tests_flag = "OFF"
 
     def run(self):
         if self.cmake_off:
             return
         try:
             cmake_version_comps = get_cmake_version().split(".")
-            if cmake_version_comps[0] < "3" or cmake_version_comps[1] < "19":
+            if cmake_version_comps[0] < "3" or cmake_version_comps[1] < "12":
                 raise RuntimeError(
-                    "CMake 3.19 or later required for multipy runtime installation."
+                    "CMake 3.12 or later required for multipy runtime installation."
                 )
         except OSError:
             raise RuntimeError(
@@ -74,7 +83,9 @@ class MultipyRuntimeBuild(MultipyRuntimeCmake, build_ext):
         print(f"-- Running multipy runtime makefile in dir {build_dir_abs}")
         try:
             subprocess.run(
-                [f"cmake -DLEGACY_PYTHON_PRE_3_8={legacy_python_cmake_flag} .."],
+                [
+                    f"cmake -DBUILD_CUDA_TESTS={self.cuda_tests_flag} -DLEGACY_PYTHON_PRE_3_8={legacy_python_cmake_flag} .."
+                ],
                 cwd=build_dir_abs,
                 shell=True,
                 check=True,

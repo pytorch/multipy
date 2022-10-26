@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=nvidia/cuda:11.3.1-devel-ubuntu18.04
+ARG BASE_IMAGE=nvidia/cuda:11.6.1-devel-ubuntu18.04
 
 FROM ${BASE_IMAGE} as dev-base
 
@@ -59,6 +59,9 @@ COPY .git .git
 COPY .gitmodules .gitmodules
 COPY multipy multipy
 COPY compat-requirements.txt compat-requirements.txt
+COPY setup.py setup.py
+COPY README.md README.md
+COPY dev-requirements.txt dev-requirements.txt
 
 RUN git submodule update --init --recursive --jobs 0
 
@@ -66,6 +69,7 @@ RUN git submodule update --init --recursive --jobs 0
 FROM dev-base as conda-pyenv
 ARG PYTHON_MAJOR_VERSION=3
 ARG PYTHON_MINOR_VERSION=8
+ARG BUILD_CUDA_TESTS=0
 ENV PYTHON_MINOR_VERSION=${PYTHON_MINOR_VERSION}
 ENV PYTHON_VERSION=${PYTHON_MAJOR_VERSION}.${PYTHON_MINOR_VERSION}
 RUN if [[ ${PYTHON_MINOR_VERSION} -gt 7 ]]; then \
@@ -75,7 +79,7 @@ RUN if [[ ${PYTHON_MINOR_VERSION} -gt 7 ]]; then \
     rm ~/miniconda.sh && \
     /opt/conda/bin/conda install -y python=${PYTHON_VERSION} mkl mkl-include conda-build pyyaml numpy ipython && \
     /opt/conda/bin/conda install -y -c conda-forge libpython-static=${PYTHON_VERSION} && \
-    /opt/conda/bin/conda install -y pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly && \
+    /opt/conda/bin/conda install -y pytorch torchvision torchaudio pytorch-cuda=11.6 -c pytorch-nightly -c nvidia && \
     /opt/conda/bin/conda clean -ya; \
     else \
     pip3 install virtualenv && \
@@ -84,29 +88,26 @@ RUN if [[ ${PYTHON_MINOR_VERSION} -gt 7 ]]; then \
     ~/.pyenv/bin/pyenv install --force 3.7.10 && \
     virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy && \
     source ~/venvs/multipy/bin/activate && \
-    pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cu113; \
+    pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cu116; \
     fi
 
-# Build/Install pytorch with post-cxx11 ABI
 FROM conda-pyenv as build
-WORKDIR /opt/multipy/multipy/runtime/third-party/pytorch
 COPY --from=conda-pyenv /opt/conda* /opt/conda
 COPY --from=submodule-update /opt/multipy /opt/multipy
 
 WORKDIR /opt/multipy
 
 # Build Multipy
-RUN rm -r multipy/runtime/build; mkdir multipy/runtime/build && \
-    cd multipy/runtime/build && \
+RUN ls && pwd && rm -rf multipy/runtime/build && \
     if [[ ${PYTHON_MINOR_VERSION} -lt 8 ]]; then \
-    source ~/venvs/multipy/bin/activate && \
-    cmake -DLEGACY_PYTHON_PRE_3_8=ON ..; \
-    else \
-    cmake -DLEGACY_PYTHON_PRE_3_8=OFF ..; \
+    source ~/venvs/multipy/bin/activate; \
     fi && \
-    cmake --build . --config Release -j && \
-    cmake --install . --prefix "." && \
-    cd ../example && python generate_examples.py
+    if [[ ${BUILD_CUDA_TESTS} -eq 1 ]]; then \
+    python -m pip install -e . --install-option="--cudatests"; \
+    else \
+    python -m pip install -e .; \
+    fi && \
+    python multipy/runtime/example/generate_examples.py
 
 # Build examples
 COPY examples examples
