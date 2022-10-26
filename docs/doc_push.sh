@@ -61,7 +61,7 @@ python -m pip install --upgrade pip
 python -m pip install setuptools
 python -m pip install -e . --install-option="--cmakeoff"
 
-multipy_ver=$(python -c "import multipy; print(multipy.__version__)")
+multipy_ver="0.1.0dev0"
 
 echo "Building multipy-$multipy_ver docs..."
 docs_dir=$repo_root/docs
