@@ -42,11 +42,11 @@ jobs:
       - name: Build
         env:
           DOCKER_BUILDKIT: 1
-        run: docker build -t multipy --progress=plain --build-arg PYTHON_MAJOR_VERSION=${{ matrix.python-major-version }} --build-arg PYTHON_MINOR_VERSION=${{ matrix.python-minor-version }} --build-arg BUILD_CUDA_TESTS=1 .
+        run: nvidia-docker build -t multipy --progress=plain --build-arg PYTHON_MAJOR_VERSION=${{ matrix.python-major-version }} --build-arg PYTHON_MINOR_VERSION=${{ matrix.python-minor-version }} --build-arg BUILD_CUDA_TESTS=1 .
 
       - name: Test
         run: |
-          docker run --rm multipy bash -c "if [[ ${{ matrix.python-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && multipy/runtime/build/test_deploy && multipy/runtime/build/test_deploy_gpu"
+          nvidia-docker run --rm multipy bash -c "if [[ ${{ matrix.python-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && multipy/runtime/build/test_deploy && multipy/runtime/build/test_deploy_gpu"
 
       - name: Examples
         run: |
