@@ -8,19 +8,22 @@ on:
 
 jobs:
   docbuild:
-    runs-on: ubuntu-18.04
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+         - os: linux.2xlarge
+          # ideally we run on 3.8 and 3.9 as well, however we are limited in resources.
+           python-version: 3.8
+           python-tag: "py38"
     steps:
-      - name: Setup Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
-          architecture: x64
       - name: Checkout MultiPy
         uses: actions/checkout@v2
       - name: Install Dependencies
         run: |
           set -eux
-          sudo apt-get install -y pandoc doxygen
+          sudo yum makecache --refresh
+          sudo yum install -y pandoc doxygen
           pip install -r docs/requirements.txt
       - name: Setup SSH (Click me for login details)
         uses: ./.github/actions/setup-ssh
@@ -40,15 +43,17 @@ jobs:
           make html
 
   docpush:
-    runs-on: ubuntu-18.04
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+         - os: linux.2xlarge
+          # ideally we run on 3.8 and 3.9 as well, however we are limited in resources.
+           python-version: 3.8
+           python-tag: "py38"
     needs: docbuild
     # if: ${{ github.ref == 'refs/heads/main' }}
     steps:
-      - name: Setup Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
-          architecture: x64
       - name: Checkout MultiPy
         uses: actions/checkout@v2
       - name: Set Identity
@@ -63,7 +68,8 @@ jobs:
       - name: Install Dependencies
         run: |
           set -eux
-          sudo apt-get install -y pandoc doxygen
+          sudo yum makecache --refresh
+          sudo yum install -y pandoc doxygen
           python -m pip install --upgrade pip
           pip install -r docs/requirements.txt
       - name: Build
