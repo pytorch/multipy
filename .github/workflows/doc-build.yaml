@@ -22,7 +22,7 @@ jobs:
       - name: Install Dependencies
         run: |
           set -eux
-          sudo yum makecache --refresh
+          sudo yum makecache
           sudo yum install -y pandoc doxygen
           pip install -r docs/requirements.txt
       - name: Setup SSH (Click me for login details)
@@ -68,7 +68,7 @@ jobs:
       - name: Install Dependencies
         run: |
           set -eux
-          sudo yum makecache --refresh
+          sudo yum makecache
           sudo yum install -y pandoc doxygen
           python -m pip install --upgrade pip
           pip install -r docs/requirements.txt
