@@ -370,6 +370,7 @@ ConcreteInterpreterImplConstructorCommon(
   BuiltinRegistry::runPreInitialization();
 
 #if PY_VERSION_HEX >= 0x03080100
+// For Python 3.8+.
   PyPreConfig preconfig;
   PyPreConfig_InitIsolatedConfig(&preconfig);
   PyStatus status = Py_PreInitialize(&preconfig);
@@ -408,6 +409,7 @@ ConcreteInterpreterImplConstructorCommon(
   TORCH_INTERNAL_ASSERT(!PyStatus_Exception(status))
 
 #else
+// For Python 3.7.
   Py_InitializeEx(1);
   TORCH_INTERNAL_ASSERT(Py_IsInitialized);
 #endif
