@@ -99,11 +99,9 @@ WORKDIR /opt/multipy
 RUN rm -r multipy/runtime/build; mkdir multipy/runtime/build && \
     cd multipy/runtime/build && \
     if [[ ${PYTHON_MINOR_VERSION} -lt 8 ]]; then \
-    source ~/venvs/multipy/bin/activate && \
-    cmake -DLEGACY_PYTHON_PRE_3_8=ON ..; \
-    else \
-    cmake -DLEGACY_PYTHON_PRE_3_8=OFF ..; \
+    source ~/venvs/multipy/bin/activate; \
     fi && \
+    cmake .. && \
     cmake --build . --config Release -j && \
     cmake --install . --prefix "." && \
     cd ../example && python generate_examples.py
