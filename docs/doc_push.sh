@@ -56,9 +56,9 @@ fi
 
 echo "Installing multipy from $repo_root..."
 cd "$repo_root" || exit
-pip install --upgrade pip
-pip install -r requirements.txt
-pip install -e . --install-option="--cmakeoff"
+python3 -m pip install --upgrade pip
+python3 -m pip install -r requirements.txt
+python3 -m pip install -e . --install-option="--cmakeoff"
 
 multipy_ver=$(python -c "import multipy; print(multipy.__version__)")
 
@@ -66,7 +66,7 @@ echo "Building multipy-$multipy_ver docs..."
 docs_dir=$repo_root/docs
 build_dir=$docs_dir/build
 cd "$docs_dir" || exit
-pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
 make clean html
 echo "Doc build complete"
 
