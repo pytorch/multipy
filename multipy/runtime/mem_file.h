@@ -19,12 +19,12 @@
 namespace torch {
 namespace deploy {
 
-// Memory maps a file into the address space read-only, and manages the lifetime
-// of the mapping. Here are a few use cases:
-// 1. Used in the loader to read in initial image, and to inspect
+/// Memory maps a file into the address space read-only, and manages the
+/// lifetime of the mapping. Here are a few use cases:
+/// 1. Used in the loader to read in initial image, and to inspect
 // ELF files for dependencies before callling dlopen.
-//
-// 2. Used in unity to load the elf file.
+///
+/// 2. Used in unity to load the elf file.
 struct MemFile {
   explicit MemFile(const char* filename_)
       : fd_(0), mem_(nullptr), n_bytes_(0), name_(filename_) {
@@ -52,8 +52,8 @@ struct MemFile {
     return (const char*)mem_;
   }
 
-  // returns if the file descriptor of the underlying file
-  // is valid.
+  /// Returns whether or not the file descriptor
+  /// of the underlying file is valid.
   int valid() {
     return fcntl(fd_, F_GETFD) != -1 || errno != EBADF;
   }
@@ -66,7 +66,7 @@ struct MemFile {
     }
   }
 
-  // return the size of the underlying file defined by the `MemFile`
+  /// Returns the size of the underlying file defined by the `MemFile`
   size_t size() {
     return n_bytes_;
   }

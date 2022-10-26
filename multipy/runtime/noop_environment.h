@@ -11,9 +11,10 @@
 namespace torch {
 namespace deploy {
 
-// The local python Environment
+/// The local python Environment
 class NoopEnvironment : public Environment {
  public:
+  /// no-op function as this is the no-op environment :)
   void configureInterpreter(Interpreter* /* interp */) override {}
 };
 
