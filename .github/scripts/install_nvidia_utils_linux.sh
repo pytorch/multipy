@@ -1,4 +1,6 @@
-et -eou pipefail
+#!/usr/bin/env bash
+
+set -eou pipefail
 
 
 DISTRIBUTION=$(. /etc/os-release;echo $ID$VERSION_ID)
