@@ -1,94 +1,58 @@
-name: Docs Build
-
+# This workflow builds the torchrec docs and deploys them to gh-pages.
+name: Generate documentation
 on:
   push:
     branches:
       - main
-  pull_request:
-
+  workflow_dispatch:
 jobs:
-  docbuild:
+  build_docs_job:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
          - os: linux.2xlarge
-          # ideally we run on 3.8 and 3.9 as well, however we are limited in resources.
            python-version: 3.8
-           python-tag: "py38"
     steps:
-      - name: Checkout MultiPy
-        uses: actions/checkout@v2
-      - name: Update pip
-        run: |
-          sudo yum update -y
-          sudo yum -y install git python3-pip
-          sudo pip3 install --upgrade pip
-      - name: Install Dependencies
-        run: |
-          set -eux
-          sudo yum makecache
-          sudo yum install -y doxygen
-          python -m pip install -r docs/requirements.txt
-      - name: Setup SSH (Click me for login details)
-        uses: ./.github/actions/setup-ssh
-        with:
-          github-secret: ${{ secrets.GITHUB_TOKEN }}
-      - name: Doc Test
-        run: |
-          cd docs
-          make doctest
-      - name: Linkcheck
-        run: |
-          cd docs
-          make linkcheck
-      - name: Doc Build
-        run: |
-          cd docs
-          make html
-
-  docpush:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-         - os: linux.2xlarge
-          # ideally we run on 3.8 and 3.9 as well, however we are limited in resources.
-           python-version: 3.8
-           python-tag: "py38"
-    needs: docbuild
-    # if: ${{ github.ref == 'refs/heads/main' }}
-    steps:
-      - name: Checkout MultiPy
-        uses: actions/checkout@v2
-      - name: Update pip
-        run: |
-          sudo yum update -y
-          sudo yum -y install git python3-pip
-          sudo pip3 install --upgrade pip
-      - name: Set Identity
-        run: |
-          set -ex
-          git config --global user.email "runner@github.com"
-          git config --global user.name "MultiPy CI Runner"
-      - name: Setup SSH (Click me for login details)
-        uses: ./.github/actions/setup-ssh
-        with:
-          github-secret: ${{ secrets.GITHUB_TOKEN }}
-      - name: Install Dependencies
-        run: |
-          set -eux
-          sudo yum makecache
-          sudo yum install -y doxygen
-          python -m python -m pip install --upgrade pip
-          python -m pip install -r docs/requirements.txt
-      - name: Build
-        run: |
-          set -ex
-          bash docs/doc_push.sh --dry-run
-      - name: Push
-        run: |
-          set -ex
-          cd /tmp/multipy_docs_tmp/multipy_gh_pages
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-          git push
+    - name: Check ldd --version
+      run: ldd --version
+    - name: Checkout
+      uses: actions/checkout@v2
+    # Update references
+    - name: Update pip
+      run: |
+        sudo yum update -y
+        sudo yum -y install git python3-pip
+        sudo pip3 install --upgrade pip
+    - name: Setup conda
+      run: |
+        wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
+        bash ~/miniconda.sh -b -p $HOME/miniconda
+    - name: setup Path
+      run: |
+        echo "/home/ec2-user/miniconda/bin" >> $GITHUB_PATH
+        echo "CONDA=/home/ec2-user/miniconda" >> $GITHUB_PATH
+    - name: create conda env
+      run: |
+        conda create --name build_binary python=${{ matrix.python-version }}
+        conda info
+    - name: check python version no Conda
+      run: |
+        python --version
+    - name: check python version
+      run: |
+        conda run -n build_binary python --version
+    - name: Build the docset
+      run: |
+        conda run -n build_binary python -m pip install -r docs/requirements.txt
+        cd docs
+        conda run -n build_binary make html
+        cd ..
+    - name: Get output time
+      run: echo "The time was ${{ steps.build.outputs.time }}"
+    - name: Deploy
+      uses: JamesIves/github-pages-deploy-action@releases/v3
+      with:
+          ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: gh-pages # The branch the action should deploy to.
+          FOLDER: docs/build/html # The folder the action should deploy.
