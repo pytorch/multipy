@@ -99,10 +99,13 @@ WORKDIR /opt/multipy
 
 # Build Multipy
 RUN ls && pwd && rm -rf multipy/runtime/build && \
+    if [[ ${PYTHON_MINOR_VERSION} -lt 8 ]]; then \
+    source ~/venvs/multipy/bin/activate; \
+    fi && \
     if [[ ${BUILD_CUDA_TESTS} -eq 1 ]]; then \
-    python3 -m pip install -e . --install-option="--cudatests"; \
+    python -m pip install -e . --install-option="--cudatests"; \
     else \
-    python3 -m pip install -e .; \
+    python -m pip install -e .; \
     fi && \
     python multipy/runtime/example/generate_examples.py
 
