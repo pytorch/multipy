@@ -65,5 +65,5 @@ jobs:
         run: |
           set -ex
           cd /tmp/multipy_docs_tmp/multipy_gh_pages
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+          sudo git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
           git push
