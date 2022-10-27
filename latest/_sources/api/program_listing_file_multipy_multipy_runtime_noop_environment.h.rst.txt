@@ -1,0 +1,34 @@
+:github_url: https://github.com/pytorch/multipy
+
+
+.. _program_listing_file_multipy_multipy_runtime_noop_environment.h:
+
+Program Listing for File noop_environment.h
+===========================================
+
+|exhale_lsh| :ref:`Return to documentation for file <file_multipy_multipy_runtime_noop_environment.h>` (``multipy/multipy/runtime/noop_environment.h``)
+
+.. |exhale_lsh| unicode:: U+021B0 .. UPWARDS ARROW WITH TIP LEFTWARDS
+
+.. code-block:: cpp
+
+   // Copyright (c) Meta Platforms, Inc. and affiliates.
+   // All rights reserved.
+   //
+   // This source code is licensed under the BSD-style license found in the
+   // LICENSE file in the root directory of this source tree.
+   
+   #pragma once
+   
+   #include <multipy/runtime/environment.h>
+   
+   namespace torch {
+   namespace deploy {
+   
+   class NoopEnvironment : public Environment {
+    public:
+     void configureInterpreter(Interpreter* /* interp */) override {}
+   };
+   
+   } // namespace deploy
+   } // namespace torch
