@@ -78,14 +78,11 @@ class MultipyRuntimeBuild(MultipyRuntimeCmake, build_ext):
         build_dir_abs = base_dir + "/" + build_dir
         if not os.path.exists(build_dir_abs):
             os.makedirs(build_dir_abs)
-        legacy_python_cmake_flag = "OFF" if sys.version_info.minor > 7 else "ON"
 
         print(f"-- Running multipy runtime makefile in dir {build_dir_abs}")
         try:
             subprocess.run(
-                [
-                    f"cmake -DBUILD_CUDA_TESTS={self.cuda_tests_flag} -DLEGACY_PYTHON_PRE_3_8={legacy_python_cmake_flag} .."
-                ],
+                [f"cmake -DBUILD_CUDA_TESTS={self.cuda_tests_flag} .."],
                 cwd=build_dir_abs,
                 shell=True,
                 check=True,

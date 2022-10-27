@@ -473,7 +473,8 @@ result = torch.Tensor([1,2,3])
   EXPECT_TRUE(w_grad0.equal(w_grad1));
 }
 
-#ifndef LEGACY_PYTHON_PRE_3_8
+// For Python 3.8+ only.
+#if PY_VERSION_HEX >= 0x03080100
 TEST(TorchpyTest, ImportlibMetadata) {
   torch::deploy::InterpreterManager m(1);
   m.registerModuleSource("importlib_test", R"PYTHON(
