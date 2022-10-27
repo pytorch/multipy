@@ -82,9 +82,7 @@ class MultipyRuntimeBuild(MultipyRuntimeCmake, build_ext):
         print(f"-- Running multipy runtime makefile in dir {build_dir_abs}")
         try:
             subprocess.run(
-                [
-                    f"cmake -DBUILD_CUDA_TESTS={self.cuda_tests_flag} .."
-                ],
+                [f"cmake -DBUILD_CUDA_TESTS={self.cuda_tests_flag} .."],
                 cwd=build_dir_abs,
                 shell=True,
                 check=True,
