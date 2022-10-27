@@ -57,7 +57,11 @@ fi
 echo "Installing multipy from $repo_root..."
 cd "$repo_root" || exit
 
-multipy_ver="0.1.0dev0"
+# Here we hardcode versions until we
+# find a better way to do it.
+
+# multipy_ver="0.1.0dev0"
+ multipy_ver="latest"
 
 echo "Building multipy-$multipy_ver docs..."
 docs_dir=$repo_root/docs
