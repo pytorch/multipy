@@ -135,7 +135,7 @@ class MultipyRuntimeInstall(MultipyRuntimeCmake, install):
             self.distribution.get_command_obj("build_ext").cmake_off = True
 
     def run(self):
-        # Setuptools/setup.py on docker image has some interesting behavior, in that the
+        # Setuptools/setup.py on docker images can have some interesting behavior, in that the
         # optional "--cmakeoff" flag gets applied to dependencies specified in
         # requirements.txt as well (installed using "install-requires" argument of setup()).
         # Since we obviously don't want things like "pip install numpy --install-option=--cmakeoff",
