@@ -6,10 +6,13 @@
 # LICENSE file in the root directory of this source tree.
 
 import os
+import os.path
 import re
+import shutil
 import subprocess
 import sys
 from datetime import date
+from distutils.command.clean import clean
 
 from setuptools import Extension, find_packages, setup
 from setuptools.command.build_ext import build_ext
@@ -79,6 +82,7 @@ class MultipyRuntimeBuild(MultipyRuntimeCmake, build_ext):
         if not os.path.exists(build_dir_abs):
             os.makedirs(build_dir_abs)
 
+        print(f"build_lib {self.build_lib}")
         print(f"-- Running multipy runtime makefile in dir {build_dir_abs}")
         try:
             subprocess.run(
@@ -117,6 +121,33 @@ class MultipyRuntimeBuild(MultipyRuntimeCmake, build_ext):
             )
         except subprocess.CalledProcessError as e:
             raise RuntimeError(e.output.decode("utf-8")) from None
+
+        print("-- Copying build outputs")
+        paths = [
+            "multipy/runtime/build/libtorch_deploy.a",
+            "multipy/runtime/build/interactive_embedded_interpreter",
+            "multipy/runtime/build/test_deploy",
+        ]
+        for path in paths:
+            target = os.path.join(self.build_lib, path)
+            target_dir = os.path.dirname(target)
+            if not os.path.exists(target_dir):
+                print(f"creating dir {target_dir}")
+                os.makedirs(target_dir)
+            print(f"copying {path} -> {target}")
+            shutil.copy2(path, target)
+
+
+class MultipyRuntimeClean(clean):
+    def run(self):
+        paths = [
+            "multipy/runtime/build",
+        ]
+        for path in paths:
+            if os.path.exists(path):
+                print(f"removing: {path}")
+                shutil.rmtree(path)
+        super().run()
 
 
 class MultipyRuntimeInstall(MultipyRuntimeCmake, install):
@@ -224,7 +255,29 @@ if __name__ == "__main__":
             "build_ext": MultipyRuntimeBuild,
             "develop": MultipyRuntimeDevelop,
             "install": MultipyRuntimeInstall,
+            "clean": MultipyRuntimeClean,
         },
+        package_data={
+            "multipy": [
+                "runtime/*",
+                "runtime/example/*",
+                "runtime/example/fx/*",
+                "runtime/interpreter/*",
+                "runtime/third-party/fmt/*",
+                "runtime/third-party/fmt/include/fmt/*",
+                "runtime/third-party/fmt/src/*",
+                "runtime/third-party/fmt/support/cmake/*",
+            ]
+        },
+        data_files=[
+            (
+                "",
+                [
+                    "requirements.txt",
+                    "dev-requirements.txt",
+                ],
+            )
+        ],
         # PyPI package information.
         classifiers=[
             "Development Status :: 4 - Beta",

@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  unittest:
+  installtest:
     strategy:
       matrix:
         python3-minor-version: [7,8,9,10]
@@ -76,13 +76,36 @@ jobs:
           pip install -e . --install-option="--cmakeoff"
           deactivate
 
-      - name: Run pip install within virtualenv
+      - name: Run pip editable install within virtualenv
         run: |
           set -eux
           source ~/venvs/multipy/bin/activate
           rm -rf multipy/runtime/build*
           pip install -e .
           deactivate
+
+      - name: Run setup.py install within virtualenv
+        run: |
+          set -eux
+          source ~/venvs/multipy/bin/activate
+          python setup.py install
+          test -e ~/venvs/multipy/lib/python3.*/site-packages/multipy/runtime/build/libtorch_deploy.a
+
+      - name: Install sdist
+        run: |
+          set -eux
+          source ~/venvs/multipy/bin/activate
+          python setup.py sdist
+          pip install dist/*.tar.gz --force-reinstall
+          test -e ~/venvs/multipy/lib/python3.*/site-packages/multipy/runtime/build/libtorch_deploy.a
+
+      - name: Install bdist_wheel
+        run: |
+          set -eux
+          source ~/venvs/multipy/bin/activate
+          python setup.py bdist_wheel
+          pip install dist/*.whl --force-reinstall
+          test -e ~/venvs/multipy/lib/python3.*/site-packages/multipy/runtime/build/libtorch_deploy.a
 
       - name: Install dependencies with conda for 3.8+
         run: |
