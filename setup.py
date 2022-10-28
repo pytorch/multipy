@@ -209,7 +209,7 @@ if __name__ == "__main__":
     if sys.version_info < (3, 7):
         sys.exit("python >= 3.7 required for multipy")
 
-    name = "multipy"
+    name = "torchdeploy"
     NAME_ARG = "--override-name"
     if NAME_ARG in sys.argv:
         idx = sys.argv.index(NAME_ARG)
@@ -233,12 +233,12 @@ if __name__ == "__main__":
         author="MultiPy Devs",
         # TODO: @sahanp create email for MultiPy
         author_email="sahanp@fb.com",
-        description="package + torch::deploy",
+        description="torch::deploy (multipy) is a C++ library that makes it easier to run eager PyTorch models in production by using independent python interpreters to avoid the GIL.",
         long_description=readme,
         long_description_content_type="text/markdown",
         url="https://github.com/pytorch/multipy",
         license="BSD-3",
-        keywords=["pytorch", "machine learning"],
+        keywords=["pytorch", "machine learning", "inference"],
         python_requires=">=3.7",
         include_package_data=True,
         packages=find_packages(exclude=()),
