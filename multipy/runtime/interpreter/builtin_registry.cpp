@@ -64,7 +64,8 @@ void BuiltinRegistry::runPreInitialization() {
   appendCPythonInittab();
 }
 
-#ifndef LEGACY_PYTHON_PRE_3_8
+#if PY_VERSION_HEX >= 0x03080100
+// For Python 3.8+.
 const char* metaPathSetupTemplate = R"PYTHON(
 import sys
 from importlib.metadata import DistributionFinder, Distribution
@@ -109,6 +110,7 @@ class DummyDistribution(Distribution):
 sys.meta_path.insert(0, F())
 )PYTHON";
 #else
+// For Python 3.7.
 const char* metaPathSetupTemplate = R"PYTHON(
 import sys
 class F:

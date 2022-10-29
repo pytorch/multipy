@@ -11,18 +11,17 @@ on:
   workflow_dispatch:
 
 jobs:
-  unittest:
+  installtest:
     strategy:
       matrix:
-        python-major-version: [3]
-        python-minor-version: [7,8,9,10]
+        python3-minor-version: [7,8,9,10]
         platform: [ubuntu-18.04]
       fail-fast: false
     runs-on: ${{ matrix.platform }}
     steps:
       - name: Set Python Version
         run: |
-          echo "python-version=${{ matrix.python-major-version }}.${{ matrix.python-minor-version }}" >> $GITHUB_ENV
+          echo "python-version=3.${{ matrix.python3-minor-version }}" >> $GITHUB_ENV
       - name: Setup Python ${{ env.python-version }}
         uses: actions/setup-python@v2
         with:
@@ -58,7 +57,7 @@ jobs:
           py_version_dict[8]='3.8.13'
           py_version_dict[9]='3.9.13'
           py_version_dict[10]='3.10.6'
-          py_install_version=${py_version_dict[${{ matrix.python-minor-version }}]}
+          py_install_version=${py_version_dict[${{ matrix.python3-minor-version }}]}
           ~/.pyenv/bin/pyenv install --force ${py_install_version}
           virtualenv -p ~/.pyenv/versions/${py_install_version}/bin/python3 ~/venvs/multipy
 
@@ -77,7 +76,7 @@ jobs:
           pip install -e . --install-option="--cmakeoff"
           deactivate
 
-      - name: Run pip install within virtualenv
+      - name: Run pip editable install within virtualenv
         run: |
           set -eux
           source ~/venvs/multipy/bin/activate
@@ -85,10 +84,33 @@ jobs:
           pip install -e .
           deactivate
 
+      - name: Run setup.py install within virtualenv
+        run: |
+          set -eux
+          source ~/venvs/multipy/bin/activate
+          python setup.py install
+          test -e ~/venvs/multipy/lib/python3.*/site-packages/multipy/runtime/build/libtorch_deploy.a
+
+      - name: Install sdist
+        run: |
+          set -eux
+          source ~/venvs/multipy/bin/activate
+          python setup.py sdist
+          pip install dist/*.tar.gz --force-reinstall
+          test -e ~/venvs/multipy/lib/python3.*/site-packages/multipy/runtime/build/libtorch_deploy.a
+
+      - name: Install bdist_wheel
+        run: |
+          set -eux
+          source ~/venvs/multipy/bin/activate
+          python setup.py bdist_wheel
+          pip install dist/*.whl --force-reinstall
+          test -e ~/venvs/multipy/lib/python3.*/site-packages/multipy/runtime/build/libtorch_deploy.a
+
       - name: Install dependencies with conda for 3.8+
         run: |
           set -eux
-          if [[ ${{ matrix.python-minor-version }} -gt 7 ]]; then \
+          if [[ ${{ matrix.python3-minor-version }} -gt 7 ]]; then \
           curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
           chmod +x ~/miniconda.sh && \
           ~/miniconda.sh -b -p /opt/conda && \
@@ -102,7 +124,7 @@ jobs:
       - name: Run pip install with conda for 3.8+
         run: |
           set -eux
-          if [[ ${{ matrix.python-minor-version }} -gt 7 ]]; then
+          if [[ ${{ matrix.python3-minor-version }} -gt 7 ]]; then
             source /opt/conda/bin/activate
             pip install -e .
           fi

@@ -11,3 +11,4 @@ examples/**/*.pt
 **/.DS_Store/**
 docs/source/api/
 docs/src/
+dist/
