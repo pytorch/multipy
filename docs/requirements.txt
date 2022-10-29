@@ -1,4 +1,4 @@
-sphinx==5.0.1
+sphinx
 sphinx-autobuild
 -e git+http://github.com/pytorch/pytorch_sphinx_theme.git#egg=pytorch_sphinx_theme
 sphinx-gallery<=0.7.0
@@ -6,4 +6,7 @@ sphinxcontrib.katex
 matplotlib
 papermill
 jinja2<=3.0.3
+breathe
 exhale
+ipython_genutils
+ipykernel

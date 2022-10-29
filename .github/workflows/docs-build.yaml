@@ -1,0 +1,69 @@
+name: Docs Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  docbuild:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+          architecture: x64
+      - name: Checkout MultiPy
+        uses: actions/checkout@v2
+      - name: Install Dependencies
+        run: |
+          set -eux
+          sudo apt-get install -y pandoc doxygen
+          pip install -r docs/requirements.txt
+      - name: Doc Test
+        run: |
+          cd docs
+          make doctest
+      - name: Linkcheck
+        run: |
+          cd docs
+          make linkcheck
+      - name: Doc Build
+        run: |
+          cd docs
+          make html
+
+  docpush:
+    runs-on: ubuntu-18.04
+    needs: docbuild
+    if: ${{ github.ref == 'refs/heads/main' }}
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+          architecture: x64
+      - name: Checkout MultiPy
+        uses: actions/checkout@v2
+      - name: Set Identity
+        run: |
+          set -ex
+          git config --global user.email "runner@github.com"
+          git config --global user.name "MultiPy CI Runner"
+      - name: Install Dependencies
+        run: |
+          set -eux
+          sudo apt-get install -y pandoc doxygen
+          pip install -r docs/requirements.txt
+      - name: Build
+        run: |
+          set -ex
+          sudo bash docs/doc_push.sh --dry-run
+      - name: Push
+        run: |
+          set -ex
+          cd /tmp/multipy_docs_tmp/multipy_gh_pages
+          sudo git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+          git push
