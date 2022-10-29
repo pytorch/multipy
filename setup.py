@@ -6,10 +6,13 @@
 # LICENSE file in the root directory of this source tree.
 
 import os
+import os.path
 import re
+import shutil
 import subprocess
 import sys
 from datetime import date
+from distutils.command.clean import clean
 
 from setuptools import Extension, find_packages, setup
 from setuptools.command.build_ext import build_ext
@@ -78,14 +81,12 @@ class MultipyRuntimeBuild(MultipyRuntimeCmake, build_ext):
         build_dir_abs = base_dir + "/" + build_dir
         if not os.path.exists(build_dir_abs):
             os.makedirs(build_dir_abs)
-        legacy_python_cmake_flag = "OFF" if sys.version_info.minor > 7 else "ON"
 
+        print(f"build_lib {self.build_lib}")
         print(f"-- Running multipy runtime makefile in dir {build_dir_abs}")
         try:
             subprocess.run(
-                [
-                    f"cmake -DBUILD_CUDA_TESTS={self.cuda_tests_flag} -DLEGACY_PYTHON_PRE_3_8={legacy_python_cmake_flag} .."
-                ],
+                [f"cmake -DBUILD_CUDA_TESTS={self.cuda_tests_flag} .."],
                 cwd=build_dir_abs,
                 shell=True,
                 check=True,
@@ -120,6 +121,33 @@ class MultipyRuntimeBuild(MultipyRuntimeCmake, build_ext):
             )
         except subprocess.CalledProcessError as e:
             raise RuntimeError(e.output.decode("utf-8")) from None
+
+        print("-- Copying build outputs")
+        paths = [
+            "multipy/runtime/build/libtorch_deploy.a",
+            "multipy/runtime/build/interactive_embedded_interpreter",
+            "multipy/runtime/build/test_deploy",
+        ]
+        for path in paths:
+            target = os.path.join(self.build_lib, path)
+            target_dir = os.path.dirname(target)
+            if not os.path.exists(target_dir):
+                print(f"creating dir {target_dir}")
+                os.makedirs(target_dir)
+            print(f"copying {path} -> {target}")
+            shutil.copy2(path, target)
+
+
+class MultipyRuntimeClean(clean):
+    def run(self):
+        paths = [
+            "multipy/runtime/build",
+        ]
+        for path in paths:
+            if os.path.exists(path):
+                print(f"removing: {path}")
+                shutil.rmtree(path)
+        super().run()
 
 
 class MultipyRuntimeInstall(MultipyRuntimeCmake, install):
@@ -181,7 +209,7 @@ if __name__ == "__main__":
     if sys.version_info < (3, 7):
         sys.exit("python >= 3.7 required for multipy")
 
-    name = "multipy"
+    name = "torchdeploy"
     NAME_ARG = "--override-name"
     if NAME_ARG in sys.argv:
         idx = sys.argv.index(NAME_ARG)
@@ -205,12 +233,12 @@ if __name__ == "__main__":
         author="MultiPy Devs",
         # TODO: @sahanp create email for MultiPy
         author_email="sahanp@fb.com",
-        description="package + torch::deploy",
+        description="torch::deploy (multipy) is a C++ library that makes it easier to run eager PyTorch models in production by using independent python interpreters to avoid the GIL.",
         long_description=readme,
         long_description_content_type="text/markdown",
         url="https://github.com/pytorch/multipy",
         license="BSD-3",
-        keywords=["pytorch", "machine learning"],
+        keywords=["pytorch", "machine learning", "inference"],
         python_requires=">=3.7",
         include_package_data=True,
         packages=find_packages(exclude=()),
@@ -227,7 +255,29 @@ if __name__ == "__main__":
             "build_ext": MultipyRuntimeBuild,
             "develop": MultipyRuntimeDevelop,
             "install": MultipyRuntimeInstall,
+            "clean": MultipyRuntimeClean,
         },
+        package_data={
+            "multipy": [
+                "runtime/*",
+                "runtime/example/*",
+                "runtime/example/fx/*",
+                "runtime/interpreter/*",
+                "runtime/third-party/fmt/*",
+                "runtime/third-party/fmt/include/fmt/*",
+                "runtime/third-party/fmt/src/*",
+                "runtime/third-party/fmt/support/cmake/*",
+            ]
+        },
+        data_files=[
+            (
+                "",
+                [
+                    "requirements.txt",
+                    "dev-requirements.txt",
+                ],
+            )
+        ],
         # PyPI package information.
         classifiers=[
             "Development Status :: 4 - Beta",
