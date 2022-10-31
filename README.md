@@ -91,9 +91,9 @@ git clone https://github.com/pyenv/pyenv.git ~/.pyenv
 
 #### Installing python, pytorch and related dependencies
 
-Multipy requires the latest version of pytorch to run models successfully, and we recommend fetching the latest _nightlies_ for pytorch and also cuda, if required.
+Multipy requires a version of pytorch > 1.13 to run models successfully, and we recommend fetching the _[latest stable release (1.13) / nightlies](https://pytorch.org/get-started/locally/)_ and also cuda, if required.
 
-##### In a `conda` environment, we would do the following:
+##### In a `conda` environment, we would do the following or similar depending on which version of pytorch we want:
 ```shell
 conda create -n newenv
 conda activate newenv
@@ -101,10 +101,10 @@ conda install python=3.8
 conda install -c conda-forge libpython-static=3.8
 
 # cuda
-conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly
+conda install pytorch torchvision torchaudio pytorch-cuda=11.6 -c pytorch -c nvidia
 
 # cpu only
-conda install pytorch torchvision torchaudio cpuonly -c pytorch-nightly
+conda install pytorch torchvision torchaudio cpuonly -c pytorch
 ```
 
 ##### For a `pyenv` / `virtualenv` setup, one could do:
@@ -116,10 +116,10 @@ source ~/venvs/multipy/bin/activate
 pip install -r dev-requirements.txt
 
 # cuda
-pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cu113
+pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu116
 
 # cpu only
-pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cpu
+pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cpu
 
 ```
 
