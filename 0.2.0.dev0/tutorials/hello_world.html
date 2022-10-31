@@ -6,7 +6,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
@@ -323,12 +323,12 @@
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
   <section id="hello-world-using-interpretersession-directly">
-<h1>Hello World (Using InterpreterSession directly)<a class="headerlink" href="#hello-world-using-interpretersession-directly" title="Permalink to this heading">¶</a></h1>
+<h1>Hello World (Using InterpreterSession directly)<a class="headerlink" href="#hello-world-using-interpretersession-directly" title="Permalink to this headline">¶</a></h1>
 <p>Here we use <code class="docutils literal notranslate"><span class="pre">torch::deploy</span></code> to print <code class="docutils literal notranslate"><span class="pre">Hello</span> <span class="pre">World</span></code> to the console
 without using <code class="docutils literal notranslate"><span class="pre">torch.package</span></code>. Instead we simply acquire an individual
 <code class="docutils literal notranslate"><span class="pre">InterpreterSession</span></code>, and use it to print <code class="docutils literal notranslate"><span class="pre">Hello</span> <span class="pre">World</span></code> directly.</p>
 <section id="printing-hello-world-with-torch-deploy">
-<h2>Printing Hello World with <code class="docutils literal notranslate"><span class="pre">torch::deploy</span></code><a class="headerlink" href="#printing-hello-world-with-torch-deploy" title="Permalink to this heading">¶</a></h2>
+<h2>Printing Hello World with <code class="docutils literal notranslate"><span class="pre">torch::deploy</span></code><a class="headerlink" href="#printing-hello-world-with-torch-deploy" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;multipy/runtime/deploy.h&gt;</span><span class="cp"></span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;multipy/runtime/path_environment.h&gt;</span><span class="cp"></span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;torch/script.h&gt;</span><span class="cp"></span>
@@ -363,7 +363,7 @@ which is a wrapper around <code class="docutils literal notranslate"><span class
 using <code class="docutils literal notranslate"><span class="pre">{&quot;Hello</span> <span class="pre">world!&quot;}</span></code> as its argument(s).</p>
 </section>
 <section id="build-and-execute">
-<h2>Build and execute<a class="headerlink" href="#build-and-execute" title="Permalink to this heading">¶</a></h2>
+<h2>Build and execute<a class="headerlink" href="#build-and-execute" title="Permalink to this headline">¶</a></h2>
 <p>Assuming the above C++ program was stored in a file called
 <code class="docutils literal notranslate"><span class="pre">hello_world_example.cpp</span></code>, a minimal <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> file would
 look like:</p>
@@ -468,9 +468,7 @@ cmake --build build/ --config Release -j
          <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
          <script src="../_static/jquery.js"></script>
          <script src="../_static/underscore.js"></script>
-         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../_static/doctools.js"></script>
-         <script src="../_static/sphinx_highlight.js"></script>
          <script src="../_static/collapsible-lists/js/CollapsibleLists.compressed.js"></script>
          <script src="../_static/collapsible-lists/js/apply-collapsible-lists.js"></script>
      
