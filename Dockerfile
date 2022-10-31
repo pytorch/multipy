@@ -67,11 +67,12 @@ RUN git submodule update --init --recursive --jobs 0
 
 # Install conda/pyenv + necessary python dependencies
 FROM dev-base as conda-pyenv
-ARG PYTHON_3_MINOR_VERSION=8
+ARG PYTHON_MAJOR_VERSION=3
+ARG PYTHON_MINOR_VERSION=8
 ARG BUILD_CUDA_TESTS=0
-ENV PYTHON_3_MINOR_VERSION=${PYTHON_3_MINOR_VERSION}
-ENV PYTHON_VERSION=3.${PYTHON_3_MINOR_VERSION}
-RUN if [[ ${PYTHON_3_MINOR_VERSION} -gt 7 ]]; then \
+ENV PYTHON_MINOR_VERSION=${PYTHON_MINOR_VERSION}
+ENV PYTHON_VERSION=${PYTHON_MAJOR_VERSION}.${PYTHON_MINOR_VERSION}
+RUN if [[ ${PYTHON_MINOR_VERSION} -gt 7 ]]; then \
     curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
     chmod +x ~/miniconda.sh && \
     ~/miniconda.sh -b -p /opt/conda && \
@@ -98,7 +99,7 @@ WORKDIR /opt/multipy
 
 # Build Multipy
 RUN ls && pwd && rm -rf multipy/runtime/build && \
-    if [[ ${PYTHON_3_MINOR_VERSION} -lt 8 ]]; then \
+    if [[ ${PYTHON_MINOR_VERSION} -lt 8 ]]; then \
     source ~/venvs/multipy/bin/activate; \
     fi && \
     if [[ ${BUILD_CUDA_TESTS} -eq 1 ]]; then \
@@ -112,7 +113,7 @@ RUN ls && pwd && rm -rf multipy/runtime/build && \
 COPY examples examples
 RUN cd examples && \
     rm -r build; \
-    if [[ ${PYTHON_3_MINOR_VERSION} -lt 8 ]]; then \
+    if [[ ${PYTHON_MINOR_VERSION} -lt 8 ]]; then \
     source ~/venvs/multipy/bin/activate; \
     else \
     source /opt/conda/bin/activate; \

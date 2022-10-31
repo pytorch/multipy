@@ -12,6 +12,8 @@ project(MultipyRuntime)
 option(BUILD_CUDA_TESTS "Set to ON in order to build cuda tests. By default we do not" OFF)
 option(GDB_ON "Sets to debug mode (for gdb), defaults to OFF" OFF)
 
+OPTION(LEGACY_PYTHON_PRE_3_8 "Whether to use Python 3.7 codepaths." OFF)
+
 if(GDB_ON)
   set(CMAKE_BUILD_TYPE Debug)
 endif()
@@ -93,6 +95,10 @@ set(INTERPRETER_TEST_SOURCES_GPU
 
 add_executable(test_deploy ${INTERPRETER_TEST_SOURCES})
 # target_compile_definitions(test_deploy PUBLIC TEST_CUSTOM_LIBRARY)
+if (${LEGACY_PYTHON_PRE_3_8})
+  message(STATUS "LEGACY_PYTHON_PRE_3_8 set in parent cmakefile.")
+  target_compile_definitions(test_deploy PUBLIC LEGACY_PYTHON_PRE_3_8)
+endif()
 target_include_directories(test_deploy PRIVATE ${PYTORCH_ROOT}/torch)
 target_link_libraries(test_deploy
   PUBLIC "-Wl,--no-as-needed -rdynamic" gtest dl torch_deploy_interface c10 torch_cpu

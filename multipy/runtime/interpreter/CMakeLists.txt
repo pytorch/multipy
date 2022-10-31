@@ -11,6 +11,8 @@ SET(INTERPRETER_DIR "${DEPLOY_DIR}/interpreter" PARENT_SCOPE)
 
 SET(MULTIPY_UTILS "${CMAKE_CURRENT_SOURCE_DIR}/../../utils")
 
+OPTION(LEGACY_PYTHON_PRE_3_8 "Whether to use Python 3.7 codepaths." OFF)
+
 message(STATUS "Python3_EXECUTABLE - ${Python3_EXECUTABLE}" )
 message(STATUS "Python3_SITELIB - ${Python3_SITELIB}" )
 message(STATUS "Python3_LIBRARIES - ${Python3_LIBRARIES}" )
@@ -24,6 +26,11 @@ endif()
 message(STATUS "Python3_STATIC_LIBRARIES - ${Python3_STATIC_LIBRARIES}" )
 
 include_directories(BEFORE ${CMAKE_SOURCE_DIR}/../..)
+
+if (${LEGACY_PYTHON_PRE_3_8})
+  message(STATUS "LEGACY_PYTHON_PRE_3_8 set")
+  add_compile_definitions(LEGACY_PYTHON_PRE_3_8)
+endif()
 
 # add gtest dependency
 include(FetchContent)
@@ -82,3 +89,5 @@ target_link_libraries(torch_deployinterpreter PRIVATE fmt::fmt-header-only)
 target_link_libraries(torch_deployinterpreter PRIVATE torch_python)
 target_link_libraries(torch_deployinterpreter PRIVATE gtest)
 target_link_libraries(torch_deployinterpreter PRIVATE multipy_torch)
+
+unset(LEGACY_PYTHON_PRE_3_8)
