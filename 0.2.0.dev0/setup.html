@@ -6,7 +6,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
@@ -321,9 +321,9 @@
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
   <section id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">¶</a></h1>
 <section id="building-torch-deploy-via-docker">
-<h2>Building <code class="docutils literal notranslate"><span class="pre">torch::deploy</span></code> via Docker<a class="headerlink" href="#building-torch-deploy-via-docker" title="Permalink to this headline">¶</a></h2>
+<h2>Building <code class="docutils literal notranslate"><span class="pre">torch::deploy</span></code> via Docker<a class="headerlink" href="#building-torch-deploy-via-docker" title="Permalink to this heading">¶</a></h2>
 <p>The easiest way to build <code class="docutils literal notranslate"><span class="pre">torch::deploy</span></code>, along with fetching all interpreter
 dependencies, is to do so via docker.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/pytorch/multipy.git
@@ -339,7 +339,7 @@ docker build -t multipy .
 </div>
 </section>
 <section id="installing-via-pip-install">
-<h2>Installing via <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code><a class="headerlink" href="#installing-via-pip-install" title="Permalink to this headline">¶</a></h2>
+<h2>Installing via <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code><a class="headerlink" href="#installing-via-pip-install" title="Permalink to this heading">¶</a></h2>
 <p>We support installing both the python modules and the c++ bits (through <code class="docutils literal notranslate"><span class="pre">CMake</span></code>)
 using a single <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">.</span></code> command, with the caveat of having to manually
 install the dependencies first.</p>
@@ -350,7 +350,7 @@ git submodule sync <span class="o">&amp;&amp;</span> git submodule update --init
 </pre></div>
 </div>
 <section id="installing-system-dependencies">
-<h3>Installing system dependencies<a class="headerlink" href="#installing-system-dependencies" title="Permalink to this headline">¶</a></h3>
+<h3>Installing system dependencies<a class="headerlink" href="#installing-system-dependencies" title="Permalink to this heading">¶</a></h3>
 <p>The runtime system dependencies are specified in
 <code class="docutils literal notranslate"><span class="pre">build-requirements.txt</span></code>. To install them on Debian-based systems, one
 could run:</p>
@@ -360,7 +360,7 @@ xargs sudo apt install -y -qq --no-install-recommends &lt; build-requirements.tx
 </div>
 </section>
 <section id="installing-environment-encapsulators">
-<h3>Installing environment encapsulators<a class="headerlink" href="#installing-environment-encapsulators" title="Permalink to this headline">¶</a></h3>
+<h3>Installing environment encapsulators<a class="headerlink" href="#installing-environment-encapsulators" title="Permalink to this heading">¶</a></h3>
 <p>We recommend using the isolated python environments of either <a class="reference external" href="https://docs.conda.io/projects/continuumio-conda/en/latest/user-guide/install/index.html#regular-installation">conda</a>
 or <a class="reference external" href="https://github.com/pyenv/pyenv.git">pyenv + virtualenv</a>
 because <code class="docutils literal notranslate"><span class="pre">torch::deploy</span></code> requires a
@@ -379,12 +379,12 @@ used, as python can be built with the <code class="docutils literal notranslate"
 </div>
 </section>
 <section id="installing-pytorch-and-related-dependencies">
-<h3>Installing pytorch and related dependencies<a class="headerlink" href="#installing-pytorch-and-related-dependencies" title="Permalink to this headline">¶</a></h3>
+<h3>Installing pytorch and related dependencies<a class="headerlink" href="#installing-pytorch-and-related-dependencies" title="Permalink to this heading">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">torch::deploy</span></code> requires the latest version of pytorch to run models
 successfully, and we recommend fetching the latest <em>nightlies</em> for
 pytorch and also cuda.</p>
 <section id="installing-the-python-dependencies-in-a-conda-environment">
-<h4>Installing the python dependencies in a <code class="docutils literal notranslate"><span class="pre">conda</span></code> environment:<a class="headerlink" href="#installing-the-python-dependencies-in-a-conda-environment" title="Permalink to this headline">¶</a></h4>
+<h4>Installing the python dependencies in a <code class="docutils literal notranslate"><span class="pre">conda</span></code> environment:<a class="headerlink" href="#installing-the-python-dependencies-in-a-conda-environment" title="Permalink to this heading">¶</a></h4>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>conda create -n newenv
 conda activate newenv
 
@@ -397,7 +397,7 @@ conda install pytorch torchvision torchaudio cpuonly -c pytorch-nightly
 </div>
 </section>
 <section id="installing-the-python-dependencies-in-a-pyenv-virtualenv-setup">
-<h4>Installing the python dependencies in a  <code class="docutils literal notranslate"><span class="pre">pyenv</span></code> / <code class="docutils literal notranslate"><span class="pre">virtualenv</span></code> setup<a class="headerlink" href="#installing-the-python-dependencies-in-a-pyenv-virtualenv-setup" title="Permalink to this headline">¶</a></h4>
+<h4>Installing the python dependencies in a  <code class="docutils literal notranslate"><span class="pre">pyenv</span></code> / <code class="docutils literal notranslate"><span class="pre">virtualenv</span></code> setup<a class="headerlink" href="#installing-the-python-dependencies-in-a-pyenv-virtualenv-setup" title="Permalink to this heading">¶</a></h4>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># feel free to replace 3.8.6 with any python version &gt; 3.7.0</span>
 <span class="nb">export</span> <span class="nv">CFLAGS</span><span class="o">=</span><span class="s2">&quot;-fPIC -g&quot;</span>
 ~/.pyenv/bin/pyenv install --force <span class="m">3</span>.8.6
@@ -412,7 +412,7 @@ pip3 install --pre torch torchvision torchaudio --extra-index-url https://downlo
 </section>
 </section>
 <section id="running-pip-install">
-<h3>Running <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code><a class="headerlink" href="#running-pip-install" title="Permalink to this headline">¶</a></h3>
+<h3>Running <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code><a class="headerlink" href="#running-pip-install" title="Permalink to this heading">¶</a></h3>
 <p>Once all the dependencies are successfully installed,
 including a <code class="docutils literal notranslate"><span class="pre">-fPIC</span></code> enabled build of python and the latest nightly of pytorch, we
 can run the following, in either <code class="docutils literal notranslate"><span class="pre">conda</span></code> or <code class="docutils literal notranslate"><span class="pre">virtualenv</span></code>, to install
@@ -443,14 +443,14 @@ can help. Alternatively, the user can go with the
 </section>
 </section>
 <section id="running-torch-deploy-build-steps-from-source">
-<h2>Running <code class="docutils literal notranslate"><span class="pre">torch::deploy</span></code> build steps from source<a class="headerlink" href="#running-torch-deploy-build-steps-from-source" title="Permalink to this headline">¶</a></h2>
+<h2>Running <code class="docutils literal notranslate"><span class="pre">torch::deploy</span></code> build steps from source<a class="headerlink" href="#running-torch-deploy-build-steps-from-source" title="Permalink to this heading">¶</a></h2>
 <p>Both <code class="docutils literal notranslate"><span class="pre">docker</span></code> and <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code> options above are wrappers around
 the cmake build of <cite>torch::deploy</cite>. If the user wishes to run the
 build steps manually instead, as before the dependencies would have to
 be installed in the user’s (isolated) environment of choice first. After
 that the following steps can be executed:</p>
 <section id="building">
-<h3>Building<a class="headerlink" href="#building" title="Permalink to this headline">¶</a></h3>
+<h3>Building<a class="headerlink" href="#building" title="Permalink to this heading">¶</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># checkout repo</span>
 git checkout https://github.com/pytorch/multipy.git
 git submodule sync <span class="o">&amp;&amp;</span> git submodule update --init --recursive
@@ -472,7 +472,7 @@ cmake --build . --config Release
 </section>
 </section>
 <section id="running-unit-tests-for-torch-deploy">
-<h2>Running unit tests for <code class="docutils literal notranslate"><span class="pre">torch::deploy</span></code><a class="headerlink" href="#running-unit-tests-for-torch-deploy" title="Permalink to this headline">¶</a></h2>
+<h2>Running unit tests for <code class="docutils literal notranslate"><span class="pre">torch::deploy</span></code><a class="headerlink" href="#running-unit-tests-for-torch-deploy" title="Permalink to this heading">¶</a></h2>
 <p>We first need to generate the neccessary examples. First make sure your
 python enviroment has <a class="reference external" href="https://pytorch.org">torch</a>. Afterwards, once
 <code class="docutils literal notranslate"><span class="pre">torch::deploy</span></code> is built, run the following (executed automatically
@@ -567,7 +567,9 @@ python example/generate_examples.py
          <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js"></script>
          <script src="_static/underscore.js"></script>
+         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="_static/doctools.js"></script>
+         <script src="_static/sphinx_highlight.js"></script>
          <script src="_static/collapsible-lists/js/CollapsibleLists.compressed.js"></script>
          <script src="_static/collapsible-lists/js/apply-collapsible-lists.js"></script>
      

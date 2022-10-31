@@ -6,7 +6,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
@@ -323,9 +323,9 @@
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
   <section id="quickstart">
-<h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h1>
+<h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this heading">¶</a></h1>
 <section id="packaging-a-model-for-torch-deploy">
-<h2>Packaging a model <code class="docutils literal notranslate"><span class="pre">for</span> <span class="pre">torch::deploy</span></code><a class="headerlink" href="#packaging-a-model-for-torch-deploy" title="Permalink to this headline">¶</a></h2>
+<h2>Packaging a model <code class="docutils literal notranslate"><span class="pre">for</span> <span class="pre">torch::deploy</span></code><a class="headerlink" href="#packaging-a-model-for-torch-deploy" title="Permalink to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">torch::deploy</span></code> can load and run Python models that are packaged with
 <code class="docutils literal notranslate"><span class="pre">torch.package</span></code>. You can find <code class="docutils literal notranslate"><span class="pre">torch.package</span></code>’s documentation
 <a class="reference external" href="https://pytorch.org/docs/stable/package.html#tutorials">here</a>.</p>
@@ -354,7 +354,7 @@ loads this package. They will not be packaged with the model.</p>
 directory.</p>
 </section>
 <section id="load-the-model-in-c">
-<h2>Load the model in C++<a class="headerlink" href="#load-the-model-in-c" title="Permalink to this headline">¶</a></h2>
+<h2>Load the model in C++<a class="headerlink" href="#load-the-model-in-c" title="Permalink to this heading">¶</a></h2>
 <div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;multipy/runtime/deploy.h&gt;</span><span class="cp"></span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;multipy/runtime/path_environment.h&gt;</span><span class="cp"></span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;torch/script.h&gt;</span><span class="cp"></span>
@@ -410,7 +410,7 @@ When you interact with a <code class="docutils literal notranslate"><span class=
 interaction.</p>
 </section>
 <section id="build-and-execute-the-c-example">
-<h2>Build and execute the C++ example<a class="headerlink" href="#build-and-execute-the-c-example" title="Permalink to this headline">¶</a></h2>
+<h2>Build and execute the C++ example<a class="headerlink" href="#build-and-execute-the-c-example" title="Permalink to this heading">¶</a></h2>
 <p>Assuming the above C++ program was stored in a file called
 <code class="docutils literal notranslate"><span class="pre">example-app.cpp</span></code>, a minimal <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> file would look like:</p>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">cmake_minimum_required</span><span class="p">(</span><span class="s">VERSION</span><span class="w"> </span><span class="s">3.12</span><span class="w"> </span><span class="s">FATAL_ERROR</span><span class="p">)</span>
@@ -528,7 +528,9 @@ cmake --build build --config Release -j
          <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
          <script src="../_static/jquery.js"></script>
          <script src="../_static/underscore.js"></script>
+         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="../_static/doctools.js"></script>
+         <script src="../_static/sphinx_highlight.js"></script>
          <script src="../_static/collapsible-lists/js/CollapsibleLists.compressed.js"></script>
          <script src="../_static/collapsible-lists/js/apply-collapsible-lists.js"></script>
      
