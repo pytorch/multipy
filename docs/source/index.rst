@@ -6,6 +6,7 @@
 ``torch::deploy``  (MultiPy for non-PyTorch use cases) is a C++ library that enables you to run eager mode PyTorch models in production without any modifications to your model to support tracing. ``torch::deploy`` provides a way to run using multiple independent Python interpreters in a single process without a shared global interpreter lock (GIL).
 For more information on how ``torch::deploy`` works please see the related `arXiv paper <https://arxiv.org/pdf/2104.00254.pdf>`_.
 
+The most up to date installation instructions for ``torch::deploy`` can be found in our `README <https://github.com/pytorch/multipy>`__. 
 
 Documentation
 ---------------
@@ -14,7 +15,6 @@ Documentation
    :maxdepth: 2
    :caption: Usage
 
-   setup.md
    tutorials/tutorial_root
    api/library_root
 
