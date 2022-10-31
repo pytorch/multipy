@@ -57,11 +57,10 @@ fi
 echo "Installing multipy from $repo_root..."
 cd "$repo_root" || exit
 
-# Here we hardcode versions until we
-# find a better way to do it.
-
-# multipy_ver="0.1.0dev0"
- multipy_ver="latest"
+# Not sure why this is on python 2, but if we are only
+# printing out variables, it should be fine. Let's change
+# it if we are doing something more complicated.
+ multipy_ver=$(python -c "from multipy.version import __version__; print __version__")
 
 echo "Building multipy-$multipy_ver docs..."
 docs_dir=$repo_root/docs

@@ -15,7 +15,7 @@ Requirements:
   * x86_64 (Beta)
   * arm64/aarch64 (Prototype)
 
-> ℹ️ This is project is in Beta. `torch::deploy` is ready for use in production environments but may have some rough edges that we're continuously working on improving. We're always interested in hearing feedback and usecases that you might have. Feel free to reach out!
+> ℹ️ `torch::deploy` is ready for use in production environments, but is in Beta and may have some rough edges that we're continuously working on improving. We're always interested in hearing feedback and usecases that you might have. Feel free to reach out!
 
 ## The Easy Path to Installation
 
