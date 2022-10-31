@@ -14,6 +14,11 @@ help:
 
 .PHONY: help Makefile
 
+clean:
+	@echo "Deleting build directory"
+	rm -rf "$(BUILDDIR)"
+	rm -rf _doxygen/ api/
+
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 %: Makefile
