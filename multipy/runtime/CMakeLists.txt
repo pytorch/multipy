@@ -10,7 +10,7 @@ project(MultipyRuntime)
 # set ABI by default to 0
 
 option(BUILD_CUDA_TESTS "Set to ON in order to build cuda tests. By default we do not" OFF)
-option(GDB_ON "Sets to debug mode (for gdb), defaults to OFF" OFF)
+option(GDB_ON "Sets to debug mode (for gdb), defaults to OFF" ON)
 
 if(GDB_ON)
   set(CMAKE_BUILD_TYPE Debug)

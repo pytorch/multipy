@@ -62,11 +62,12 @@ struct RunPython {
   static torch::deploy::ReplicatedObj load_and_wrap(
       torch::deploy::Package& package) {
     auto I = package.acquireSession();
+    std::cout << "Here it is in load_and_wrap: "<< &I << std::endl;
     auto obj = I.self.attr("load_pickle")({"model", "model.pkl"});
     if (cuda) {
       obj = I.global("gpu_wrapper", "GPUWrapper")({obj});
     }
-    return I.createMovable(obj);
+    return package.createMovable(obj, &I);
   }
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
   RunPython(
@@ -82,6 +83,7 @@ struct RunPython {
       eg2.insert(eg2.end(), eg_.begin(), eg_.end());
       I.self(eg2);
     } else {
+      std::cout << "Here it is in in operator(): "<< &I << std::endl;
       I.self(eg_);
     }
   }
@@ -89,14 +91,6 @@ struct RunPython {
   std::vector<at::IValue> eg_;
   const torch::deploy::Interpreter* interps_;
 };
-
-// def to_device(i, d):
-//     if isinstance(i, torch.Tensor):
-//         return i.to(device=d)
-//     elif isinstance(i, (tuple, list)):
-//         return tuple(to_device(e, d) for e in i)
-//     else:
-//         raise RuntimeError('inputs are weird')
 
 static torch::IValue to_device(const torch::IValue& v, torch::Device to);
 
@@ -315,8 +309,8 @@ int main(int argc, char* argv[]) {
     auto I = interp.acquireSession();
     I.global("sys", "path").attr("append")({"multipy/runtime/example"});
   }
-
-  auto n_threads = {1, 2, 4, 8, 16, 32, 40};
+  auto n_threads = {2, 4, 8, 16, 32, 40};
+  // auto n_threads = {1, 2, 4, 8, 16, 32, 40};
   for (const auto i : c10::irange(4, argc)) {
     std::string model_file = argv[i];
     for (int n_thread : n_threads) {
