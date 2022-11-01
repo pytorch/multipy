@@ -36,8 +36,7 @@ for arg in "$@"; do
     shift
     case "$arg" in
         "--dry-run") dry_run=1 ;;
-        "--python2") python2=1 ;;
-        "--help") echo "Usage $0 [--dry-run, --python2]"; exit 0 ;;
+        "--help") echo "Usage $0 [--dry-run]"; exit 0 ;;
     esac
 done
 
@@ -58,6 +57,8 @@ fi
 echo "Installing multipy from $repo_root..."
 cd "$repo_root" || exit
 
+# For some reason the CI uses python 3.6 for the script, so we can't build multipy.
+# Fortunately, we just need the version.
 multipy_ver=$(python3 -c "from multipy.version import __version__; print(__version__)")
 
 echo "Building multipy-$multipy_ver docs..."
