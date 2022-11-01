@@ -59,11 +59,11 @@ InterpreterManager::InterpreterManager(
   setenv("PYTORCH_DISABLE_LIBRARY", "1", /*overwrite*/ 0);
 
   for (const auto i : c10::irange(nInterp)) {
-#ifdef FBCODE_CAFFE2
+// #ifdef FBCODE_CAFFE2
     instances_.emplace_back(this, env);
-#else
-    instances_.emplace_back(env);
-#endif
+// #else
+    // instances_.emplace_back(env);
+// #endif
     auto I = instances_.back().acquireSession();
     // make torch.version.interp be the interpreter id
     // can be used for balancing work across GPUs

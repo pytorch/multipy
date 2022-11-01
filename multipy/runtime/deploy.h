@@ -30,8 +30,8 @@ struct LoadBalancer;
 struct TORCH_API InterpreterSession {
   friend struct LoadBalancer;
 
-  explicit InterpreterSession(InterpreterSessionImpl* impl) noexcept
-      : impl_(impl), manager_(nullptr) {}
+  // explicit InterpreterSession(InterpreterSessionImpl* impl) noexcept
+  //     : impl_(impl), manager_(nullptr) {}
   InterpreterSession(
       InterpreterSessionImpl* impl,
       InterpreterManager* manager) noexcept
@@ -101,16 +101,16 @@ class TORCH_API Interpreter {
 
   /// Creates an Interpreter manager using environment `env` which is not tied
   /// to an Interpreter Manager.
-  explicit Interpreter(std::shared_ptr<Environment> env)
-      : Interpreter(nullptr, env) {}
+  // explicit Interpreter(std::shared_ptr<Environment> env)
+  //     : Interpreter(nullptr, env) {}
 
   /// Gets a new `InterpreterSession` from this Interpreter.
   InterpreterSession acquireSession() const {
-    if (manager_) {
+    // if (manager_) {
       return InterpreterSession(pImpl_->acquireSession(), manager_);
-    } else {
-      return InterpreterSession(pImpl_->acquireSession());
-    }
+    // } else {
+      // return InterpreterSession(pImpl_->acquireSession());
+    // }
   }
 
   ~Interpreter();
