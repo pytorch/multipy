@@ -58,12 +58,7 @@ fi
 echo "Installing multipy from $repo_root..."
 cd "$repo_root" || exit
 
-# Python 2 version needed as CI runs this script using python 2 for some reason
-if [ $python2 -eq 1 ]; then
-    multipy_ver=$(python -c "from multipy.version import __version__; print __version__")
-else
-    multipy_ver=$(python -c "from multipy.version import __version__; print(__version__)")
-fi
+multipy_ver=$(python3 -c "from multipy.version import __version__; print(__version__)")
 
 echo "Building multipy-$multipy_ver docs..."
 docs_dir=$repo_root/docs
