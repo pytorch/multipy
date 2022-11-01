@@ -34,7 +34,6 @@ class MultipyRuntimeCmake(object):
     user_options = [
         ("cmakeoff", None, None),
         ("cudatests", None, None),
-        ("abicxx", None, None),
     ]
 
 
@@ -44,9 +43,6 @@ class MultipyRuntimeDevelop(MultipyRuntimeCmake, develop):
     def initialize_options(self):
         develop.initialize_options(self)
         self.cmakeoff = None
-
-        # TODO(tristanr): remove once unused
-        self.abicxx = None
 
         self.cudatests = None
 
