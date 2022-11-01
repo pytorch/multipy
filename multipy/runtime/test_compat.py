@@ -24,7 +24,7 @@ class TestCompat(unittest.TestCase):
 
     @unittest.skip("torch.Library is not supported")
     def test_torchdynamo_eager(self):
-        import torchdynamo
+        import torch._dynamo as torchdynamo
 
         @torchdynamo.optimize("eager")
         def fn(x, y):
@@ -36,7 +36,7 @@ class TestCompat(unittest.TestCase):
 
     @unittest.skip("torch.Library is not supported")
     def test_torchdynamo_ofi(self):
-        import torchdynamo
+        import torch._dynamo as torchdynamo
 
         torchdynamo.reset()
 
