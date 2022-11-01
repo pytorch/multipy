@@ -57,10 +57,9 @@ fi
 echo "Installing multipy from $repo_root..."
 cd "$repo_root" || exit
 
-# Not sure why this is on python 2, but if we are only
-# printing out variables, it should be fine. Let's change
-# it if we are doing something more complicated.
- multipy_ver=$(python -c "from multipy.version import __version__; print __version__")
+# For some reason the CI uses python 3.6 for the script, so we can't build multipy.
+# Fortunately, we just need the version.
+multipy_ver=$(python3 -c "from multipy.version import __version__; print(__version__)")
 
 echo "Building multipy-$multipy_ver docs..."
 docs_dir=$repo_root/docs
