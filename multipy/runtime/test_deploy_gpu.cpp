@@ -35,7 +35,7 @@ TEST(TorchDeployGPUTest, SimpleModel) {
   const char* jit_filename = path("SIMPLE_JIT", simple_jit);
 
   // Test
-  torch::deploy::InterpreterManager m(1);
+  torch::deploy::InterpreterManager m(2);
   torch::deploy::Package p = m.loadPackage(model_filename);
   auto model = p.loadPickle("model", "model.pkl");
   {
@@ -64,7 +64,7 @@ TEST(TorchDeployGPUTest, SimpleModel) {
 TEST(TorchDeployGPUTest, UsesDistributed) {
   const auto model_filename = path(
       "USES_DISTRIBUTED", "multipy/runtime/example/generated/uses_distributed");
-  torch::deploy::InterpreterManager m(1);
+  torch::deploy::InterpreterManager m(2);
   torch::deploy::Package p = m.loadPackage(model_filename);
   {
     auto I = p.acquireSession();
@@ -81,7 +81,7 @@ TEST(TorchDeployGPUTest, UsesCuda) {
 
   const auto model_filename =
       path("USES_CUDA", "multipy/runtime/example/generated/uses_cuda");
-  torch::deploy::InterpreterManager m(1);
+  torch::deploy::InterpreterManager m(2);
   torch::deploy::Package p = m.loadPackage(model_filename);
   {
     auto I = p.acquireSession();
@@ -96,7 +96,7 @@ TEST(TorchDeployGPUTest, TensorRT) {
   }
   auto packagePath = path(
       "MAKE_TRT_MODULE", "multipy/runtime/example/generated/make_trt_module");
-  torch::deploy::InterpreterManager m(1);
+  torch::deploy::InterpreterManager m(2);
   torch::deploy::Package p = m.loadPackage(packagePath);
   auto makeModel = p.loadPickle("make_trt_module", "model.pkl");
   {
