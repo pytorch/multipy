@@ -36,7 +36,8 @@ for arg in "$@"; do
     shift
     case "$arg" in
         "--dry-run") dry_run=1 ;;
-        "--help") echo "Usage $0 [--dry-run]"; exit 0 ;;
+        "--python2") python2=1 ;;
+        "--help") echo "Usage $0 [--dry-run, --python2]"; exit 0 ;;
     esac
 done
 
@@ -57,10 +58,12 @@ fi
 echo "Installing multipy from $repo_root..."
 cd "$repo_root" || exit
 
-# Not sure why this is on python 2, but if we are only
-# printing out variables, it should be fine. Let's change
-# it if we are doing something more complicated.
- multipy_ver=$(python -c "from multipy.version import __version__; print __version__")
+# Python 2 version needed as CI runs this script using python 2 for some reason
+if [ $python2 -eq 1 ]; then
+    multipy_ver=$(python -c "from multipy.version import __version__; print __version__")
+else
+    multipy_ver=$(python -c "from multipy.version import __version__; print(__version__)")
+fi
 
 echo "Building multipy-$multipy_ver docs..."
 docs_dir=$repo_root/docs
