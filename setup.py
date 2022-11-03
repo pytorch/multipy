@@ -14,6 +14,7 @@ import sys
 from datetime import date
 from distutils.command.clean import clean
 
+#from setuptools import Extension, find_packages, setup
 from setuptools import Extension, find_packages, setup
 from setuptools.command.build_ext import build_ext
 from setuptools.command.develop import develop
@@ -73,7 +74,6 @@ class MultipyRuntimeBuild(MultipyRuntimeCmake, build_ext):
         if not os.path.exists(build_dir_abs):
             os.makedirs(build_dir_abs)
 
-        print(f"build_lib {self.build_lib}")
         print(f"-- Running multipy runtime makefile in dir {build_dir_abs}")
         try:
             subprocess.run(
@@ -113,7 +113,7 @@ class MultipyRuntimeBuild(MultipyRuntimeCmake, build_ext):
         except subprocess.CalledProcessError as e:
             raise RuntimeError(e.output.decode("utf-8")) from None
 
-        print("-- Copying build outputs")
+        print(f"-- Copying build outputs to {self.build_lib}")
         paths = [
             "multipy/runtime/build/libtorch_deploy.a",
             "multipy/runtime/build/interactive_embedded_interpreter",
