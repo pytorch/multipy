@@ -305,14 +305,6 @@ int main(int argc, char* argv[]) {
     I.global("sys", "path").attr("append")({"multipy/runtime/example"});
   }
 
-  torch::deploy::InterpreterManager manager_single_interpreter(max_thread);
-
-  // make sure gpu_wrapper.py is in the import path
-  for (auto& interp : manager_single_interpreter.allInstances()) {
-    auto I = interp.acquireSession();
-    I.global("sys", "path").attr("append")({"multipy/runtime/example"});
-  }
-
   auto n_threads = {1, 2, 4, 8, 16, 32, 40};
   for (const auto i : c10::irange(4, argc)) {
     std::string model_file = argv[i];
@@ -330,7 +322,7 @@ int main(int argc, char* argv[]) {
           }
         }
         if(strategy == "one_python"){
-          Benchmark b(manager_single_interpreter, 1, strategy, model_file);
+          Benchmark b(manager, 1, strategy, model_file);
           Report r = b.run();
           r.report(std::cout);
         }else{
