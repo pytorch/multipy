@@ -14,11 +14,15 @@ import sys
 from datetime import date
 from distutils.command.clean import clean
 
-#from setuptools import Extension, find_packages, setup
 from setuptools import Extension, find_packages, setup
 from setuptools.command.build_ext import build_ext
 from setuptools.command.develop import develop
 from setuptools.command.install import install
+
+
+class MultipyRuntimeExtension(Extension):
+    def __init__(self, name):
+        Extension.__init__(self, name, sources=[])
 
 
 def get_cmake_version():
@@ -74,6 +78,7 @@ class MultipyRuntimeBuild(MultipyRuntimeCmake, build_ext):
         if not os.path.exists(build_dir_abs):
             os.makedirs(build_dir_abs)
 
+        print(f"build_lib {self.build_lib}")
         print(f"-- Running multipy runtime makefile in dir {build_dir_abs}")
         try:
             subprocess.run(
@@ -113,7 +118,7 @@ class MultipyRuntimeBuild(MultipyRuntimeCmake, build_ext):
         except subprocess.CalledProcessError as e:
             raise RuntimeError(e.output.decode("utf-8")) from None
 
-        print(f"-- Copying build outputs to {self.build_lib}")
+        print("-- Copying build outputs")
         paths = [
             "multipy/runtime/build/libtorch_deploy.a",
             "multipy/runtime/build/interactive_embedded_interpreter",
@@ -176,6 +181,11 @@ class MultipyRuntimeInstall(MultipyRuntimeCmake, install):
         install.run(self)
 
 
+ext_modules = [
+    MultipyRuntimeExtension("multipy.so"),
+]
+
+
 def get_version():
     # get version string from version.py
     # TODO: ideally the version.py should be generated when setup is run
@@ -236,6 +246,7 @@ if __name__ == "__main__":
             ],
         },
         # Cmake invocation for runtime build.
+        ext_modules=ext_modules,
         cmdclass={
             "build_ext": MultipyRuntimeBuild,
             "develop": MultipyRuntimeDevelop,
