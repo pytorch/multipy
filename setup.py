@@ -20,11 +20,6 @@ from setuptools.command.develop import develop
 from setuptools.command.install import install
 
 
-class MultipyRuntimeExtension(Extension):
-    def __init__(self, name):
-        Extension.__init__(self, name, sources=[])
-
-
 def get_cmake_version():
     output = subprocess.check_output(["cmake", "--version"]).decode("utf-8")
     return output.splitlines()[0].split()[2]
@@ -181,11 +176,6 @@ class MultipyRuntimeInstall(MultipyRuntimeCmake, install):
         install.run(self)
 
 
-ext_modules = [
-    MultipyRuntimeExtension("multipy.so"),
-]
-
-
 def get_version():
     # get version string from version.py
     # TODO: ideally the version.py should be generated when setup is run
@@ -246,7 +236,6 @@ if __name__ == "__main__":
             ],
         },
         # Cmake invocation for runtime build.
-        ext_modules=ext_modules,
         cmdclass={
             "build_ext": MultipyRuntimeBuild,
             "develop": MultipyRuntimeDevelop,
