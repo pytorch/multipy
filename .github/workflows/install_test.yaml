@@ -89,7 +89,8 @@ jobs:
           set -eux
           source ~/venvs/multipy/bin/activate
           python setup.py install
-          test -e ~/venvs/multipy/lib/python3.*/site-packages/multipy/runtime/build/libtorch_deploy.a
+          test -e ~/venvs/multipy/lib/python3.${{ matrix.python3-minor-version }}/site-packages/multipy/runtime/build/libtorch_deploy.a
+          deactivate
 
       - name: Install sdist
         run: |
@@ -97,7 +98,8 @@ jobs:
           source ~/venvs/multipy/bin/activate
           python setup.py sdist
           pip install dist/*.tar.gz --force-reinstall
-          test -e ~/venvs/multipy/lib/python3.*/site-packages/multipy/runtime/build/libtorch_deploy.a
+          test -e ~/venvs/multipy/lib/python3.${{ matrix.python3-minor-version }}/site-packages/multipy/runtime/build/libtorch_deploy.a
+          deactivate
 
       - name: Install bdist_wheel
         run: |
@@ -105,7 +107,17 @@ jobs:
           source ~/venvs/multipy/bin/activate
           python setup.py bdist_wheel
           pip install dist/*.whl --force-reinstall
-          test -e ~/venvs/multipy/lib/python3.*/site-packages/multipy/runtime/build/libtorch_deploy.a
+          test -e ~/venvs/multipy/lib/python3.${{ matrix.python3-minor-version }}/site-packages/multipy/runtime/build/libtorch_deploy.a
+          deactivate
+
+      - name: Install bdist_wheel with cudatests
+        run: |
+          set -eux
+          source ~/venvs/multipy/bin/activate
+          python setup.py bdist_wheel
+          pip install dist/*.whl --force-reinstall --install-option="--cudatests"
+          test -e ~/venvs/multipy/lib/python3.${{ matrix.python3-minor-version }}/site-packages/multipy/runtime/build/libtorch_deploy.a
+          deactivate
 
       - name: Install dependencies with conda for 3.8+
         run: |

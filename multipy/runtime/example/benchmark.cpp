@@ -127,7 +127,6 @@ static bool exists(const std::string& fname) {
 
 struct RunJIT {
   RunJIT(const std::string& file_to_run) {
-
     if (!cuda) {
       models_.push_back(torch::jit::load(file_to_run + "_jit"));
     } else {
@@ -321,8 +320,7 @@ int main(int argc, char* argv[]) {
             continue;
           }
         }
-        if(strategy == "one_python") {
-
+        if (strategy == "one_python") {
           Benchmark b(manager, 1, strategy, model_file);
           Report r = b.run();
           r.report(std::cout);

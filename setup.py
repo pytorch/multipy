@@ -78,7 +78,6 @@ class MultipyRuntimeBuild(MultipyRuntimeCmake, build_ext):
         if not os.path.exists(build_dir_abs):
             os.makedirs(build_dir_abs)
 
-        print(f"build_lib {self.build_lib}")
         print(f"-- Running multipy runtime makefile in dir {build_dir_abs}")
         try:
             subprocess.run(
@@ -118,7 +117,7 @@ class MultipyRuntimeBuild(MultipyRuntimeCmake, build_ext):
         except subprocess.CalledProcessError as e:
             raise RuntimeError(e.output.decode("utf-8")) from None
 
-        print("-- Copying build outputs")
+        print(f"-- Copying build outputs to {self.build_lib}")
         paths = [
             "multipy/runtime/build/libtorch_deploy.a",
             "multipy/runtime/build/interactive_embedded_interpreter",
@@ -152,11 +151,14 @@ class MultipyRuntimeInstall(MultipyRuntimeCmake, install):
     def initialize_options(self):
         install.initialize_options(self)
         self.cmakeoff = None
+        self.cudatests = None
 
     def finalize_options(self):
         install.finalize_options(self)
         if self.cmakeoff is not None:
             self.distribution.get_command_obj("build_ext").cmake_off = True
+        if self.cudatests is not None:
+            self.distribution.get_command_obj("build_ext").cuda_tests_flag = "ON"
 
     def run(self):
         # Setuptools/setup.py on docker image has some interesting behavior, in that the
