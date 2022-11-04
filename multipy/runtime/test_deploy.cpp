@@ -565,25 +565,6 @@ TEST(MultiPyException, Check) {
   EXPECT_THROW(MULTIPY_CHECK(false, "msg"), std::runtime_error);
 }
 
-TEST(TorchpyTest, ResNetMultiThreading) {
-  torch::deploy::InterpreterManager m(2);
-  torch::deploy::Package p = m.loadPackage("multipy/runtime/example/generated/resnet");
-  auto model = p.loadPickle("model", "model.pkl");
-  at::IValue eg;
-  {
-    auto I = p.acquireSession();
-    eg = I.self.attr("load_pickle")({"model", "example.pkl"}).toIValue();
-  }
-  at::Tensor output = model(eg.toTupleRef().elements()).toTensor();
-  // Reference
-  auto ref_model = torch::jit::load("multipy/runtime/example/generated/resnet_jit");
-  at::Tensor ref_output =
-      ref_model.forward(eg.toTupleRef().elements()).toTensor();
-
-  ASSERT_TRUE(ref_output.allclose(output, 1e-03, 1e-05));
-  EXPECT_EQ(output.toTensor().size(0), 1);
-}
-
 int main(int argc, char* argv[]) {
   ::testing::InitGoogleTest(&argc, argv);
   char tempeh[256];
