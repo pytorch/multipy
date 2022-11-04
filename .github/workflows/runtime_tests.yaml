@@ -55,13 +55,10 @@ jobs:
           docker run --rm multipy bash -c "if [[ ${{ matrix.python3-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && python3 examples/quickstart/gen_package.py && ./examples/build/quickstart my_package.pt"
           docker run --rm multipy bash -c "if [[ ${{ matrix.python3-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && ./examples/build/movable_example"
 
-      - name: Test Benchmark
+      - name: Benchmark
         run: |
-          docker run --rm multipy bash -c "if [[ ${{ matrix.python3-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && examples/build/hello_world_example"
-          docker run --rm multipy bash -c "if [[ ${{ matrix.python3-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && python3 examples/quickstart/gen_package.py && ./examples/build/quickstart my_package.pt"
-          docker run --rm multipy bash -c "if [[ ${{ matrix.python3-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && ./examples/build/movable_example" 
+          docker run --rm multipy bash -c "if [[ ${{ matrix.python3-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && ./multipy/runtime/build/deploy_benchmark 4 none jit multipy/runtime/example/generated/resnet
 
       - name: Compat Tests
         run: |
-          docker run --rm multipy bash -c "if [[ ${{ matrix.python3-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && ./multipy/runtime/build/deploy_benchmark 4 none jit multipy/runtime/example/generated/resnet
-          
+          docker run --rm multipy bash -c "if [[ ${{ matrix.python3-minor-version }} -gt 7 ]]; then pip install -r compat-requirements.txt && multipy/runtime/build/interactive_embedded_interpreter --pyscript multipy/runtime/test_compat.py; fi"
