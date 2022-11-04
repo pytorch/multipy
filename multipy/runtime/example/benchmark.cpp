@@ -126,7 +126,8 @@ static bool exists(const std::string& fname) {
 }
 
 struct RunJIT {
-  RunJIT(const std::string& file_to_run){
+  RunJIT(const std::string& file_to_run) {
+
     if (!cuda) {
       models_.push_back(torch::jit::load(file_to_run + "_jit"));
     } else {
@@ -200,8 +201,7 @@ struct Benchmark {
     if (strategy_ == "jit") {
       run_one_work_item = RunJIT(file_to_run_);
     } else {
-      run_one_work_item =
-          RunPython(package, manager_.allInstances().data());
+      run_one_work_item = RunPython(package, manager_.allInstances().data());
     }
 
     // NOLINTNEXTLINE(cppcoreguidelines-init-variables)
@@ -321,11 +321,12 @@ int main(int argc, char* argv[]) {
             continue;
           }
         }
-        if(strategy == "one_python"){
+        if(strategy == "one_python") {
+
           Benchmark b(manager, 1, strategy, model_file);
           Report r = b.run();
           r.report(std::cout);
-        }else{
+        } else {
           Benchmark b(manager, n_thread, strategy, model_file);
           Report r = b.run();
           r.report(std::cout);
