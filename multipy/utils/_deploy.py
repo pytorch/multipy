@@ -37,7 +37,7 @@ def _save_storages(importer, obj):
             if isinstance(obj, STORAGE_TYPE):
                 # TODO: Once we decide to break serialization FC, we can
                 # remove this case
-                storage = obj._storage
+                storage = obj.untyped()
                 dtype = obj.dtype
             else:
                 storage = obj
