@@ -1,0 +1,4 @@
+libffi-devel
+libnsl2-devel
+readline-devel
+xz-devel
