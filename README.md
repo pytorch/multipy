@@ -157,7 +157,6 @@ cd multipy
 # (optional) if using existing checkout
 git submodule sync && git submodule update --init --recursive
 
-cd multipy
 # install python parts of `torch::deploy` in multipy/multipy/utils
 pip install -e . --install-option="--cmakeoff"
 
@@ -177,10 +176,8 @@ cmake --build build --config Release -j
 We first need to generate the neccessary examples. First make sure your python environment has [torch](https://pytorch.org). Afterwards, once `multipy::runtime` is built, run the following (executed automatically for `docker` and `pip` above):
 
 ```
-cd multipy/multipy/runtime
-python example/generate_examples.py
-cd build
-./test_deploy
+python multipy/runtime/example/generate_examples.py
+./multipy/runtime/build/test_deploy
 ```
 
 ## Examples
