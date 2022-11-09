@@ -157,7 +157,6 @@ cd multipy
 # (optional) if using existing checkout
 git submodule sync && git submodule update --init --recursive
 
-cd multipy
 # install python parts of `torch::deploy` in multipy/multipy/utils
 pip install -e . --install-option="--cmakeoff"
 
