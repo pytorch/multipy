@@ -20,19 +20,8 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: true
-      - name: Clean up previous CUDA driver installations
-        shell: bash
-        run: |
-          set -x
-          yum list installed | grep nvidia || true
-          yum list installed | grep cuda || true
-          sudo yum remove -y cuda || true
-          sudo yum remove -y cuda-drivers || true
-          sudo yum remove -y "*nvidia*" || true
       - name: Install nvidia driver, nvidia-docker runtime, set GPU_FLAG
-        run: |
-          bash .github/scripts/install_nvidia_utils_linux.sh || true
-          echo "GPU_FLAG=--gpus all" >> "${GITHUB_ENV}"
+        uses: pytorch/test-infra/.github/actions/setup-nvidia@main
       - name: Setup SSH (Click me for login details)
         uses: ./.github/actions/setup-ssh
         with:
