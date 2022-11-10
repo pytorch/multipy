@@ -66,4 +66,8 @@ jobs:
           set -ex
           cd /tmp/multipy_docs_tmp/multipy_gh_pages
           sudo git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+          if git diff --exit-code gh-pages origin/gh-pages; then
+            echo "Docs are unchanged, skipping push"
+            exit
+          fi
           git push
