@@ -351,11 +351,14 @@ git submodule sync <span class="o">&amp;&amp;</span> git submodule update --init
 </div>
 <section id="installing-system-dependencies">
 <h3>Installing system dependencies<a class="headerlink" href="#installing-system-dependencies" title="Permalink to this heading">¶</a></h3>
-<p>The runtime system dependencies are specified in
-<code class="docutils literal notranslate"><span class="pre">build-requirements.txt</span></code>. To install them on Debian-based systems, one
-could run:</p>
+<p>The runtime system dependencies are specified in <code class="docutils literal notranslate"><span class="pre">build-requirements-{debian,centos8}.txt</span></code>.
+To install them on Debian-based systems, one could run:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>sudo apt update
-xargs sudo apt install -y -qq --no-install-recommends &lt; build-requirements.txt
+xargs sudo apt install -y -qq --no-install-recommends &lt; build-requirements-debian.txt
+</pre></div>
+</div>
+<p>While to install on a CentOS 8 system:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>xargs sudo dnf install -y &lt; build-requirements-centos8.txt
 </pre></div>
 </div>
 </section>
