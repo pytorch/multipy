@@ -57,7 +57,7 @@ jobs:
 
       - name: Benchmark
         run: |
-          docker run --rm multipy bash -c "if [[ ${{ matrix.python3-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && ./multipy/runtime/build/deploy_benchmark 4 none jit multipy/runtime/example/generated/resnet
+          docker run --rm multipy bash -c "if [[ ${{ matrix.python3-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && ./multipy/runtime/build/deploy_benchmark 2 none jit multipy/runtime/example/generated/resnet
 
       - name: Set Python Version
         run: |
