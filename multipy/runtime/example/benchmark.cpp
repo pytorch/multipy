@@ -22,6 +22,8 @@
 #include <thread>
 #include <vector>
 
+using at::IValue;
+
 typedef void (*function_type)(const char*);
 
 bool cuda = false;
@@ -66,37 +68,27 @@ struct RunPython {
     if (cuda) {
       obj = I.global("gpu_wrapper", "GPUWrapper")({obj});
     }
-    return I.createMovable(obj);
+    return package.createMovable(obj, &I);
   }
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
   RunPython(
       torch::deploy::Package& package,
-      std::vector<at::IValue> eg,
       const torch::deploy::Interpreter* interps)
-      : obj_(load_and_wrap(package)), eg_(std::move(eg)), interps_(interps) {}
-  void operator()(int i) {
+      : obj_(load_and_wrap(package)), interps_(interps) {}
+  void operator()(int i, std::vector<at::IValue> eg) {
     auto I = obj_.acquireSession();
     if (cuda) {
       // NOLINTNEXTLINE(cppcoreguidelines-init-variables)
       std::vector<at::IValue> eg2 = {i};
-      eg2.insert(eg2.end(), eg_.begin(), eg_.end());
+      eg2.insert(eg2.end(), eg.begin(), eg.end());
       I.self(eg2);
     } else {
-      I.self(eg_);
+      I.self(eg);
     }
   }
   torch::deploy::ReplicatedObj obj_;
-  std::vector<at::IValue> eg_;
   const torch::deploy::Interpreter* interps_;
 };
-
-// def to_device(i, d):
-//     if isinstance(i, torch.Tensor):
-//         return i.to(device=d)
-//     elif isinstance(i, (tuple, list)):
-//         return tuple(to_device(e, d) for e in i)
-//     else:
-//         raise RuntimeError('inputs are weird')
 
 static torch::IValue to_device(const torch::IValue& v, torch::Device to);
 
@@ -134,8 +126,7 @@ static bool exists(const std::string& fname) {
 }
 
 struct RunJIT {
-  RunJIT(const std::string& file_to_run, std::vector<torch::IValue> eg)
-      : eg_(std::move(eg)) {
+  RunJIT(const std::string& file_to_run) {
     if (!cuda) {
       models_.push_back(torch::jit::load(file_to_run + "_jit"));
     } else {
@@ -151,18 +142,17 @@ struct RunJIT {
       }
     }
   }
-  void operator()(int i) {
+  void operator()(int i, std::vector<at::IValue> eg) {
     if (cuda) {
       const auto device_id = i % models_.size();
       auto d = torch::Device(torch::DeviceType::CUDA, device_id);
       to_device(
-          models_[device_id].forward(to_device_vec(eg_, d)),
+          models_[device_id].forward(to_device_vec(eg, d)),
           torch::DeviceType::CPU);
     } else {
-      models_[0].forward(eg_);
+      models_[0].forward(eg);
     }
   }
-  std::vector<at::IValue> eg_;
   std::vector<torch::jit::Module> models_;
 };
 
@@ -197,40 +187,38 @@ struct Benchmark {
     // NOLINTNEXTLINE(cppcoreguidelines-init-variables)
     torch::deploy::Package package = manager_.loadPackage(file_to_run_);
 
-    // NOLINTNEXTLINE(cppcoreguidelines-init-variables)
-    std::vector<at::IValue> eg;
+    at::IValue eg;
     {
       auto I = package.acquireSession();
 
       eg = I.global("builtins", "tuple")(
                 I.self.attr("load_pickle")({"model", "example.pkl"}))
-               .toIValue()
-               .toTupleRef()
-               .elements();
+               .toIValue();
     }
 
     // NOLINTNEXTLINE(bugprone-branch-clone)
     if (strategy_ == "jit") {
-      run_one_work_item = RunJIT(file_to_run_, std::move(eg));
+      run_one_work_item = RunJIT(file_to_run_);
     } else {
-      run_one_work_item =
-          RunPython(package, std::move(eg), manager_.allInstances().data());
+      run_one_work_item = RunPython(package, manager_.allInstances().data());
     }
 
     // NOLINTNEXTLINE(cppcoreguidelines-init-variables)
     std::vector<std::vector<double>> latencies(n_threads_);
 
     for (const auto i : c10::irange(n_threads_)) {
-      threads_.emplace_back([this, &latencies, i] {
+      threads_.emplace_back([this, &latencies, i, eg] {
         torch::NoGradGuard guard;
         // do initial work
-        run_one_work_item(i);
+        std::vector<at::IValue> eg_copy = eg.deepcopy().toTupleRef().elements();
+        run_one_work_item(i, std::move(eg_copy));
 
         pthread_barrier_wait(&first_run_);
         size_t local_items_completed = 0;
         while (should_run_) {
+          eg_copy = eg.deepcopy().toTupleRef().elements();
           auto begin = std::chrono::steady_clock::now();
-          run_one_work_item(i);
+          run_one_work_item(i, std::move(eg_copy));
           auto end = std::chrono::steady_clock::now();
           double work_seconds =
               std::chrono::duration<double>(end - begin).count();
@@ -298,7 +286,7 @@ struct Benchmark {
   std::atomic<size_t> items_completed_;
   std::atomic<size_t> reached_min_items_completed_;
   std::vector<std::thread> threads_;
-  std::function<void(int)> run_one_work_item;
+  std::function<void(int, std::vector<at::IValue>)> run_one_work_item;
 };
 
 // NOLINTNEXTLINE(bugprone-exception-escape)
@@ -332,9 +320,15 @@ int main(int argc, char* argv[]) {
             continue;
           }
         }
-        Benchmark b(manager, n_thread, strategy, model_file);
-        Report r = b.run();
-        r.report(std::cout);
+        if (strategy == "one_python") {
+          Benchmark b(manager, 1, strategy, model_file);
+          Report r = b.run();
+          r.report(std::cout);
+        } else {
+          Benchmark b(manager, n_thread, strategy, model_file);
+          Report r = b.run();
+          r.report(std::cout);
+        }
       }
     }
   }
