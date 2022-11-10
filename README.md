@@ -58,11 +58,17 @@ git submodule sync && git submodule update --init --recursive
 
 #### Installing System Dependencies
 
-The runtime system dependencies are specified in `build-requirements.txt`. To install them on Debian-based systems, one could run:
+The runtime system dependencies are specified in `build-requirements-{debian,centos8}.txt`.
+To install them on Debian-based systems, one could run:
 
 ```shell
 sudo apt update
-xargs sudo apt install -y -qq --no-install-recommends <build-requirements.txt
+xargs sudo apt install -y -qq --no-install-recommends <build-requirements-debian.txt
+```
+
+While on a Centos system:
+```shell
+xargs sudo dnf install -y <build-requirements-centos8.txt
 ```
 
 #### Python Environment Setup
