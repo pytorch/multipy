@@ -90,7 +90,7 @@ for redirect in "${redirects[@]}"; do
 done
 
 git add .
-git commit --quiet -m "[doc_push][$release_tag] built from $commit_id ($branch). Redirects: ${redirects[*]} -> $multipy_ver."
+git commit --allow-empty --quiet -m "[doc_push][$release_tag] built from $commit_id ($branch). Redirects: ${redirects[*]} -> $multipy_ver."
 
 if [ $dry_run -eq 1 ]; then
     echo "*** --dry-run mode, skipping push to gh-pages branch. To publish run: cd ${gh_pages_dir} && git push"

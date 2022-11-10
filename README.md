@@ -58,11 +58,17 @@ git submodule sync && git submodule update --init --recursive
 
 #### Installing System Dependencies
 
-The runtime system dependencies are specified in `build-requirements.txt`. To install them on Debian-based systems, one could run:
+The runtime system dependencies are specified in `build-requirements-{debian,centos8}.txt`.
+To install them on Debian-based systems, one could run:
 
 ```shell
 sudo apt update
-xargs sudo apt install -y -qq --no-install-recommends <build-requirements.txt
+xargs sudo apt install -y -qq --no-install-recommends <build-requirements-debian.txt
+```
+
+While on a Centos system:
+```shell
+xargs sudo dnf install -y <build-requirements-centos8.txt
 ```
 
 #### Python Environment Setup
@@ -157,7 +163,6 @@ cd multipy
 # (optional) if using existing checkout
 git submodule sync && git submodule update --init --recursive
 
-cd multipy
 # install python parts of `torch::deploy` in multipy/multipy/utils
 pip install -e . --install-option="--cmakeoff"
 
@@ -177,10 +182,8 @@ cmake --build build --config Release -j
 We first need to generate the neccessary examples. First make sure your python environment has [torch](https://pytorch.org). Afterwards, once `multipy::runtime` is built, run the following (executed automatically for `docker` and `pip` above):
 
 ```
-cd multipy/multipy/runtime
-python example/generate_examples.py
-cd build
-./test_deploy
+python multipy/runtime/example/generate_examples.py
+./multipy/runtime/build/test_deploy
 ```
 
 ## Examples

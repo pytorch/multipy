@@ -53,6 +53,8 @@ InterpreterManager::InterpreterManager(
     size_t nInterp,
     std::shared_ptr<Environment> env)
     : resources_(nInterp) {
+  C10_LOG_API_USAGE_ONCE("torch.deploy.InterpreterManager");
+
   // disable GIL deadlock detection if it's not set already
   setenv("TORCH_DISABLE_DEADLOCK_DETECTION", "1", /*overwrite*/ 0);
   // disable prims/torch.Library support
