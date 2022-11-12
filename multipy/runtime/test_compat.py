@@ -8,7 +8,6 @@ import unittest
 
 import torch
 
-
 class TestCompat(unittest.TestCase):
     def test_torchvision(self):
         import torchvision  # noqa: F401
@@ -21,6 +20,9 @@ class TestCompat(unittest.TestCase):
 
     def test_hf_tokenizers(self):
         import tokenizers  # noqa: F401
+resnet_path = "multipy/runtime/example/generated/resnet";
+# resnet_path = "multipy/runtime/example/generated/resnet_dynamo";
+resnet_jit_path = "multipy/runtime/example/generated/resnet_jit";
 
     @unittest.skip("torch.Library is not supported")
     def test_torchdynamo_eager(self):

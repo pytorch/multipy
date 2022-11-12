@@ -129,7 +129,7 @@ class ResNet(nn.Module):
 def resnet18():
     return ResNet(BasicBlock, [2, 2, 2, 2])
 
-@torchdynamo.optimize("ts")
+@torchdynamo.optimize("eager")
 def resnet18_dynamo():
     return resnet18(); 
 

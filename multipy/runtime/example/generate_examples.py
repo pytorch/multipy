@@ -108,7 +108,8 @@ if __name__ == "__main__":
     resnet_dynamo = resnet18_dynamo()
     resnet_eg = torch.rand(1, 3, 224, 224)
     resnet_traced = torch.jit.trace(resnet, resnet_eg)
-    save("resnet", resnet, resnet_traced, resnet_dynamo, (resnet_eg,))
+    save("resnet", resnet_dynamo, resnet_traced, resnet_dynamo, (resnet_eg,))
+    # save("resnet", resnet, resnet_traced, resnet_dynamo, (resnet_eg,))
 
     simple = Simple(10, 20)
     save(

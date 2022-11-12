@@ -39,8 +39,8 @@ void compare_torchpy_jit(const char* model_filename, const char* jit_filename) {
       ref_model.forward(eg.toTupleRef().elements()).toTensor();
   ASSERT_TRUE(ref_output.allclose(output, 1e-03, 1e-05));
 }
-
-const char* resnet_path = "multipy/runtime/example/generated/resnet_dynamo";
+const char* resnet_path = "multipy/runtime/example/generated/resnet";
+// const char* resnet_path = "multipy/runtime/example/generated/resnet_dynamo";
 const char* resnet_jit_path = "multipy/runtime/example/generated/resnet_jit";
 
 const char* path(const char* envname, const char* path) {
