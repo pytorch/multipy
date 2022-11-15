@@ -9,6 +9,7 @@ from typing import Dict, List, Tuple
 import torch
 import torch.nn as nn
 from torch import Tensor
+import torch._dynamo as torchdynamo
 
 
 class Simple(torch.nn.Module):
@@ -127,6 +128,10 @@ class ResNet(nn.Module):
 
 def resnet18():
     return ResNet(BasicBlock, [2, 2, 2, 2])
+
+@torchdynamo.optimize("eager")
+def resnet18_dynamo():
+    return resnet18(); 
 
 
 class BatchedModel(nn.Module):

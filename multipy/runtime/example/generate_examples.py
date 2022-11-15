@@ -21,6 +21,7 @@ try:
         multi_return_metadata,
         MultiReturn,
         resnet18,
+        resnet18_dynamo,
         Simple,
     )
 except ImportError:
@@ -30,6 +31,7 @@ except ImportError:
         multi_return_metadata,
         MultiReturn,
         resnet18,
+        resnet18_dynamo,
         Simple,
     )
 
@@ -60,33 +62,38 @@ def save(
     name,
     model,
     model_jit=None,
+    model_dynamo=None,
     eg=None,
     featurestore_meta=None,
     text_in_extra_file=None,
     binary_in_extra_file=None,
 ):
-    with PackageExporter(str(p / name)) as e:
-        e.mock("iopath.**")
-        e.intern("**")
-        e.save_pickle("model", "model.pkl", model)
-        if eg:
-            e.save_pickle("model", "example.pkl", eg)
-        if featurestore_meta:
-            # TODO(whc) can this name come from buck somehow,
-            # so it's consistent with predictor_config_constants::METADATA_FILE_NAME()?
-            e.save_text("extra_files", "metadata.json", featurestore_meta)
-        if text_in_extra_file:
-            e.save_text("extra_files", "text", text_in_extra_file)
-        if binary_in_extra_file:
-            e.save_binary("extra_files", "binary", binary_in_extra_file)
-
+    def package_model(name, model):
+        with PackageExporter(str(p / name)) as e:
+            e.mock("iopath.**")
+            e.intern("**")
+            e.save_pickle("model", "model.pkl", model)
+            if eg:
+                e.save_pickle("model", "example.pkl", eg)
+            if featurestore_meta:
+                # TODO(whc) can this name come from buck somehow,
+                # so it's consistent with predictor_config_constants::METADATA_FILE_NAME()?
+                e.save_text("extra_files", "metadata.json", featurestore_meta)
+            if text_in_extra_file:
+                e.save_text("extra_files", "text", text_in_extra_file)
+            if binary_in_extra_file:
+                e.save_binary("extra_files", "binary", binary_in_extra_file)
+                
+    package_model(name, model)
+    if model_dynamo:
+        package_model(name + "_dynamo", model_dynamo)
     if model_jit:
         model_jit.save(str(p / (name + "_jit")))
+    
 
 
 parser = argparse.ArgumentParser(description="Generate Examples")
 parser.add_argument("--install_dir", help="Root directory for all output files")
-
 
 if __name__ == "__main__":
     args = parser.parse_args()
@@ -98,9 +105,11 @@ if __name__ == "__main__":
 
     resnet = resnet18()
     resnet.eval()
+    resnet_dynamo = resnet18_dynamo()
     resnet_eg = torch.rand(1, 3, 224, 224)
     resnet_traced = torch.jit.trace(resnet, resnet_eg)
-    save("resnet", resnet, resnet_traced, (resnet_eg,))
+    save("resnet", resnet_dynamo, resnet_traced, resnet_dynamo, (resnet_eg,))
+    # save("resnet", resnet, resnet_traced, resnet_dynamo, (resnet_eg,))
 
     simple = Simple(10, 20)
     save(
@@ -117,6 +126,7 @@ if __name__ == "__main__":
         "multi_return",
         multi_return,
         torch.jit.script(multi_return),
+        None,
         (torch.rand(10, 20),),
         multi_return_metadata,
     )
