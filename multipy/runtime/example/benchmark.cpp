@@ -178,6 +178,8 @@ struct Benchmark {
       manager.debugLimitInterpreters(1);
     } else if (strategy == "multi_python") {
       manager.debugLimitInterpreters(n_threads_);
+    } else if (strategy == "dynamo+deploy"){
+      manager.debugLimitInterpreters(n_threads_);
     }
   }
 
@@ -295,6 +297,7 @@ int main(int argc, char* argv[]) {
   cuda = std::string(argv[2]) == "cuda";
   // NOLINTNEXTLINE(cppcoreguidelines-init-variables)
   bool jit_enable = std::string(argv[3]) == "jit";
+  bool inductor_enable = std::string(argv[3]) == "inductor";
   Report::report_header(std::cout);
   torch::deploy::InterpreterManager manager(max_thread);
 
@@ -311,7 +314,7 @@ int main(int argc, char* argv[]) {
       if (n_thread > max_thread) {
         continue;
       }
-      for (std::string strategy : {"one_python", "multi_python", "jit"}) {
+      for (std::string strategy : {"one_python", "multi_python", "jit", "dynamo+deploy"}) {
         if (strategy == "jit") {
           if (!jit_enable) {
             continue;
@@ -319,9 +322,15 @@ int main(int argc, char* argv[]) {
           if (!exists(model_file + "_jit")) {
             continue;
           }
-        }
-        if (strategy == "one_python") {
+        } else if (strategy == "one_python") {
           Benchmark b(manager, 1, strategy, model_file);
+          Report r = b.run();
+          r.report(std::cout);
+        } else if (strategy == "dynamo+deploy") {
+          if (!exists(model_file + "_dynamo")) {
+            continue;
+          }
+          Benchmark b(manager, n_thread, strategy, model_file + "_dynamo");
           Report r = b.run();
           r.report(std::cout);
         } else {
