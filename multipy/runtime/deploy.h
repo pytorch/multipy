@@ -5,6 +5,11 @@
 // LICENSE file in the root directory of this source tree.
 
 #pragma once
+
+#ifndef USE_MULTIPY
+#define USE_MULTIPY
+#endif
+
 #include <c10/util/irange.h>
 #include <multipy/runtime/embedded_file.h>
 #include <multipy/runtime/interpreter/interpreter_impl.h>
