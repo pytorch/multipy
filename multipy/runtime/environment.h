@@ -51,6 +51,9 @@ class Environment {
     extraPythonPaths_.push_back(getZippedArchive(
         ".multipy_python_modules",
         std::string(pythonAppDir) + "/multipy_python_modules.zip"));
+    extraPythonPaths_.push_back(getZippedArchive(
+        ".torchgen_python_modules",
+        std::string(pythonAppDir) + "/torchgen_python_modules.zip"));
 
 #endif
     extraPythonLibrariesDir_ = pythonAppDir;

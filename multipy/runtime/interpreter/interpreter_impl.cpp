@@ -161,6 +161,10 @@ class RegisterModuleImporter(importlib.abc.InspectLoader):
 # print(f"modules: {sys.modules}", file=sys.stderr)
 
 import torch # has to be done serially otherwise things will segfault
+
+# test other zipped modules
+import torchgen
+
 import multipy.utils
 try:
   import torch.version # for some reason torch doesn't import this and cuda fails?
