@@ -1,0 +1,91 @@
+name: Reusable build, test and release
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        required: true
+        type: string
+      runner:
+        required: true
+        type: string
+      compat-tests:
+        default: false
+        type: boolean
+      release-artefact:
+        default: ''
+        type: string
+    secrets:
+      token:
+        required: true
+
+jobs:
+  build-test:
+    uses: pytorch/test-infra/.github/workflows/linux_job.yml@main
+    with:
+      runner: ${{ inputs.runner }}
+      upload-artifact: ${{ inputs.release-artefact }}
+      repository: pytorch/multipy
+      script: |
+        # Build
+        xargs sudo dnf install -y <build-requirements-centos8.txt
+        pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu116
+        pip install -e .
+        python multipy/runtime/example/generate_examples.py
+        
+        # Test
+        multipy/runtime/build/test_deploy
+        multipy/runtime/build/test_deploy_gpu
+  
+        # Examples
+        examples/build/hello_world_example
+        python3 examples/quickstart/gen_package.py
+        ./examples/build/quickstart my_package.pt
+        ./examples/build/movable_example
+  
+        # Benchmark
+        ./multipy/runtime/build/deploy_benchmark 2 none jit multipy/runtime/example/generated/resnet
+  
+        # Compat Tests
+        if ${{ inputs.compat-tests }};
+        then
+          pip install -r compat-requirements.txt
+          multipy/runtime/build/interactive_embedded_interpreter --pyscript multipy/runtime/test_compat.py
+        ;
+        fi
+  
+        if ${{ inputs.release-artefact != '' }};
+        then
+          # Create Tarball
+          docker cp $(docker run -d multipy):/opt/dist/multipy .
+          tar -czvf multipy_runtime_python${{ env.python-version }}.tar.gz multipy/
+          
+          # Create artefact to be uploaded
+          mkdir dist
+          mv multipy_runtime_python${{ env.python-version }}.tar.gz \
+          multipy_runtime_python${{ env.python-version }}.whl
+        ;
+        fi
+  release:
+    runs-on: ${{ inputs.runner }}
+    if:  ${{ inputs.release-artefact != '' }}
+    steps:
+      - name: Download artefact
+        uses: actions/download-artifact@v3
+        with:
+          name: multipy_runtime_python${{ env.python-version }}
+          path: ${{ runner.temp }}/artifacts/
+
+      - name: Rename artefact
+        run: |
+          mv ${{ runner.temp }}/artifacts/multipy_runtime_python${{ env.python-version }}.whl \
+          ${{ runner.temp }}/artifacts/multipy_runtime_python${{ env.python-version }}.tar.gz
+
+      - name: Update nightly release
+        uses: pyTooling/Actions/releaser@main
+        with:
+          tag: nightly-runtime-python${{ env.python-version }}
+          rm: true
+          token: ${{ secrets.token }}
+          files: |
+            ${{ runner.temp }}/multipy_runtime_python${{ env.python-version }}.tar.gz
