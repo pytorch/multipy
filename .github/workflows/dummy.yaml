@@ -1,0 +1,34 @@
+name: Reusable workflow to build, test and release Multipy
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        required: true
+        type: string
+      runner:
+        required: true
+        type: string
+    secrets:
+      token:
+        required: true
+
+jobs:
+  build-test:
+    uses: pytorch/test-infra/.github/workflows/linux_job.yml@main
+    with:
+      runner: ${{ inputs.runner }}
+      upload-artifact: foo
+      repository: pytorch/multipy
+      script: |
+        file=dist/test-${{ inputs.python-version }}.whl
+        
+        # Create file
+        touch $file
+        
+        # Write file
+        echo "Hello World" >> $file
+  release:
+    - name: Baz
+      run: |
+        echo "Hello World"

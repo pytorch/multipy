@@ -1,0 +1,46 @@
+name: Reusable workflow to build, test and release Multipy
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        required: true
+        type: string
+      runner:
+        required: true
+        type: string
+    secrets:
+      token:
+        required: true
+
+jobs:
+  build-test:
+    uses: pytorch/test-infra/.github/workflows/linux_job.yml@main
+    with:
+      runner: ${{ env.runner }}
+      repository: pytorch/multipy
+      script: |
+        # Test
+        multipy/runtime/build/test_deploy
+        multipy/runtime/build/test_deploy_gpu
+  
+        # Examples
+        examples/build/hello_world_example
+        python3 examples/quickstart/gen_package.py && ./examples/build/quickstart my_package.pt
+        ./examples/build/movable_example
+  
+        # Benchmark
+        ./multipy/runtime/build/deploy_benchmark 2 none jit multipy/runtime/example/generated/resnet
+  
+        # Create Tarball
+        docker cp $(docker run -d multipy):/opt/dist/multipy .
+        tar -czvf multipy_runtime_python${{ env.python-version }}.tar.gz multipy/
+  release:
+    - name: Update nightly release
+      uses: pyTooling/Actions/releaser@main
+      with:
+        tag: nightly-runtime-python${{ env.python-version }}
+        rm: true
+        token: ${{ secrets.token }}
+        files: |
+          multipy_runtime_python${{ env.python-version }}.tar.gz
