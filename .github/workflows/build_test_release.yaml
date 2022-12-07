@@ -58,12 +58,12 @@ jobs:
         then
           # Create Tarball
           docker cp $(docker run -d multipy):/opt/dist/multipy .
-          tar -czvf multipy_runtime_python${{ env.python-version }}.tar.gz multipy/
+          tar -czvf ${{ inputs.release-artefact }}.tar.gz multipy/
           
           # Create artefact to be uploaded
           mkdir dist
-          mv multipy_runtime_python${{ env.python-version }}.tar.gz \
-          multipy_runtime_python${{ env.python-version }}.whl
+          mv ${{ inputs.release-artefact }}.tar.gz \
+          ${{ inputs.release-artefact }}.whl
         ;
         fi
   release:
@@ -73,13 +73,13 @@ jobs:
       - name: Download artefact
         uses: actions/download-artifact@v3
         with:
-          name: multipy_runtime_python${{ env.python-version }}
+          name: ${{ inputs.release-artefact }}
           path: ${{ runner.temp }}/artifacts/
 
       - name: Rename artefact
         run: |
-          mv ${{ runner.temp }}/artifacts/multipy_runtime_python${{ env.python-version }}.whl \
-          ${{ runner.temp }}/artifacts/multipy_runtime_python${{ env.python-version }}.tar.gz
+          mv ${{ runner.temp }}/artifacts/${{ inputs.release-artefact }}.whl \
+          ${{ runner.temp }}/artifacts/${{ inputs.release-artefact }}.tar.gz
 
       - name: Update nightly release
         uses: pyTooling/Actions/releaser@main
@@ -88,4 +88,4 @@ jobs:
           rm: true
           token: ${{ secrets.token }}
           files: |
-            ${{ runner.temp }}/multipy_runtime_python${{ env.python-version }}.tar.gz
+            ${{ runner.temp }}/${{ inputs.release-artefact }}.tar.gz
