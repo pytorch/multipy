@@ -121,6 +121,11 @@ std::vector<::torch::jit::StackEntry> noPythonCallstack() {
 
 const char* start = R"PYTHON(
 import _ssl # must come before _hashlib otherwise ssl's locks will be set to a Python that might no longer exist...
+
+# Avoid fork in platform.system()
+import platform
+platform.system = lambda: "Linux"
+
 import sys
 import importlib.abc
 import linecache
