@@ -3,18 +3,21 @@ name: Reusable build, test and release
 on:
   workflow_call:
     inputs:
-      python-version:
+      python3-minor-version:
         required: true
         type: string
       runner:
         required: true
         type: string
+      distro:
+        default: centos7
+        type: string
       compat-tests:
         default: false
         type: boolean
-      release-artefact:
-        default: ''
-        type: string
+      release:
+        default: false
+        type: boolean
     secrets:
       token:
         required: true
@@ -24,68 +27,114 @@ jobs:
     uses: pytorch/test-infra/.github/workflows/linux_job.yml@main
     with:
       runner: ${{ inputs.runner }}
-      upload-artifact: ${{ inputs.release-artefact }}
+      upload-artifact: multipy_runtime_python3.${{ inputs.python3-minor-version }}
       repository: pytorch/multipy
+      gpu-arch-type: cuda
+      gpu-arch-version: 116
       script: |
-        # Build
-        xargs sudo dnf install -y <build-requirements-centos8.txt
-        pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu116
-        pip install -e .
-        python multipy/runtime/example/generate_examples.py
+        python_version=3.${{ inputs.python3-minor-version }}
         
-        # Test
+        echo "::group::Install runtime build dependencies"
+        xargs yum install -y <build-requirements-${{ inputs.distro }}.txt
+        echo "::endgroup::"
+        
+        echo "::group::Sync git submodules"
+        git submodule update --init --recursive --jobs 0
+        echo "::endgroup::"
+        
+        echo "::group::Setup virtual environment"
+        if [[ ${{ inputs.python3-minor-version }} -gt 7 ]];
+        then
+          conda install -y python=${python_version} mkl mkl-include conda-build pyyaml numpy ipython
+          conda install -y -c conda-forge libpython-static=${python_version}
+          conda install -y pytorch torchvision torchaudio pytorch-cuda=11.6 -c pytorch-nightly -c nvidia
+          conda clean -ya;
+        else
+          conda deactivate
+          export CFLAGS="-fPIC -g"
+          pyenv_root=~/.pyenv
+          git clone https://github.com/pyenv/pyenv.git ${pyenv_root}
+          git clone https://github.com/pyenv/pyenv-virtualenv.git ${pyenv_root}/plugins/pyenv-virtualenv
+          ${pyenv_root}/bin/pyenv install --force ${python_version}
+          PATH=${pyenv_root}/versions/$(${pyenv_root}/bin/pyenv latest ${python_version})/bin/:$PATH
+          ${pyenv_root}/bin/pyenv virtualenv multipy
+          source ${pyenv_root}/versions/multipy/bin/activate 
+          pip install \
+          --pre torch torchvision torchaudio \
+          --extra-index-url https://download.pytorch.org/whl/nightly/cu116;
+        fi
+        echo "::endgroup::"
+        
+        echo "::group::Install"
+        python -m pip install -e . --install-option="--cudatests"
+        echo "::endgroup::"
+        
+        echo "::group::Generate examples"
+        python multipy/runtime/example/generate_examples.py
+        cd examples
+        cmake -S . -B build/ -DMULTIPY_PATH=".." && cmake --build build/ --config Release -j
+        cd -
+        echo "::endgroup::"
+        
+        export PYTHONPATH=.
+        export LIBTEST_DEPLOY_LIB=multipy/runtime/build/libtest_deploy_lib.so
+        export LD_LIBRARY_PATH=/opt/conda/lib/
+        
+        echo "::group::Test"
         multipy/runtime/build/test_deploy
         multipy/runtime/build/test_deploy_gpu
-  
-        # Examples
+        echo "::endgroup::"
+        
+        echo "::group::Run examples"
         examples/build/hello_world_example
         python3 examples/quickstart/gen_package.py
         ./examples/build/quickstart my_package.pt
         ./examples/build/movable_example
-  
-        # Benchmark
+        echo "::endgroup::"
+        
+        echo "::group::Benchmark"
         ./multipy/runtime/build/deploy_benchmark 2 none jit multipy/runtime/example/generated/resnet
-  
-        # Compat Tests
-        if ${{ inputs.compat-tests }};
-        then
-          pip install -r compat-requirements.txt
-          multipy/runtime/build/interactive_embedded_interpreter --pyscript multipy/runtime/test_compat.py
-        ;
-        fi
-  
-        if ${{ inputs.release-artefact != '' }};
-        then
-          # Create Tarball
-          docker cp $(docker run -d multipy):/opt/dist/multipy .
-          tar -czvf ${{ inputs.release-artefact }}.tar.gz multipy/
-          
-          # Create artefact to be uploaded
-          mkdir dist
-          mv ${{ inputs.release-artefact }}.tar.gz \
-          ${{ inputs.release-artefact }}.whl
-        ;
-        fi
+        echo "::endgroup::"
+        
+        echo "::group::Compat test"
+        pip install -r compat-requirements.txt
+        multipy/runtime/build/interactive_embedded_interpreter --pyscript multipy/runtime/test_compat.py
+        echo "::endgroup::"
+        
+        echo "::group::Create tarball"
+        cp -r multipy/runtime/build/dist/* .
+        rm -rf multipy/runtime/build
+        tar -czf multipy_runtime_python${python_version}.tar.gz multipy/
+        echo "::endgroup::"
+        
+        echo "::group::Move artifact to dist folder"
+        # TODO: Once pytorch/test-infra supports file types other than '.whl', remove 
+        # the part where we change the extension by renaming it.
+        mkdir dist
+        mv multipy_runtime_python${python_version}.tar.gz \
+        dist/multipy_runtime_python${python_version}.whl
+        echo "::endgroup::"
+
   release:
-    runs-on: ${{ inputs.runner }}
-    if:  ${{ inputs.release-artefact != '' }}
+    needs: [build-test]
+    runs-on: ubuntu-latest
+    if: ${{ inputs.release }}
     steps:
       - name: Download artefact
         uses: actions/download-artifact@v3
         with:
-          name: ${{ inputs.release-artefact }}
-          path: ${{ runner.temp }}/artifacts/
+          name: multipy_runtime_python3.${{ inputs.python3-minor-version }}
+          path: ./
 
       - name: Rename artefact
         run: |
-          mv ${{ runner.temp }}/artifacts/${{ inputs.release-artefact }}.whl \
-          ${{ runner.temp }}/artifacts/${{ inputs.release-artefact }}.tar.gz
+          mv multipy_runtime_python3.${{ inputs.python3-minor-version }}.whl \
+          multipy_runtime_python3.${{ inputs.python3-minor-version }}.tar.gz
 
       - name: Update nightly release
         uses: pyTooling/Actions/releaser@main
         with:
-          tag: nightly-runtime-python${{ env.python-version }}
+          tag: multipy_runtime_python3.${{ inputs.python3-minor-version }}
           rm: true
           token: ${{ secrets.token }}
-          files: |
-            ${{ runner.temp }}/${{ inputs.release-artefact }}.tar.gz
+          files: multipy_runtime_python3.${{ inputs.python3-minor-version }}.tar.gz
