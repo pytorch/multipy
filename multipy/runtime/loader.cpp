@@ -67,6 +67,14 @@
 #include <multipy/runtime/loader.h>
 #include <multipy/runtime/mem_file.h>
 
+/* Linux traditionally doesn't have the trailing 64 that BSD has on these. */
+#ifndef R_AARCH64_TLS_DTPREL
+    #define R_AARCH64_TLS_DTPREL R_AARCH64_TLS_DTPREL64
+#endif
+#ifndef R_AARCH64_TLS_DTPMOD
+    #define R_AARCH64_TLS_DTPMOD R_AARCH64_TLS_DTPMOD64
+#endif
+
 namespace torch {
 namespace deploy {
 
