@@ -1,0 +1,9 @@
+binutils
+bzip2
+bzip2-devel
+gcc
+libffi-devel
+openssl-devel
+readline-devel
+xz-devel
+zlib-devel
