@@ -3,7 +3,11 @@ bzip2
 bzip2-devel
 gcc
 libffi-devel
+make
 openssl-devel
 readline-devel
+sqlite
+sqlite-devel
+tk-devel
 xz-devel
 zlib-devel
