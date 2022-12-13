@@ -58,7 +58,7 @@ jobs:
           ${pyenv_root}/bin/pyenv install --force ${python_version}
           PATH=${pyenv_root}/versions/$(${pyenv_root}/bin/pyenv latest ${python_version})/bin/:$PATH
           ${pyenv_root}/bin/pyenv virtualenv multipy
-          source ${pyenv_root}/versions/multipy/bin/activate 
+          source ${pyenv_root}/versions/multipy/bin/activate
           pip install \
           --pre torch torchvision torchaudio \
           --extra-index-url https://download.pytorch.org/whl/nightly/cu116;
@@ -76,8 +76,8 @@ jobs:
         cd -
         echo "::endgroup::"
         
-        export PYTHONPATH=.
-        export LIBTEST_DEPLOY_LIB=multipy/runtime/build/libtest_deploy_lib.so
+        export PYTHONPATH=$(pwd)
+        export LIBTEST_DEPLOY_LIB=$(pwd)/multipy/runtime/build/libtest_deploy_lib.so
         export LD_LIBRARY_PATH=/opt/conda/lib/
         
         echo "::group::Test"
