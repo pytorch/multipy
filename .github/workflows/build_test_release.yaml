@@ -83,16 +83,6 @@ jobs:
         multipy/runtime/build/test_deploy
         echo "::endgroup::"
         
-        echo "::group::Test"
-        if [[ ${{ inputs.python3-minor-version }} -gt 7 ]];
-        then
-          conda install --force-reinstall pytorch pytorch-cuda=11.6 -c pytorch -c nvidia;
-        else
-          pip install --upgrade --force-reinstall torch --extra-index-url https://download.pytorch.org/whl/cu116;
-        fi
-        multipy/runtime/build/test_deploy_gpu
-        echo "::endgroup::"
-        
         echo "::group::Run examples"
         examples/build/hello_world_example
         python3 examples/quickstart/gen_package.py
@@ -107,6 +97,17 @@ jobs:
         echo "::group::Compat test"
         pip install -r compat-requirements.txt
         multipy/runtime/build/interactive_embedded_interpreter --pyscript multipy/runtime/test_compat.py
+        echo "::endgroup::"
+        
+        echo "::group::Test GPU"
+        # Separating GPU tests due to issues with py37 and py38: https://github.com/pytorch/multipy/issues/239
+        if [[ ${{ inputs.python3-minor-version }} -gt 7 ]];
+        then
+          conda install -y --force-reinstall pytorch pytorch-cuda=11.6 -c pytorch-nightly -c nvidia;
+        else
+          pip install --upgrade --force-reinstall torch --extra-index-url https://download.pytorch.org/whl/cu116;
+        fi
+        multipy/runtime/build/test_deploy_gpu
         echo "::endgroup::"
         
         echo "::group::Create tarball"
