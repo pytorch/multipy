@@ -43,6 +43,7 @@ jobs:
         echo "::endgroup::"
         
         echo "::group::Setup virtual environment"
+        export PATH=/opt/conda/bin:$PATH
         if [[ ${{ inputs.python3-minor-version }} -gt 7 ]];
         then
           conda install -y python=${python_version} mkl mkl-include conda-build pyyaml numpy ipython
@@ -52,15 +53,13 @@ jobs:
           export LD_LIBRARY_PATH=/opt/conda/lib/:$LD_LIBRARY_PATH
         else
           conda deactivate
+          pip3 install virtualenv
+          git clone https://github.com/pyenv/pyenv.git ~/.pyenv
           export CFLAGS="-fPIC -g"
-          pyenv_root=~/.pyenv
-          git clone https://github.com/pyenv/pyenv.git ${pyenv_root}
-          git clone https://github.com/pyenv/pyenv-virtualenv.git ${pyenv_root}/plugins/pyenv-virtualenv
-          ${pyenv_root}/bin/pyenv install --force ${python_version}
-          PATH=${pyenv_root}/versions/$(${pyenv_root}/bin/pyenv latest ${python_version})/bin/:$PATH
-          ${pyenv_root}/bin/pyenv virtualenv multipy
-          source ${pyenv_root}/versions/multipy/bin/activate
-          pip install \
+          ~/.pyenv/bin/pyenv install --force 3.7.10
+          virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy
+          source ~/venvs/multipy/bin/activate
+          pip3 install \
           --pre torch torchvision torchaudio \
           --extra-index-url https://download.pytorch.org/whl/nightly/cu116;
         fi
