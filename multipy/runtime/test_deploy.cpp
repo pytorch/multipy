@@ -344,53 +344,6 @@ TEST(TorchpyTest, FxModule) {
 }
 #endif
 
-#ifdef FBCODE_CAFFE2
-TEST(TorchpyTest, TestImports) {
-  torch::deploy::InterpreterManager manager(1);
-  manager.registerModuleSource("test_imports", R"PYTHON(
-def import_torch():
-    import torch
-    return 1
-
-def import_multipy():
-    import multipy
-    return 1
-
-def import_torchgen():
-    import torchgen
-    return 1
-
-def import_fsdp():
-    import torch.distributed.fsdp
-    return 1
-
-)PYTHON");
-
-  auto I = manager.acquireOne();
-
-  ASSERT_EQ(
-      I.global("test_imports", "import_torch")(at::ArrayRef<at::IValue>{})
-          .toIValue()
-          .toInt(),
-      1);
-  ASSERT_EQ(
-      I.global("test_imports", "import_multipy")(at::ArrayRef<at::IValue>{})
-          .toIValue()
-          .toInt(),
-      1);
-  ASSERT_EQ(
-      I.global("test_imports", "import_torchgen")(at::ArrayRef<at::IValue>{})
-          .toIValue()
-          .toInt(),
-      1);
-  ASSERT_EQ(
-      I.global("test_imports", "import_fsdp")(at::ArrayRef<at::IValue>{})
-          .toIValue()
-          .toInt(),
-      1);
-}
-#endif
-
 // Moving a tensor between interpreters should share the underlying storage.
 TEST(TorchpyTest, TensorSerializationSharing) {
   torch::deploy::InterpreterManager manager(2);
