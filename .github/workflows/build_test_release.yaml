@@ -45,7 +45,7 @@ jobs:
         echo "::group::Setup virtual environment"
         if [[ ${{ inputs.python3-minor-version }} -gt 7 ]];
         then
-          conda install -y -c conda-forge python=${python_version} mkl mkl-include conda-build pyyaml numpy ipython
+          conda install -y python=${python_version} mkl mkl-include conda-build pyyaml numpy ipython
           conda install -y -c conda-forge libpython-static=${python_version}
           conda install -y pytorch torchvision torchaudio pytorch-cuda=11.6 -c pytorch-nightly -c nvidia
           conda clean -ya;
