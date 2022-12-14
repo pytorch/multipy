@@ -80,11 +80,6 @@ jobs:
         export PYTHONPATH=$(pwd)
         export LIBTEST_DEPLOY_LIB=$(pwd)/multipy/runtime/build/libtest_deploy_lib.so
         
-        echo "::group::Test"
-        multipy/runtime/build/test_deploy
-        multipy/runtime/build/test_deploy_gpu
-        echo "::endgroup::"
-        
         echo "::group::Run examples"
         examples/build/hello_world_example
         python3 examples/quickstart/gen_package.py
@@ -99,6 +94,11 @@ jobs:
         echo "::group::Compat test"
         pip install -r compat-requirements.txt
         multipy/runtime/build/interactive_embedded_interpreter --pyscript multipy/runtime/test_compat.py
+        echo "::endgroup::"
+                
+        echo "::group::Test"
+        multipy/runtime/build/test_deploy
+        multipy/runtime/build/test_deploy_gpu
         echo "::endgroup::"
         
         echo "::group::Create tarball"
