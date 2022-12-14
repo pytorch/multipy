@@ -48,7 +48,7 @@ jobs:
         then
           conda install -y python=${python_version} mkl mkl-include conda-build pyyaml numpy ipython
           conda install -y -c conda-forge libpython-static=${python_version}
-          conda install pytorch torchvision torchaudio cpuonly -c pytorch
+          conda install -y pytorch torchvision torchaudio cpuonly -c pytorch-nightly
           conda clean -ya;
         else
           conda deactivate
