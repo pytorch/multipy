@@ -80,7 +80,7 @@ jobs:
         export LIBTEST_DEPLOY_LIB=$(pwd)/multipy/runtime/build/libtest_deploy_lib.so
         
         echo "::group::Test"
-        multipy/runtime/build/test_deploy --gtest_filter=-TorchpyTest.Autograd
+        multipy/runtime/build/test_deploy
         multipy/runtime/build/test_deploy_gpu
         echo "::endgroup::"
         
