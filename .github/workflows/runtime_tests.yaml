@@ -11,7 +11,7 @@ jobs:
   build-test:
     strategy:
       matrix:
-        python3-minor-version: [7,8]
+        python3-minor-version: [7,8,9,10]
         platform: [linux.4xlarge.nvidia.gpu]
       fail-fast: false
     uses: ./.github/workflows/build_test_release.yaml
