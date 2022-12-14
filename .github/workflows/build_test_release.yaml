@@ -60,7 +60,7 @@ jobs:
           source ~/venvs/multipy/bin/activate
           pip install \
           --pre torch torchvision torchaudio \
-          --extra-index-url https://download.pytorch.org/whl/cpu;
+          --extra-index-url https://download.pytorch.org/whl/nightly/cpu;
         fi
         echo "::endgroup::"
         
@@ -105,12 +105,8 @@ jobs:
         
         echo "::group::Test GPU"
         # Separating GPU tests due to issues with py37 and py38: https://github.com/pytorch/multipy/issues/239
-        if [[ ${{ inputs.python3-minor-version }} -gt 7 ]];
-        then
-          conda install -y --force-reinstall pytorch pytorch-cuda=11.6 -c pytorch-nightly -c nvidia;
-        else
-          pip install --upgrade --force-reinstall torch --extra-index-url https://download.pytorch.org/whl/cu116;
-        fi
+        pip install --upgrade --force-reinstall --pre torch \
+        --extra-index-url https://download.pytorch.org/whl/nightly/cu116
         multipy/runtime/build/test_deploy_gpu
         echo "::endgroup::"
         
