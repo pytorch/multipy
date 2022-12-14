@@ -29,6 +29,8 @@ jobs:
       runner: ${{ inputs.runner }}
       upload-artifact: multipy_runtime_python3.${{ inputs.python3-minor-version }}
       repository: pytorch/multipy
+      gpu-arch-type: cuda
+      gpu-arch-version: 116
       script: |
         python_version=3.${{ inputs.python3-minor-version }}
         
