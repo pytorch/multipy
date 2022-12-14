@@ -56,8 +56,8 @@ jobs:
           pip3 install virtualenv
           git clone https://github.com/pyenv/pyenv.git ~/.pyenv
           export CFLAGS="-fPIC -g"
-          ~/.pyenv/bin/pyenv install --force 3.7.10
-          virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy
+          ~/.pyenv/bin/pyenv install --force ${python_version}
+          virtualenv -p ~/.pyenv/versions/$(~/.pyenv/bin/pyenv latest ${python_version})/bin/python3 ~/venvs/multipy
           source ~/venvs/multipy/bin/activate
           pip3 install \
           --pre torch torchvision torchaudio \
