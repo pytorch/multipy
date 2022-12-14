@@ -45,6 +45,10 @@ TEST(TorchpyTest, TestImportMultiPy) {
   test_import({"multipy"});
 }
 
+TEST(TorchpyTest, TestImportSympy) {
+  test_import({"mpmath", "sympy"});
+}
+
 int main(int argc, char* argv[]) {
   ::testing::InitGoogleTest(&argc, argv);
   char tempeh[256];
