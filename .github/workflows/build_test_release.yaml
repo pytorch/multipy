@@ -50,7 +50,6 @@ jobs:
           conda install -y -c conda-forge libpython-static=${python_version}
           conda install -y pytorch torchvision torchaudio pytorch-cuda=11.6 -c pytorch-nightly -c nvidia
           conda clean -ya;
-          export LD_LIBRARY_PATH=/opt/conda/lib/:$LD_LIBRARY_PATH
         else
           conda deactivate
           pip3 install virtualenv
@@ -78,6 +77,7 @@ jobs:
         
         export PYTHONPATH=$(pwd)
         export LIBTEST_DEPLOY_LIB=$(pwd)/multipy/runtime/build/libtest_deploy_lib.so
+        export LD_LIBRARY_PATH=/opt/conda/lib/:$LD_LIBRARY_PATH
         
         echo "::group::Test"
         multipy/runtime/build/test_deploy
