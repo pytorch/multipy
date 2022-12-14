@@ -60,6 +60,7 @@ set(INTERPRETER_LIB_SOURCES
   ${INTERPRETER_DIR}/builtin_registry.cpp
   ${INTERPRETER_DIR}/import_find_sharedfuncptr.cpp
   ${INTERPRETER_DIR}/plugin_registry.cpp
+  ${INTERPRETER_DIR}/../loader.cpp
   ${LINKER_SCRIPT}
 )
 add_library(torch_deployinterpreter SHARED ${INTERPRETER_LIB_SOURCES} ${LINKER_SCRIPT})
@@ -80,5 +81,4 @@ target_include_directories(torch_deployinterpreter BEFORE PUBLIC ${Python3_INCLU
 
 target_link_libraries(torch_deployinterpreter PRIVATE fmt::fmt-header-only)
 target_link_libraries(torch_deployinterpreter PRIVATE torch_python)
-target_link_libraries(torch_deployinterpreter PRIVATE gtest)
 target_link_libraries(torch_deployinterpreter PRIVATE multipy_torch)

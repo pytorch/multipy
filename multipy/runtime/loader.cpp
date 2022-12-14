@@ -1024,15 +1024,16 @@ struct __attribute__((visibility("hidden"))) CustomLibraryImpl
       }
     }
 
+    // search in this binary first -- equivalent to RTLD_DEEPBIND behavior
+    auto r = sym(sym_name, version);
+    if (r) {
+      return r;
+    }
     for (const auto& sys_lib : symbol_search_path_) {
       auto r = sys_lib->sym(sym_name, version);
       if (r) {
         return r;
       }
-    }
-    auto r = sym(sym_name, version);
-    if (r) {
-      return r;
     }
     if (ELF64_ST_BIND(sym_st.st_info) != STB_WEAK) {
       if (!version) {

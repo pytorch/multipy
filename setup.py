@@ -265,6 +265,10 @@ if __name__ == "__main__":
                 "runtime/third-party/fmt/include/fmt/*",
                 "runtime/third-party/fmt/src/*",
                 "runtime/third-party/fmt/support/cmake/*",
+                "runtime/third-party/pybind11/*",
+                "runtime/third-party/pybind11/include/pybind11/*",
+                "runtime/third-party/pybind11/include/pybind11/detail/*",
+                "runtime/third-party/pybind11/tools/*",
             ]
         },
         data_files=[

@@ -21,7 +21,7 @@ message(STATUS "CMAKE_BUILD_TYPE - ${CMAKE_BUILD_TYPE}" )
 set(DEPLOY_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 get_filename_component(MULTIPY_DIR ${CMAKE_CURRENT_SOURCE_DIR} DIRECTORY)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fabi-version=11 -fno-lto")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fabi-version=11 -fno-lto -fPIC")
 include(${DEPLOY_DIR}/utils.cmake)
 
 add_subdirectory(interpreter)
@@ -171,3 +171,10 @@ install (
 
 install(TARGETS torch_deploy DESTINATION dist/multipy/runtime/lib)
 install(TARGETS torch_deployinterpreter DESTINATION dist/multipy/runtime/lib)
+
+add_subdirectory(third-party/pybind11)
+pybind11_add_module(multipy_pybind pybind_init.cpp)
+target_include_directories(multipy_pybind PRIVATE ${CMAKE_SOURCE_DIR}/../..)
+target_link_libraries(multipy_pybind
+  PUBLIC "-Wl,--no-as-needed -rdynamic" dl torch_deploy_interface c10 torch_cpu torch_python
+)
