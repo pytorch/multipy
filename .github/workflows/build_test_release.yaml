@@ -79,8 +79,12 @@ jobs:
         export LIBTEST_DEPLOY_LIB=$(pwd)/multipy/runtime/build/libtest_deploy_lib.so
         export LD_LIBRARY_PATH=/opt/conda/lib/:$LD_LIBRARY_PATH
         
-        echo "::group::Test"
+        echo "::group::Test C++"
         multipy/runtime/build/test_deploy
+        echo "::endgroup::"
+        
+        echo "::group::Test Pybind"
+        python multipy/runtime/test_pybind.py
         echo "::endgroup::"
         
         echo "::group::Run examples"
