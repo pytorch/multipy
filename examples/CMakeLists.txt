@@ -9,9 +9,6 @@ include(${MULTIPY_PATH}/multipy/runtime/utils.cmake)
 # add headers from multipy
 include_directories(${MULTIPY_PATH})
 
-# disable pthreads in gtests
-set(gtest_disable_pthreads OFF)
-
 # link the multipy prebuilt binary
 add_library(multipy_internal STATIC IMPORTED)
 set_target_properties(multipy_internal
