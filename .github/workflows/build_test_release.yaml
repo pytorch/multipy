@@ -61,7 +61,7 @@ jobs:
           ${pyenv_root}/bin/pyenv virtualenv multipy
           source ${pyenv_root}/versions/multipy/bin/activate
           pip install \
-          --pre torch torchvision torchaudio \
+          torch torchvision torchaudio \
           --extra-index-url https://download.pytorch.org/whl/cu116;
         fi
         echo "::endgroup::"
