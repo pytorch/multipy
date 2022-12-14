@@ -74,9 +74,7 @@ inline bool exists(const char* name) {
 
 multipy::optional<Section> searchForSection(const char* name) {
   {
-    std::string execPath;
-    std::ifstream("/proc/self/cmdline") >> execPath;
-    ElfFile elfFile(execPath.c_str());
+    ElfFile elfFile("/proc/self/exe");
     auto section = elfFile.findSection(name);
     if (section) {
       return section;

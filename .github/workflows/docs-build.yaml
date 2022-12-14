@@ -17,6 +17,8 @@ jobs:
           architecture: x64
       - name: Checkout MultiPy
         uses: actions/checkout@v2
+        with:
+          submodules: true
       - name: Install Dependencies
         run: |
           set -eux

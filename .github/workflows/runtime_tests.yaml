@@ -32,11 +32,14 @@ jobs:
           DOCKER_BUILDKIT: 1
         run: nvidia-docker build -t multipy --progress=plain --build-arg PYTHON_3_MINOR_VERSION=${{ matrix.python3-minor-version }} --build-arg BUILD_CUDA_TESTS=1 .
 
-      - name: Test
+      - name: C++ Tests
         run: |
           docker run --rm multipy bash -c "if [[ ${{ matrix.python3-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && multipy/runtime/build/test_deploy"
           nvidia-docker run --rm multipy bash -c "if [[ ${{ matrix.python3-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && multipy/runtime/build/test_deploy_gpu"
 
+      - name: Pybind Tests
+        run: |
+          docker run --rm multipy bash -c "if [[ ${{ matrix.python3-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && python multipy/runtime/test_pybind.py"
 
       - name: Examples
         run: |
