@@ -30,6 +30,8 @@ jobs:
 
       - name: Checkout MultiPy
         uses: actions/checkout@v2
+        with:
+          submodules: true
 
       - name: Install runtime build dependencies
         run: |

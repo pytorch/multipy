@@ -121,6 +121,11 @@ std::vector<::torch::jit::StackEntry> noPythonCallstack() {
 
 const char* start = R"PYTHON(
 import _ssl # must come before _hashlib otherwise ssl's locks will be set to a Python that might no longer exist...
+
+# Avoid fork in platform.system()
+import platform
+platform.system = lambda: "Linux"
+
 import sys
 import importlib.abc
 import linecache
@@ -151,14 +156,14 @@ class RegisterModuleImporter(importlib.abc.InspectLoader):
             return importlib.util.spec_from_loader(fullname, self)
         return None
 
-# print("exec_prefix:", sys.base_exec_prefix)
-# print("_base_executable:", sys._base_executable)
-# print("base_prefix:", sys.base_prefix)
-# print("exec_prefix:", sys.exec_prefix)
-# print("executable:", sys.executable)
-# print("path:", sys.path)
-# print("prefix:", sys.prefix)
-# print("modules:", sys.modules)
+# print(f"exec_prefix: {sys.base_exec_prefix}", file=sys.stderr)
+# print(f"_base_executable: {sys._base_executable}", file=sys.stderr)
+# print(f"base_prefix: {sys.base_prefix}", file=sys.stderr)
+# print(f"exec_prefix: {sys.exec_prefix}", file=sys.stderr)
+# print(f"executable: {sys.executable}", file=sys.stderr)
+# print(f"path: {sys.path}", file=sys.stderr)
+# print(f"prefix: {sys.prefix}", file=sys.stderr)
+# print(f"modules: {sys.modules}", file=sys.stderr)
 
 import torch # has to be done serially otherwise things will segfault
 import multipy.utils

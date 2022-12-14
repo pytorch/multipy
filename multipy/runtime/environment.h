@@ -46,11 +46,20 @@ class Environment {
   void setupZippedPythonModules(const std::string& pythonAppDir) {
 #ifdef FBCODE_CAFFE2
     extraPythonPaths_.push_back(getZippedArchive(
+        ".mpmath_python_modules",
+        std::string(pythonAppDir) + "/mpmath_python_modules.zip"));
+    extraPythonPaths_.push_back(getZippedArchive(
+        ".sympy_python_modules",
+        std::string(pythonAppDir) + "/sympy_python_modules.zip"));
+    extraPythonPaths_.push_back(getZippedArchive(
         ".torch_python_modules",
         std::string(pythonAppDir) + "/torch_python_modules.zip"));
     extraPythonPaths_.push_back(getZippedArchive(
         ".multipy_python_modules",
         std::string(pythonAppDir) + "/multipy_python_modules.zip"));
+    extraPythonPaths_.push_back(getZippedArchive(
+        ".torchgen_python_modules",
+        std::string(pythonAppDir) + "/torchgen_python_modules.zip"));
 
 #endif
     extraPythonLibrariesDir_ = pythonAppDir;
