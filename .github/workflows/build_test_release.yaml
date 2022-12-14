@@ -48,7 +48,7 @@ jobs:
         then
           conda install -y python=${python_version} mkl mkl-include conda-build pyyaml numpy ipython
           conda install -y -c conda-forge libpython-static=${python_version}
-          conda install -y pytorch torchvision torchaudio pytorch-cuda=11.6 -c pytorch-nightly -c nvidia
+          conda install pytorch torchvision torchaudio cpuonly -c pytorch
           conda clean -ya;
         else
           conda deactivate
@@ -60,7 +60,7 @@ jobs:
           source ~/venvs/multipy/bin/activate
           pip3 install \
           --pre torch torchvision torchaudio \
-          --extra-index-url https://download.pytorch.org/whl/nightly/cu116;
+          --extra-index-url https://download.pytorch.org/whl/cpu;
         fi
         echo "::endgroup::"
         
@@ -81,6 +81,15 @@ jobs:
         
         echo "::group::Test"
         multipy/runtime/build/test_deploy
+        echo "::endgroup::"
+        
+        echo "::group::Test"
+        if [[ ${{ inputs.python3-minor-version }} -gt 7 ]];
+        then
+          conda install --force-reinstall pytorch pytorch-cuda=11.6 -c pytorch -c nvidia;
+        else
+          pip install --upgrade --force-reinstall torch --extra-index-url https://download.pytorch.org/whl/cu116;
+        fi
         multipy/runtime/build/test_deploy_gpu
         echo "::endgroup::"
         
