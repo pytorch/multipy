@@ -47,9 +47,8 @@ jobs:
         then
           conda install -y -c conda-forge python=${python_version} mkl mkl-include conda-build pyyaml numpy ipython
           conda install -y -c conda-forge libpython-static=${python_version}
-          conda install -y pytorch torchvision torchaudio pytorch-cuda=11.6 -c pytorch -c nvidia
+          conda install -y pytorch torchvision torchaudio pytorch-cuda=11.6 -c pytorch-nightly -c nvidia
           conda clean -ya;
-          export LD_LIBRARY_PATH=/opt/conda/lib/
         else
           conda deactivate
           export CFLAGS="-fPIC -g"
@@ -62,7 +61,7 @@ jobs:
           source ${pyenv_root}/versions/multipy/bin/activate
           pip install \
           --pre torch torchvision torchaudio \
-          --extra-index-url https://download.pytorch.org/whl/cu116;
+          --extra-index-url https://download.pytorch.org/whl/nightly/cu116;
         fi
         echo "::endgroup::"
         
@@ -79,6 +78,7 @@ jobs:
         
         export PYTHONPATH=$(pwd)
         export LIBTEST_DEPLOY_LIB=$(pwd)/multipy/runtime/build/libtest_deploy_lib.so
+        export LD_LIBRARY_PATH=/opt/conda/lib/
         
         echo "::group::Test"
         multipy/runtime/build/test_deploy
