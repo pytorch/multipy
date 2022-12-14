@@ -52,13 +52,13 @@ jobs:
           conda clean -ya;
         else
           conda deactivate
-          pip3 install virtualenv
+          pip install virtualenv
           git clone https://github.com/pyenv/pyenv.git ~/.pyenv
           export CFLAGS="-fPIC -g"
           ~/.pyenv/bin/pyenv install --force ${python_version}
           virtualenv -p ~/.pyenv/versions/$(~/.pyenv/bin/pyenv latest ${python_version})/bin/python3 ~/venvs/multipy
           source ~/venvs/multipy/bin/activate
-          pip3 install \
+          pip install \
           --pre torch torchvision torchaudio \
           --extra-index-url https://download.pytorch.org/whl/cpu;
         fi
