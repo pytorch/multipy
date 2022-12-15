@@ -43,7 +43,6 @@ jobs:
         echo "::endgroup::"
         
         echo "::group::Setup virtual environment"
-        export PATH=/opt/conda/bin:$PATH
         if [[ ${{ inputs.python3-minor-version }} -gt 7 ]];
         then
           conda install -y python=${python_version} mkl mkl-include conda-build pyyaml numpy ipython
