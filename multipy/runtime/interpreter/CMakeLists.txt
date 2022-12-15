@@ -80,5 +80,6 @@ target_include_directories(torch_deployinterpreter PRIVATE ${INTERPRETER_DIR})
 target_include_directories(torch_deployinterpreter BEFORE PUBLIC ${Python3_INCLUDE_DIRS})
 
 target_link_libraries(torch_deployinterpreter PRIVATE fmt::fmt-header-only)
+target_link_libraries(torch_deployinterpreter PRIVATE gtest)
 target_link_libraries(torch_deployinterpreter PRIVATE torch_python)
 target_link_libraries(torch_deployinterpreter PRIVATE multipy_torch)
