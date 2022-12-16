@@ -1,0 +1,142 @@
+name: Reusable build, test and release
+
+on:
+  workflow_call:
+    inputs:
+      python3-minor-version:
+        required: true
+        type: string
+      runner:
+        required: true
+        type: string
+      distro:
+        default: centos7
+        type: string
+      compat-tests:
+        default: false
+        type: boolean
+      release:
+        default: false
+        type: boolean
+    secrets:
+      token:
+        required: true
+
+jobs:
+  build-test:
+    uses: pytorch/test-infra/.github/workflows/linux_job.yml@main
+    with:
+      runner: ${{ inputs.runner }}
+      upload-artifact: multipy_runtime_python3.${{ inputs.python3-minor-version }}
+      repository: pytorch/multipy
+      gpu-arch-type: cuda
+      gpu-arch-version: 116
+      script: |
+        python_version=3.${{ inputs.python3-minor-version }}
+
+        echo "::group::Install runtime build dependencies"
+        xargs yum install -y <build-requirements-${{ inputs.distro }}.txt
+        echo "::endgroup::"
+
+        echo "::group::Sync git submodules"
+        git submodule update --init --recursive --jobs 0
+        echo "::endgroup::"
+
+        echo "::group::Setup virtual environment"
+        if [[ ${{ inputs.python3-minor-version }} -gt 7 ]];
+        then
+          conda install -y python=${python_version} mkl mkl-include conda-build pyyaml numpy ipython
+          conda install -y -c conda-forge libpython-static=${python_version}
+          conda install -y pytorch torchvision torchaudio cpuonly -c pytorch
+          conda clean -ya;
+        else
+          conda deactivate
+          pip install virtualenv
+          git clone https://github.com/pyenv/pyenv.git ~/.pyenv
+          export CFLAGS="-fPIC -g"
+          ~/.pyenv/bin/pyenv install --force ${python_version}
+          virtualenv -p ~/.pyenv/versions/$(~/.pyenv/bin/pyenv latest ${python_version})/bin/python3 ~/venvs/multipy
+          source ~/venvs/multipy/bin/activate
+          pip install \
+          torch torchvision torchaudio \
+          --extra-index-url https://download.pytorch.org/whl/cpu;
+        fi
+        echo "::endgroup::"
+
+        echo "::group::Install"
+        python -m pip install -e . --install-option="--cudatests"
+        echo "::endgroup::"
+
+        echo "::group::Generate examples"
+        python multipy/runtime/example/generate_examples.py
+        cd examples
+        cmake -S . -B build/ -DMULTIPY_PATH=".." && cmake --build build/ --config Release -j
+        cd -
+        echo "::endgroup::"
+
+        export PYTHONPATH=$(pwd)
+        export LIBTEST_DEPLOY_LIB=$(pwd)/multipy/runtime/build/libtest_deploy_lib.so
+        export LD_LIBRARY_PATH=/opt/conda/lib/:$LD_LIBRARY_PATH
+
+        echo "::group::Test C++"
+        multipy/runtime/build/test_deploy
+        echo "::endgroup::"
+
+        echo "::group::Test Pybind"
+        python multipy/runtime/test_pybind.py
+        echo "::endgroup::"
+
+        echo "::group::Run examples"
+        examples/build/hello_world_example
+        python3 examples/quickstart/gen_package.py
+        ./examples/build/quickstart my_package.pt
+        ./examples/build/movable_example
+        echo "::endgroup::"
+
+        echo "::group::Benchmark"
+        ./multipy/runtime/build/deploy_benchmark 2 none jit multipy/runtime/example/generated/resnet
+        echo "::endgroup::"
+
+        if [[ ${{ inputs.python3-minor-version }} -gt 7 ]];
+        then
+          echo "::group::Compat test"
+          pip install -r compat-requirements.txt
+          multipy/runtime/build/interactive_embedded_interpreter --pyscript multipy/runtime/test_compat.py
+          echo "::endgroup::";
+        fi
+
+        echo "::group::Test GPU"
+        # Separating GPU tests due to issues with py37 and py38: https://github.com/pytorch/multipy/issues/239
+        pip install --upgrade --force-reinstall torch \
+        --extra-index-url https://download.pytorch.org/whl/cu116
+        multipy/runtime/build/test_deploy_gpu
+        echo "::endgroup::"
+
+        echo "::group::Create tarball"
+        cp -r multipy/runtime/build/dist/* .
+        rm -rf multipy/runtime/build
+        tar -czf multipy_runtime_python${python_version}.tar.gz multipy/
+        echo "::endgroup::"
+
+        echo "::group::Move artifact for upload"
+        mv multipy_runtime_python${python_version}.tar.gz ${RUNNER_ARTIFACT_DIR}/
+        echo "::endgroup::"
+
+  release:
+    needs: [build-test]
+    runs-on: ubuntu-latest
+    if: ${{ inputs.release }}
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: multipy_runtime_python3.${{ inputs.python3-minor-version }}
+          path: ./
+
+      - name: Update nightly release
+        uses: pyTooling/Actions/releaser@main
+        with:
+          tag: multipy_runtime_python3.${{ inputs.python3-minor-version }}
+          rm: true
+          token: ${{ secrets.token }}
+          files: multipy_runtime_python3.${{ inputs.python3-minor-version }}.tar.gz
