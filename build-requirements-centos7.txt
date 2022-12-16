@@ -1,0 +1,14 @@
+binutils
+bzip2
+bzip2-devel
+gcc
+gtest-devel
+libffi-devel
+make
+openssl-devel
+readline-devel
+sqlite
+sqlite-devel
+tk-devel
+xz-devel
+zlib-devel
