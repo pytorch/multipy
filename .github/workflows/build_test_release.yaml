@@ -136,7 +136,7 @@ jobs:
       - name: Update nightly release
         uses: pyTooling/Actions/releaser@main
         with:
-          tag: multipy_runtime_python3.${{ inputs.python3-minor-version }}
+          tag: nightly-runtime-python3.${{ inputs.python3-minor-version }}
           rm: true
           token: ${{ secrets.token }}
           files: multipy_runtime_python3.${{ inputs.python3-minor-version }}.tar.gz
