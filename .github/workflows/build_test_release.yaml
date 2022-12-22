@@ -39,7 +39,7 @@ jobs:
         echo "::endgroup::"
 
         echo "::group::Sync git submodules"
-        git submodule update --init --recursive --jobs 0
+        git -c fetch.parallel=0 -c submodule.fetchJobs=0 submodule update --init --recursive
         echo "::endgroup::"
 
         echo "::group::Setup virtual environment"

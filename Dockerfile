@@ -63,7 +63,7 @@ COPY setup.py setup.py
 COPY README.md README.md
 COPY dev-requirements.txt dev-requirements.txt
 
-RUN git submodule update --init --recursive --jobs 0
+RUN git -c fetch.parallel=0 -c submodule.fetchJobs=0  submodule update --init --recursive
 
 # Install conda/pyenv + necessary python dependencies
 FROM dev-base as conda-pyenv
