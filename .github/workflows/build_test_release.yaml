@@ -43,6 +43,7 @@ jobs:
         echo "::endgroup::"
 
         echo "::group::Setup virtual environment"
+        export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib
         if [[ ${{ inputs.python3-minor-version }} -gt 7 ]];
         then
           conda install -y python=${python_version} mkl mkl-include conda-build pyyaml numpy ipython
@@ -51,7 +52,6 @@ jobs:
           conda clean -ya;
         else
           conda deactivate
-          export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib
           pip install virtualenv
           git clone https://github.com/pyenv/pyenv.git ~/.pyenv
           export CFLAGS="-fPIC -g"
