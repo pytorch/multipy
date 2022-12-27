@@ -10,7 +10,6 @@ on:
     - cron: '0 2 * * *' # run at 2 AM UTC
   workflow_dispatch:
 
-
 jobs:
   unittest:
     strategy:
@@ -98,8 +97,8 @@ jobs:
         chmod +x ~/miniconda.sh && \
         /bin/bash ~/miniconda.sh -b -p /opt/conda && \
         rm ~/miniconda.sh && \
-        /opt/conda/bin/conda install -y python=${{ env.python-version }} mkl mkl-include conda-build pyyaml numpy ipython && \
-        /opt/conda/bin/conda install -y -c conda-forge libpython-static=${{ env.python-version }} && \
+        /opt/conda/bin/conda install -y python=${{ matrix.python-version }} mkl mkl-include conda-build pyyaml numpy ipython && \
+        /opt/conda/bin/conda install -y -c conda-forge libpython-static=${{ matrix.python-version }} && \
         /opt/conda/bin/conda install -y pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly && \
         /opt/conda/bin/conda clean -ya; \
         fi
