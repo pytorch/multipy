@@ -12,3 +12,5 @@ examples/**/*.pt
 docs/source/api/
 docs/src/
 dist/
+.lintbin
+.lintbin/**
