@@ -160,6 +160,7 @@ exclude_patterns=[
     '**/build/**',
     '**/__pycache__/**',
     '.lintbin/**',
+    '.clang-format',
 ]
 command = [
     'python3',
@@ -177,6 +178,7 @@ exclude_patterns = [
     '**/build/**',
     '**/__pycache__/**',
     '**/third_party/**',
+    '.clang-format',
     'multipy/runtime/example/generated/**',
 ]
 command = [
@@ -204,13 +206,14 @@ exclude_patterns = [
     'scripts/linter/adapters/**',
     'multipy/runtime/example/generated/**',
     '.lintrunner.toml',
+    '.clang-format',
     'README.md',
 ]
 command = [
     'python3',
     'scripts/linter/adapters/grep_linter.py',
     # @lint-ignore TXT2
-    '--pattern=    ',
+    '--pattern= ',
     '--linter-name=TABS',
     '--error-name=saw some tabs',
     '--replace-pattern=s/\t/    /',
