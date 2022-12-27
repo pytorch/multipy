@@ -15,9 +15,10 @@ jobs:
     strategy:
       matrix:
         python3-minor-version: [7,8,9,10]
+        platform: [linux.4xlarge.nvidia.gpu]
     uses: pytorch/test-infra/.github/workflows/linux_job.yml@main
     with:
-      runner: ${{ inputs.runner }}
+      runner: ${{ matrix.platform }}
       repository: pytorch/multipy
       gpu-arch-type: cuda
       gpu-arch-version: 116
