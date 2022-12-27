@@ -122,7 +122,7 @@ command = [
     'python3',
     'scripts/linter/adapters/clangtidy_linter.py',
     '--binary=.lintbin/clang-tidy',
-    '--build_dir=./build',
+    '--build_dir=./multipy/runtime/build',
     '--',
     '@{{PATHSFILE}}'
 ]
