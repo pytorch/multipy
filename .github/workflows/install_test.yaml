@@ -67,15 +67,15 @@ jobs:
         run: |
           set -eux
           source ~/venvs/multipy/bin/activate
-          pip install -r dev-requirements.txt
+          python -m pip install -r dev-requirements.txt
           pip3 install --pre torch
           deactivate
 
-      - name: Run lightweight pip install within virtualenv
+      - name: Run lightweight python -m pip install within virtualenv
         run: |
           set -eux
           source ~/venvs/multipy/bin/activate
-          pip install -e . --install-option="--cmakeoff"
+          python -m pip install -e . --install-option="--cmakeoff"
           deactivate
 
       - name: Run pip editable install within virtualenv
@@ -83,7 +83,7 @@ jobs:
           set -eux
           source ~/venvs/multipy/bin/activate
           rm -rf multipy/runtime/build*
-          pip install -e .
+          python -m pip install -e .
           deactivate
 
       - name: Run setup.py install within virtualenv
@@ -99,7 +99,7 @@ jobs:
           set -eux
           source ~/venvs/multipy/bin/activate
           python setup.py sdist
-          pip install dist/*.tar.gz --force-reinstall
+          python -m pip install dist/*.tar.gz --force-reinstall
           test -e ~/venvs/multipy/lib/python3.${{ matrix.python3-minor-version }}/site-packages/multipy/runtime/build/libtorch_deploy.a
           deactivate
 
@@ -108,7 +108,7 @@ jobs:
           set -eux
           source ~/venvs/multipy/bin/activate
           python setup.py bdist_wheel
-          pip install dist/*.whl --force-reinstall
+          python -m pip install dist/*.whl --force-reinstall
           test -e ~/venvs/multipy/lib/python3.${{ matrix.python3-minor-version }}/site-packages/multipy/runtime/build/libtorch_deploy.a
           deactivate
 
@@ -117,7 +117,7 @@ jobs:
           set -eux
           source ~/venvs/multipy/bin/activate
           python setup.py bdist_wheel
-          pip install dist/*.whl --force-reinstall --install-option="--cudatests"
+          python -m pip install dist/*.whl --force-reinstall --install-option="--cudatests"
           test -e ~/venvs/multipy/lib/python3.${{ matrix.python3-minor-version }}/site-packages/multipy/runtime/build/libtorch_deploy.a
           deactivate
 
@@ -135,10 +135,10 @@ jobs:
           /opt/conda/bin/conda clean -ya; \
           fi
 
-      - name: Run pip install with conda for 3.8+
+      - name: Run python -m pip install with conda for 3.8+
         run: |
           set -eux
           if [[ ${{ matrix.python3-minor-version }} -gt 7 ]]; then
             source /opt/conda/bin/activate
-            pip install -e .
+            python -m pip install -e .
           fi

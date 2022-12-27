@@ -51,13 +51,13 @@ jobs:
           conda clean -ya;
         else
           conda deactivate
-          pip install virtualenv
+          python -m pip install virtualenv
           git clone https://github.com/pyenv/pyenv.git ~/.pyenv
           export CFLAGS="-fPIC -g"
           ~/.pyenv/bin/pyenv install --force ${python_version}
           virtualenv -p ~/.pyenv/versions/$(~/.pyenv/bin/pyenv latest ${python_version})/bin/python3 ~/venvs/multipy
           source ~/venvs/multipy/bin/activate
-          pip install \
+          python -m pip install \
           torch torchvision torchaudio \
           --extra-index-url https://download.pytorch.org/whl/cpu;
         fi
@@ -100,14 +100,14 @@ jobs:
         if [[ ${{ inputs.python3-minor-version }} -gt 7 ]];
         then
           echo "::group::Compat test"
-          pip install -r compat-requirements.txt
+          python -m pip install -r compat-requirements.txt
           multipy/runtime/build/interactive_embedded_interpreter --pyscript multipy/runtime/test_compat.py
           echo "::endgroup::";
         fi
 
         echo "::group::Test GPU"
         # Separating GPU tests due to issues with py37 and py38: https://github.com/pytorch/multipy/issues/239
-        pip install --upgrade --force-reinstall torch \
+        python -m pip install --upgrade --force-reinstall torch \
         --extra-index-url https://download.pytorch.org/whl/cu116
         multipy/runtime/build/test_deploy_gpu
         echo "::endgroup::"
