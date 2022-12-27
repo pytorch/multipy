@@ -1,3 +1,5 @@
+# (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 import argparse
 import concurrent.futures
 import json
@@ -7,7 +9,6 @@ import subprocess
 import sys
 import time
 from enum import Enum
-from pathlib import Path
 from typing import Any, List, NamedTuple, Optional
 
 
@@ -26,15 +27,15 @@ class LintSeverity(str, Enum):
 
 
 class LintMessage(NamedTuple):
-    path: Optional[str]
+    path: str
     line: Optional[int]
     char: Optional[int]
-    code: str
     severity: LintSeverity
     name: str
     original: Optional[str]
     replacement: Optional[str]
     description: Optional[str]
+    bypassChangedLineFiltering: Optional[bool]
 
 
 def as_posix(name: str) -> str:
@@ -105,16 +106,17 @@ def check_file(
                 path=filename,
                 line=None,
                 char=None,
-                code="CLANGFORMAT",
                 severity=LintSeverity.ERROR,
                 name="timeout",
                 original=None,
                 replacement=None,
                 description=(
-                    "clang-format timed out while trying to process a file. "
-                    "Please report an issue in pytorch/pytorch with the "
-                    "label 'module: lint'"
+                    "Please report this in https://fb.workplace.com/groups/lintqa/\n"
+                    "If clang-format is timing out over a file, it can lock up "
+                    "the daily clang-format CodemodService codemods "
+                    "(see T115674339)."
                 ),
+                bypassChangedLineFiltering=None,
             )
         ]
     except (OSError, subprocess.CalledProcessError) as err:
@@ -123,7 +125,6 @@ def check_file(
                 path=filename,
                 line=None,
                 char=None,
-                code="CLANGFORMAT",
                 severity=LintSeverity.ADVICE,
                 name="command-failed",
                 original=None,
@@ -143,6 +144,7 @@ def check_file(
                         stdout=err.stdout.decode("utf-8").strip() or "(empty)",
                     )
                 ),
+                bypassChangedLineFiltering=None,
             )
         ]
 
@@ -153,14 +155,14 @@ def check_file(
     return [
         LintMessage(
             path=filename,
-            line=None,
-            char=None,
-            code="CLANGFORMAT",
+            line=1,
+            char=1,
             severity=LintSeverity.WARNING,
             name="format",
             original=original.decode("utf-8"),
             replacement=replacement.decode("utf-8"),
-            description="See https://clang.llvm.org/docs/ClangFormat.html.\nRun `lintrunner -a` to apply this patch.",
+            description="See https://fburl.com/fbsource-linters#clang-format",
+            bypassChangedLineFiltering=True,
         )
     ]
 
@@ -210,23 +212,6 @@ def main() -> None:
     )
 
     binary = os.path.normpath(args.binary) if IS_WINDOWS else args.binary
-    if not Path(binary).exists():
-        lint_message = LintMessage(
-            path=None,
-            line=None,
-            char=None,
-            code="CLANGFORMAT",
-            severity=LintSeverity.ERROR,
-            name="init-error",
-            original=None,
-            replacement=None,
-            description=(
-                f"Could not find clang-format binary at {binary}, "
-                "did you forget to run `lintrunner init`?"
-            ),
-        )
-        print(json.dumps(lint_message._asdict()), flush=True)
-        sys.exit(0)
 
     with concurrent.futures.ThreadPoolExecutor(
         max_workers=os.cpu_count(),
