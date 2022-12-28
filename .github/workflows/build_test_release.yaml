@@ -40,7 +40,6 @@ jobs:
         echo "::endgroup::"
 
         echo "::group::Setup virtual environment"
-        export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib
         if [[ ${{ inputs.python3-minor-version }} -gt 7 ]];
         then
           conda install -y python=${python_version} mkl mkl-include conda-build pyyaml numpy ipython
@@ -58,6 +57,7 @@ jobs:
           pip install \
           torch torchvision torchaudio \
           --extra-index-url https://download.pytorch.org/whl/cpu;
+          export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib:~/.pyenv/versions/${py_install_version}/bin/python3
         fi
         echo "::endgroup::"
 
