@@ -16,11 +16,36 @@ message(STATUS "Python3_SITELIB - ${Python3_SITELIB}" )
 message(STATUS "Python3_LIBRARIES - ${Python3_LIBRARIES}" )
 
 # Find static libpython with a preference for nolto since cross compiler version
-# LTO is problematic.
+# LTO is problematic. We also recursively search in the directory for static
+# libpython, as it's not guarenteed to be in the same directory as libpython such
+# as with pyenv.
+
 string(REPLACE ".so" ".nolto.a" Python3_STATIC_LIBRARIES ${Python3_LIBRARIES})
+
+if (NOT EXISTS ${Python3_STATIC_LIBRARIES})
+  get_filename_component(STATIC_Python_FILENAME ${Python3_STATIC_LIBRARIES} NAME)
+  string(REPLACE "${STATIC_Python_FILENAME}" "**/${STATIC_Python_FILENAME}" STATIC_Python_GLOB ${Python3_STATIC_LIBRARIES} )
+  file(GLOB_RECURSE Python3_STATIC_LIBRARIES ${STATIC_Python_GLOB})
+endif()
+
 if (NOT EXISTS ${Python3_STATIC_LIBRARIES})
   string(REPLACE ".so" ".a" Python3_STATIC_LIBRARIES ${Python3_LIBRARIES})
 endif()
+
+if (NOT EXISTS ${Python3_STATIC_LIBRARIES})
+  get_filename_component(STATIC_Python_FILENAME ${Python3_STATIC_LIBRARIES} NAME)
+  string(REPLACE "${STATIC_Python_FILENAME}" "**/${STATIC_Python_FILENAME}" STATIC_Python_GLOB ${Python3_STATIC_LIBRARIES})
+  file(GLOB_RECURSE Python3_STATIC_LIBRARIES ${STATIC_Python_GLOB})
+endif()
+
+# If we still can't find the library, we fail early
+if (NOT EXISTS ${Python3_STATIC_LIBRARIES})
+  get_filename_component(Python_FILENAME ${Python3_LIBRARIES} NAME)
+  string(REPLACE ".so" ".nolto.a" Python3_STATIC_NOLTO_FILENAME ${Python_FILENAME})
+  string(REPLACE ".so" ".a" Python3_STATIC_FILENAME ${Python_FILENAME})
+  message(FATAL_ERROR "Cannot find ${Python3_STATIC_NOLTO_FILENAME} or ${Python3_STATIC_FILENAME} in ${libpython_DIR}. Are you using a static version of python? Please refer to https://github.com/pytorch/multipy for install instructions using conda and pyenv.")
+endif()
+
 message(STATUS "Python3_STATIC_LIBRARIES - ${Python3_STATIC_LIBRARIES}" )
 
 include_directories(BEFORE ${CMAKE_SOURCE_DIR}/../..)

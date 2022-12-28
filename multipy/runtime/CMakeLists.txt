@@ -6,7 +6,6 @@
 
 cmake_minimum_required(VERSION 3.12)
 project(MultipyRuntime)
-
 # set ABI by default to 0
 
 option(BUILD_CUDA_TESTS "Set to ON in order to build cuda tests. By default we do not" OFF)
