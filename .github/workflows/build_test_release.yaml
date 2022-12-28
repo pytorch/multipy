@@ -47,6 +47,13 @@ jobs:
           conda install -y pytorch torchvision torchaudio cpuonly -c pytorch
           conda clean -ya;
         else
+
+          declare -A py_version_dict
+          py_version_dict[7]='3.7.10'
+          py_version_dict[8]='3.8.13'
+          py_version_dict[9]='3.9.13'
+          py_version_dict[10]='3.10.6'
+          py_install_version=${py_version_dict[${{ matrix.python3-minor-version }}]}
           conda deactivate
           pip install virtualenv
           git clone https://github.com/pyenv/pyenv.git ~/.pyenv
