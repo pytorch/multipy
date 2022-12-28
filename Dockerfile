@@ -83,8 +83,7 @@ RUN if [[ ${PYTHON_3_MINOR_VERSION} -gt 7 ]]; then \
     else \
     pip3 install virtualenv && \
     git clone https://github.com/pyenv/pyenv.git ~/.pyenv && \
-    export CFLAGS="-fPIC -g" && \
-    ~/.pyenv/bin/pyenv install --force 3.7.10 && \
+    PYTHON_CFLAGS="-fPIC -g" ~/.pyenv/bin/pyenv install --force 3.7.10 && \
     virtualenv -p ~/.pyenv/versions/3.7.10/bin/python3 ~/venvs/multipy && \
     source ~/venvs/multipy/bin/activate && \
     pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cu116; \
