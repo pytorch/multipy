@@ -36,7 +36,8 @@ jobs:
         echo "::group::Setup virtual environment"
         pip3 install virtualenv
         git clone https://github.com/pyenv/pyenv.git ~/.pyenv
-        export CFLAGS="-fPIC -g"
+        export CFLAGS="-fPIC"
+        export PYTHON_CFLAGS="-fPIC"
         declare -A py_version_dict
         py_version_dict[7]='3.7.10'
         py_version_dict[8]='3.8.13'
