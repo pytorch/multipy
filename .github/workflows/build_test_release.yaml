@@ -54,9 +54,8 @@ jobs:
           py_version_dict[9]='3.9.13'
           py_version_dict[10]='3.10.6'
           py_install_version=${py_version_dict[${{ matrix.python3-minor-version }}]}
-          conda deactivate
+          conda deactivatei
           pip install virtualenv
-          pip install ssl
           git clone https://github.com/pyenv/pyenv.git ~/.pyenv
           export CFLAGS="-fPIC -g"
           export PYTHON_CFLAGS="-fPIC"
