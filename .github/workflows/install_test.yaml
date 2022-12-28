@@ -11,134 +11,101 @@ on:
   workflow_dispatch:
 
 jobs:
-  installtest:
+  unittest:
     strategy:
       matrix:
         python3-minor-version: [7,8,9,10]
-        platform: [ubuntu-18.04]
-      fail-fast: false
-    runs-on: ${{ matrix.platform }}
-    steps:
-      - name: Set Python Version
-        run: |
-          echo "python-version=3.${{ matrix.python3-minor-version }}" >> $GITHUB_ENV
-      - name: Setup Python ${{ env.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ env.python-version }}
-          architecture: x64
+        runner: [linux.4xlarge.nvidia.gpu]
+    uses: pytorch/test-infra/.github/workflows/linux_job.yml@main
+    with:
+      runner: ${{ matrix.runner }}
+      upload-artifact: multipy_runtime_python3.${{ matrix.python3-minor-version }}
+      repository: pytorch/multipy
+      gpu-arch-type: cuda
+      gpu-arch-version: 116
+      script: |
+        python_version=3.${{ matrix.python3-minor-version }}
 
-      - name: Checkout MultiPy
-        uses: actions/checkout@v2
-        with:
-          submodules: true
+        echo "::group::Install runtime build dependencies"
+        xargs yum install -y < build-requirements-centos7.txt
+        echo "::endgroup::"
 
-      - name: Install runtime build dependencies
-        run: |
-          set -eux
-          sudo apt update
-          xargs sudo apt install -y -qq --no-install-recommends <build-requirements-debian.txt
-          git -c fetch.parallel=0 -c submodule.fetchJobs=0 submodule update --init --recursive
+        echo "::group::Sync git submodules"
+        git -c fetch.parallel=0 -c submodule.fetchJobs=0 submodule update --init --recursive
+        echo "::endgroup::"
 
-      - name: Update cmake
-        run: |
-          wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | sudo gpg --dearmor -o /usr/share/keyrings/magic-key.gpg
-          echo "deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/magic-key.gpg] https://apt.kitware.com/ubuntu/ bionic main" | sudo tee -a /etc/apt/sources.list
-          echo "deb http://security.ubuntu.com/ubuntu focal-security main" | sudo tee -a /etc/apt/sources.list
-          sudo apt update
-          sudo apt install -y binutils cmake
+        echo "::group::Setup virtual environment"
+        pip install virtualenv
+        git clone https://github.com/pyenv/pyenv.git ~/.pyenv
+        export CFLAGS="-fPIC -g"
+        ~/.pyenv/bin/pyenv install --force ${python_version}
+        virtualenv -p ~/.pyenv/versions/$(~/.pyenv/bin/pyenv latest ${python_version})/bin/python3 ~/venvs/multipy
+        source ~/venvs/multipy/bin/activate
+        pip install \
+        torch torchvision torchaudio \
+        --extra-index-url https://download.pytorch.org/whl/cpu;
+        echo "::endgroup::"
 
-      - name: Set up virtual environment
-        run: |
-          set -eux
-          pip3 install virtualenv
-          git clone https://github.com/pyenv/pyenv.git ~/.pyenv
-          export CFLAGS="-fPIC -g"
-          declare -A py_version_dict
-          py_version_dict[7]='3.7.10'
-          py_version_dict[8]='3.8.13'
-          py_version_dict[9]='3.9.13'
-          py_version_dict[10]='3.10.6'
-          py_install_version=${py_version_dict[${{ matrix.python3-minor-version }}]}
-          ~/.pyenv/bin/pyenv install --force ${py_install_version}
-          virtualenv -p ~/.pyenv/versions/${py_install_version}/bin/python3 ~/venvs/multipy
+        echo "::group::Install dependencies"
+        set -eux
+        source ~/venvs/multipy/bin/activate
+        pip install -r dev-requirements.txt
+        deactivate
+        echo "::endgroup::"
 
-      - name: Install dependencies
-        run: |
-          set -eux
-          source ~/venvs/multipy/bin/activate
-          pip install -r dev-requirements.txt
-          pip3 install --pre torch
-          deactivate
+        echo "::group::Run lightweight pip install within virtualenv"
+        source ~/venvs/multipy/bin/activate
+        echo "::endgroup::"
 
-      - name: Run lightweight pip install within virtualenv
-        run: |
-          set -eux
-          source ~/venvs/multipy/bin/activate
-          pip install -e . --install-option="--cmakeoff"
-          deactivate
+        echo "::group::Run pip editable install within virtualenv"
+        rm -rf multipy/runtime/build*
+        pip install -e .
+        echo "::endgroup::"
 
-      - name: Run pip editable install within virtualenv
-        run: |
-          set -eux
-          source ~/venvs/multipy/bin/activate
-          rm -rf multipy/runtime/build*
+        echo "::group::Run setup.py install within virtualenv"
+        rm -rf multipy/runtime/build*
+        python setup.py install
+        test -e ~/venvs/multipy/lib/python3.${{ matrix.python3-minor-version }}/site-packages/multipy/runtime/build/libtorch_deploy.a
+        echo "::endgroup::"
+
+        echo "::group::Install sdist"
+        python setup.py sdist
+        pip install dist/*.tar.gz --force-reinstall
+        test -e ~/venvs/multipy/lib/python3.${{ matrix.python3-minor-version }}/site-packages/multipy/runtime/build/libtorch_deploy.a
+        echo "::endgroup::"
+
+        echo "::group::Install bdist_wheel"
+        python setup.py bdist_wheel
+        pip install dist/*.whl --force-reinstall
+        test -e ~/venvs/multipy/lib/python3.${{ matrix.python3-minor-version }}/site-packages/multipy/runtime/build/libtorch_deploy.a
+        echo "::endgroup::"
+
+        echo "::group::Install bdist_wheel with cudatests"
+        python setup.py bdist_wheel
+        pip install dist/*.whl --force-reinstall --install-option="--cudatests"
+        test -e ~/venvs/multipy/lib/python3.${{ matrix.python3-minor-version }}/site-packages/multipy/runtime/build/libtorch_deploy.a
+        echo "::endgroup::"
+
+        echo "::group::Deactivate Env"
+        deactivate
+        echo "::endgroup::"
+
+        echo "::group::Test C++"
+        if [[ ${{ matrix.python3-minor-version }} -gt 7 ]]; then \
+        curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
+        chmod +x ~/miniconda.sh && \
+        /bin/bash ~/miniconda.sh -b -p /opt/conda && \
+        rm ~/miniconda.sh && \
+        /opt/conda/bin/conda install -y python=${python-version} mkl mkl-include conda-build pyyaml numpy ipython && \
+        /opt/conda/bin/conda install -y -c conda-forge libpython-static=${python-version} && \
+        /opt/conda/bin/conda install -y pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly && \
+        /opt/conda/bin/conda clean -ya; \
+        fi
+        echo "::endgroup::"
+
+        echo "::Run pip install with conda for 3.8+"
+        if [[ ${{ matrix.python3-minor-version }} -gt 7 ]]; then
+          source /opt/conda/bin/activate
           pip install -e .
-          deactivate
-
-      - name: Run setup.py install within virtualenv
-        run: |
-          set -eux
-          source ~/venvs/multipy/bin/activate
-          python setup.py install
-          test -e ~/venvs/multipy/lib/python3.${{ matrix.python3-minor-version }}/site-packages/multipy/runtime/build/libtorch_deploy.a
-          deactivate
-
-      - name: Install sdist
-        run: |
-          set -eux
-          source ~/venvs/multipy/bin/activate
-          python setup.py sdist
-          pip install dist/*.tar.gz --force-reinstall
-          test -e ~/venvs/multipy/lib/python3.${{ matrix.python3-minor-version }}/site-packages/multipy/runtime/build/libtorch_deploy.a
-          deactivate
-
-      - name: Install bdist_wheel
-        run: |
-          set -eux
-          source ~/venvs/multipy/bin/activate
-          python setup.py bdist_wheel
-          pip install dist/*.whl --force-reinstall
-          test -e ~/venvs/multipy/lib/python3.${{ matrix.python3-minor-version }}/site-packages/multipy/runtime/build/libtorch_deploy.a
-          deactivate
-
-      - name: Install bdist_wheel with cudatests
-        run: |
-          set -eux
-          source ~/venvs/multipy/bin/activate
-          python setup.py bdist_wheel
-          pip install dist/*.whl --force-reinstall --install-option="--cudatests"
-          test -e ~/venvs/multipy/lib/python3.${{ matrix.python3-minor-version }}/site-packages/multipy/runtime/build/libtorch_deploy.a
-          deactivate
-
-      - name: Install dependencies with conda for 3.8+
-        run: |
-          set -eux
-          if [[ ${{ matrix.python3-minor-version }} -gt 7 ]]; then \
-          curl -fsSL -v -o ~/miniconda.sh -O  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
-          chmod +x ~/miniconda.sh && \
-          /bin/bash ~/miniconda.sh -b -p /opt/conda && \
-          rm ~/miniconda.sh && \
-          /opt/conda/bin/conda install -y python=${{ env.python-version }} mkl mkl-include conda-build pyyaml numpy ipython && \
-          /opt/conda/bin/conda install -y -c conda-forge libpython-static=${{ env.python-version }} && \
-          /opt/conda/bin/conda install -y pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly && \
-          /opt/conda/bin/conda clean -ya; \
-          fi
-
-      - name: Run pip install with conda for 3.8+
-        run: |
-          set -eux
-          if [[ ${{ matrix.python3-minor-version }} -gt 7 ]]; then
-            source /opt/conda/bin/activate
-            pip install -e .
-          fi
+        fi
+        echo "::endgroup::"
