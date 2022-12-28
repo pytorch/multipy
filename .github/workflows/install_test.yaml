@@ -34,7 +34,6 @@ jobs:
         echo "::endgroup::"
 
         echo "::group::Setup virtual environment"
-        export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib
         pip3 install virtualenv
         git clone https://github.com/pyenv/pyenv.git ~/.pyenv
         export CFLAGS="-fPIC -g"
@@ -46,6 +45,8 @@ jobs:
         py_install_version=${py_version_dict[${{ matrix.python3-minor-version }}]}
         ~/.pyenv/bin/pyenv install --force ${py_install_version}
         virtualenv -p ~/.pyenv/versions/${py_install_version}/bin/python3 ~/venvs/multipy
+        export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib:~/.pyenv/versions/${py_install_version}/bin/python3
+
         echo "::endgroup::"
 
         echo "::group::Install dependencies"
