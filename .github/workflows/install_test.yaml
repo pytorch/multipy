@@ -35,6 +35,7 @@ jobs:
 
         echo "::group::Setup virtual environment"
         pip3 install virtualenv
+        pip3 install ssl
         git clone https://github.com/pyenv/pyenv.git ~/.pyenv
         export CFLAGS="-fPIC -g"
         declare -A py_version_dict
