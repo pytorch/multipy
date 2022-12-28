@@ -23,7 +23,7 @@ jobs:
       gpu-arch-type: cuda
       gpu-arch-version: 116
       script: |
-        python_version=3.${{ inputs.python3-minor-version }}
+        python_version=3.${{ matrix.python3-minor-version }}
 
         echo "::group::Install runtime build dependencies"
         xargs yum install -y <build-requirements-centos7.txt
@@ -47,7 +47,8 @@ jobs:
         py_install_version=${py_version_dict[${{ matrix.python3-minor-version }}]}
         ~/.pyenv/bin/pyenv install --force ${py_install_version}
         virtualenv -p ~/.pyenv/versions/${py_install_version}/bin/python3 ~/venvs/multipy
-        export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib:~/.pyenv/versions/${py_install_version}/bin/python3
+        export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib:~/.pyenv/versions/${py_install_version}/bin
+        export PATH=PATH:~/.pyenv/versions/${py_install_version}/bin
 
         echo "::endgroup::"
 
@@ -101,8 +102,8 @@ jobs:
         chmod +x ~/miniconda.sh && \
         /bin/bash ~/miniconda.sh -b -p /opt/conda && \
         rm ~/miniconda.sh && \
-        /opt/conda/bin/conda install -y python=${{ matrix.python-version }} mkl mkl-include conda-build pyyaml numpy ipython && \
-        /opt/conda/bin/conda install -y -c conda-forge libpython-static=${{ matrix.python-version }} && \
+        /opt/conda/bin/conda install -y python=${python-version} mkl mkl-include conda-build pyyaml numpy ipython && \
+        /opt/conda/bin/conda install -y -c conda-forge libpython-static=${python-version} && \
         /opt/conda/bin/conda install -y pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch-nightly && \
         /opt/conda/bin/conda clean -ya; \
         fi
