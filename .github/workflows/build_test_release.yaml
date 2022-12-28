@@ -32,7 +32,7 @@ jobs:
         python_version=3.${{ inputs.python3-minor-version }}
 
         echo "::group::Install runtime build dependencies"
-        xargs yum install -y <build-requirements-centos7.txt
+        xargs yum install -y < build-requirements-centos7.txt
         echo "::endgroup::"
 
         echo "::group::Sync git submodules"
@@ -48,6 +48,12 @@ jobs:
           conda clean -ya;
         else
           conda deactivate
+
+          # sometimes ssl linking is flaky, this makes it explicit
+          # for pyenv
+          export CPPFLAGS="-I$(which openssl)/include"
+          export LDFLAGS="-L$(which openssl)/lib"
+
           pip install virtualenv
           git clone https://github.com/pyenv/pyenv.git ~/.pyenv
           export CFLAGS="-fPIC -g"

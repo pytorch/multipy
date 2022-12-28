@@ -24,6 +24,8 @@ jobs:
       gpu-arch-type: cuda
       gpu-arch-version: 116
       script: |
+        conda deactivate
+
         python_version=3.${{ matrix.python3-minor-version }}
 
         echo "::group::Install runtime build dependencies"
@@ -35,6 +37,12 @@ jobs:
         echo "::endgroup::"
 
         echo "::group::Setup virtual environment"
+
+        # sometimes ssl linking is flaky, this makes it explicit
+        # for pyenv
+        # export CPPFLAGS="-I$(which openssl)/include"
+        # export LDFLAGS="-L$(which openssl)/lib"
+
         pip install virtualenv
         git clone https://github.com/pyenv/pyenv.git ~/.pyenv
         export CFLAGS="-fPIC -g"
