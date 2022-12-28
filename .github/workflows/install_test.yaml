@@ -27,7 +27,7 @@ jobs:
         python_version=3.${{ matrix.python3-minor-version }}
 
         echo "::group::Install runtime build dependencies"
-        xargs yum install -y <build-requirements-${{ inputs.distro }}.txt
+        xargs yum install -y <build-requirements-centos7.txt
         echo "::endgroup::"
 
         echo "::group::Sync git submodules"
