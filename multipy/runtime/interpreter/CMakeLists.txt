@@ -20,22 +20,22 @@ message(STATUS "Python3_LIBRARIES - ${Python3_LIBRARIES}" )
 # libpython, as it's not guarenteed to be in the same directory as libpython such
 # as with pyenv.
 
-string(REPLACE ".so" ".nolto.a" Python3_STATIC_LIBRARIES ${Python3_LIBRARIES})
+FUNCTION(find_file_with_different_suffix VAR FILE ORIGINAL_SUFFIX NEW_SUFFIX)
+  string(REPLACE ${ORIGINAL_SUFFIX} ${NEW_SUFFIX} MODIFIED_FILE ${FILE})
 
-if (NOT EXISTS ${Python3_STATIC_LIBRARIES})
-  get_filename_component(STATIC_Python_FILENAME ${Python3_STATIC_LIBRARIES} NAME)
-  string(REPLACE "${STATIC_Python_FILENAME}" "**/${STATIC_Python_FILENAME}" STATIC_Python_GLOB ${Python3_STATIC_LIBRARIES} )
-  file(GLOB_RECURSE Python3_STATIC_LIBRARIES ${STATIC_Python_GLOB})
+  if (NOT EXISTS ${MODIFIED_FILE})
+    get_filename_component(MODIFIED_FILENAME ${MODIFIED_FILE} NAME)
+    string(REPLACE "${MODIFIED_FILENAME}" "**/${MODIFIED_FILENAME}" MODIFIED_FILE_GLOB ${MODIFIED_FILE} )
+    file(GLOB_RECURSE MODIFIED_FILE ${MODIFIED_FILE_GLOB})
 endif()
+set(${VAR} ${MODIFIED_FILE} PARENT_SCOPE)
+ENDFUNCTION()
+
+find_file_with_different_suffix(Python3_STATIC_LIBRARIES ${Python3_LIBRARIES} ".so" ".nolto.a")
+
 
 if (NOT EXISTS ${Python3_STATIC_LIBRARIES})
-  string(REPLACE ".so" ".a" Python3_STATIC_LIBRARIES ${Python3_LIBRARIES})
-endif()
-
-if (NOT EXISTS ${Python3_STATIC_LIBRARIES})
-  get_filename_component(STATIC_Python_FILENAME ${Python3_STATIC_LIBRARIES} NAME)
-  string(REPLACE "${STATIC_Python_FILENAME}" "**/${STATIC_Python_FILENAME}" STATIC_Python_GLOB ${Python3_STATIC_LIBRARIES})
-  file(GLOB_RECURSE Python3_STATIC_LIBRARIES ${STATIC_Python_GLOB})
+  find_file_with_different_suffix(Python3_STATIC_LIBRARIES ${Python3_LIBRARIES} ".so" ".a")
 endif()
 
 # If we still can't find the library, we fail early
