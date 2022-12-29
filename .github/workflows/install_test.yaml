@@ -43,12 +43,12 @@ jobs:
 
         # sometimes ssl linking is flaky, this makes it explicit
         # for pyenv
-        export CPPFLAGS="-I$(which openssl)/include"
-        export LDFLAGS="-L$(which openssl)/lib"
 
         pip install virtualenv
         git clone https://github.com/pyenv/pyenv.git ~/.pyenv
         export CFLAGS="-fPIC -g"
+        CPPFLAGS="-I$(which openssl)/include" \
+        LDFLAGS="-L$(which openssl)/lib" \
         ~/.pyenv/bin/pyenv install --force ${python_version}
         virtualenv -p ~/.pyenv/versions/$(~/.pyenv/bin/pyenv latest ${python_version})/bin/python3 ~/venvs/multipy
         source ~/venvs/multipy/bin/activate
