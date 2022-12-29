@@ -14,7 +14,7 @@ jobs:
   unittest:
     strategy:
       matrix:
-        python3-minor-version: [7,8,9,10]
+        python3-minor-version: [7]
         runner: [linux.4xlarge.nvidia.gpu]
     uses: pytorch/test-infra/.github/workflows/linux_job.yml@main
     with:
@@ -24,10 +24,6 @@ jobs:
       gpu-arch-type: cuda
       gpu-arch-version: 116
       script: |
-
-        # conda is activated by default in test-infra which
-        # messes with pyenv
-        conda deactivate
 
         python_version=3.${{ matrix.python3-minor-version }}
 
@@ -41,8 +37,9 @@ jobs:
 
         echo "::group::Setup virtual environment"
 
-        # sometimes ssl linking is flaky, this makes it explicit
-        # for pyenv
+        # conda is activated by default in test-infra which
+        # messes with pyenv
+        conda deactivate
 
         pip install virtualenv
         git clone https://github.com/pyenv/pyenv.git ~/.pyenv
@@ -52,9 +49,6 @@ jobs:
         ~/.pyenv/bin/pyenv install --force ${python_version}
         virtualenv -p ~/.pyenv/versions/$(~/.pyenv/bin/pyenv latest ${python_version})/bin/python3 ~/venvs/multipy
         source ~/venvs/multipy/bin/activate
-        pip install \
-        torch torchvision torchaudio \
-        --extra-index-url https://download.pytorch.org/whl/cpu;
         echo "::endgroup::"
 
         echo "::group::Install dependencies"
