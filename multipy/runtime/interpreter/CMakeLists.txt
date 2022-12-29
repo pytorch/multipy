@@ -16,35 +16,11 @@ message(STATUS "Python3_SITELIB - ${Python3_SITELIB}" )
 message(STATUS "Python3_LIBRARIES - ${Python3_LIBRARIES}" )
 
 # Find static libpython with a preference for nolto since cross compiler version
-# LTO is problematic. We also recursively search in the directory for static
-# libpython, as it's not guarenteed to be in the same directory as libpython such
-# as with pyenv.
-
-FUNCTION(find_file_with_different_suffix VAR FILE ORIGINAL_SUFFIX NEW_SUFFIX)
-  string(REPLACE ${ORIGINAL_SUFFIX} ${NEW_SUFFIX} MODIFIED_FILE ${FILE})
-
-  if (NOT EXISTS ${MODIFIED_FILE})
-    get_filename_component(MODIFIED_FILENAME ${MODIFIED_FILE} NAME)
-    string(REPLACE "${MODIFIED_FILENAME}" "**/${MODIFIED_FILENAME}" MODIFIED_FILE_GLOB ${MODIFIED_FILE} )
-    file(GLOB_RECURSE MODIFIED_FILE ${MODIFIED_FILE_GLOB})
-  endif()
-  set(${VAR} ${MODIFIED_FILE} PARENT_SCOPE)
-ENDFUNCTION()
-
-find_file_with_different_suffix(Python3_STATIC_LIBRARIES ${Python3_LIBRARIES} ".so" ".nolto.a")
-
+# LTO is problematic.
+string(REPLACE ".so" ".nolto.a" Python3_STATIC_LIBRARIES ${Python3_LIBRARIES})
 if (NOT EXISTS ${Python3_STATIC_LIBRARIES})
-  find_file_with_different_suffix(Python3_STATIC_LIBRARIES ${Python3_LIBRARIES} ".so" ".a")
+  string(REPLACE ".so" ".a" Python3_STATIC_LIBRARIES ${Python3_LIBRARIES})
 endif()
-
-# If we still can't find the library, we fail early
-if (NOT EXISTS ${Python3_STATIC_LIBRARIES})
-  get_filename_component(Python_FILENAME ${Python3_LIBRARIES} NAME)
-  string(REPLACE ".so" ".nolto.a" Python3_STATIC_NOLTO_FILENAME ${Python_FILENAME})
-  string(REPLACE ".so" ".a" Python3_STATIC_FILENAME ${Python_FILENAME})
-  message(FATAL_ERROR "Cannot find ${Python3_STATIC_NOLTO_FILENAME} or ${Python3_STATIC_FILENAME} in ${libpython_DIR}. Are you using a static version of python? Please refer to https://github.com/pytorch/multipy for install instructions using conda and pyenv.")
-endif()
-
 message(STATUS "Python3_STATIC_LIBRARIES - ${Python3_STATIC_LIBRARIES}" )
 
 include_directories(BEFORE ${CMAKE_SOURCE_DIR}/../..)
