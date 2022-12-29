@@ -37,7 +37,7 @@ jobs:
         run: |
           set -eux
           sudo apt update
-          xargs sudo apt install -y -qq --no-install-recommends <build-requirements-debian.txt
+          xargs sudo apt install -y -qq --no-install-recommends < build-requirements-debian.txt
           git -c fetch.parallel=0 -c submodule.fetchJobs=0 submodule update --init --recursive
 
       - name: Update cmake
