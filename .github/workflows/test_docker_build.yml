@@ -1,0 +1,42 @@
+name: Docker tests
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+jobs:
+  unittest:
+    strategy:
+      matrix:
+        python3-minor-version: [7,8,9,10]
+        platform: [linux.4xlarge.nvidia.gpu]
+      fail-fast: false
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout MultiPy
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Install nvidia driver, nvidia-docker runtime, set GPU_FLAG
+        uses: pytorch/test-infra/.github/actions/setup-nvidia@main
+      - name: Setup SSH (Click me for login details)
+        uses: ./.github/actions/setup-ssh
+        with:
+          github-secret: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Image
+        env:
+          DOCKER_BUILDKIT: 1
+        run: nvidia-docker build -t multipy --progress=plain --build-arg PYTHON_3_MINOR_VERSION=${{ matrix.python3-minor-version }} --build-arg BUILD_CUDA_TESTS=1 .
+
+      - name: Run Tests and Examples
+        run: |
+          docker run --rm multipy bash -c "if [[ ${{ matrix.python3-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && multipy/runtime/build/test_deploy"
+          nvidia-docker run --rm multipy bash -c "if [[ ${{ matrix.python3-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && multipy/runtime/build/test_deploy_gpu"
+          docker run --rm multipy bash -c "if [[ ${{ matrix.python3-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && python multipy/runtime/test_pybind.py"
+          docker run --rm multipy bash -c "if [[ ${{ matrix.python3-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && examples/build/hello_world_example"
+          docker run --rm multipy bash -c "if [[ ${{ matrix.python3-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && python3 examples/quickstart/gen_package.py && ./examples/build/quickstart my_package.pt"
+          docker run --rm multipy bash -c "if [[ ${{ matrix.python3-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && ./examples/build/movable_example"
+          docker run --rm multipy bash -c "if [[ ${{ matrix.python3-minor-version }} -lt 8 ]]; then source ~/venvs/multipy/bin/activate; fi && ./multipy/runtime/build/deploy_benchmark 2 none jit multipy/runtime/example/generated/resnet"
+          docker run --rm multipy bash -c "if [[ ${{ matrix.python3-minor-version }} -gt 7 ]]; then pip install -r compat-requirements.txt && multipy/runtime/build/interactive_embedded_interpreter --pyscript multipy/runtime/test_compat.py; fi"
