@@ -47,6 +47,9 @@ jobs:
           conda install -y pytorch torchvision torchaudio cpuonly -c pytorch
           conda clean -ya;
         else
+
+          # conda is activated by default in test-infra which
+          # messes with pyenv
           conda deactivate
 
           # sometimes ssl linking is flaky, this makes it explicit

@@ -24,6 +24,9 @@ jobs:
       gpu-arch-type: cuda
       gpu-arch-version: 116
       script: |
+
+        # conda is activated by default in test-infra which
+        # messes with pyenv
         conda deactivate
 
         python_version=3.${{ matrix.python3-minor-version }}
@@ -40,8 +43,8 @@ jobs:
 
         # sometimes ssl linking is flaky, this makes it explicit
         # for pyenv
-        # export CPPFLAGS="-I$(which openssl)/include"
-        # export LDFLAGS="-L$(which openssl)/lib"
+        export CPPFLAGS="-I$(which openssl)/include"
+        export LDFLAGS="-L$(which openssl)/lib"
 
         pip install virtualenv
         git clone https://github.com/pyenv/pyenv.git ~/.pyenv
