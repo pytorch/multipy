@@ -27,12 +27,11 @@ FUNCTION(find_file_with_different_suffix VAR FILE ORIGINAL_SUFFIX NEW_SUFFIX)
     get_filename_component(MODIFIED_FILENAME ${MODIFIED_FILE} NAME)
     string(REPLACE "${MODIFIED_FILENAME}" "**/${MODIFIED_FILENAME}" MODIFIED_FILE_GLOB ${MODIFIED_FILE} )
     file(GLOB_RECURSE MODIFIED_FILE ${MODIFIED_FILE_GLOB})
-endif()
-set(${VAR} ${MODIFIED_FILE} PARENT_SCOPE)
+  endif()
+  set(${VAR} ${MODIFIED_FILE} PARENT_SCOPE)
 ENDFUNCTION()
 
 find_file_with_different_suffix(Python3_STATIC_LIBRARIES ${Python3_LIBRARIES} ".so" ".nolto.a")
-
 
 if (NOT EXISTS ${Python3_STATIC_LIBRARIES})
   find_file_with_different_suffix(Python3_STATIC_LIBRARIES ${Python3_LIBRARIES} ".so" ".a")
