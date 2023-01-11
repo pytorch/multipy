@@ -326,15 +326,15 @@
 <h2>Building <code class="docutils literal notranslate"><span class="pre">torch::deploy</span></code> via Docker<a class="headerlink" href="#building-torch-deploy-via-docker" title="Permalink to this heading">¶</a></h2>
 <p>The easiest way to build <code class="docutils literal notranslate"><span class="pre">torch::deploy</span></code>, along with fetching all interpreter
 dependencies, is to do so via docker.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/pytorch/multipy.git
-<span class="nb">cd</span> multipy
-<span class="nb">export</span> <span class="nv">DOCKER_BUILDKIT</span><span class="o">=</span><span class="m">1</span>
-docker build -t multipy .
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/pytorch/multipy.git
+<span class="nb">cd</span><span class="w"> </span>multipy
+<span class="nb">export</span><span class="w"> </span><span class="nv">DOCKER_BUILDKIT</span><span class="o">=</span><span class="m">1</span>
+docker<span class="w"> </span>build<span class="w"> </span>-t<span class="w"> </span>multipy<span class="w"> </span>.
 </pre></div>
 </div>
 <p>The built artifacts are located in <code class="docutils literal notranslate"><span class="pre">multipy/runtime/build</span></code>.</p>
 <p>To run the tests:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>docker run --rm multipy multipy/runtime/build/test_deploy
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>multipy<span class="w"> </span>multipy/runtime/build/test_deploy
 </pre></div>
 </div>
 </section>
@@ -344,21 +344,21 @@ docker build -t multipy .
 using a single <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">.</span></code> command, with the caveat of having to manually
 install the dependencies first.</p>
 <p>First clone multipy and update the submodules:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/pytorch/multipy.git
-<span class="nb">cd</span> multipy
-git submodule sync <span class="o">&amp;&amp;</span> git submodule update --init --recursive
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/pytorch/multipy.git
+<span class="nb">cd</span><span class="w"> </span>multipy
+git<span class="w"> </span>submodule<span class="w"> </span>sync<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>submodule<span class="w"> </span>update<span class="w"> </span>--init<span class="w"> </span>--recursive
 </pre></div>
 </div>
 <section id="installing-system-dependencies">
 <h3>Installing system dependencies<a class="headerlink" href="#installing-system-dependencies" title="Permalink to this heading">¶</a></h3>
 <p>The runtime system dependencies are specified in <code class="docutils literal notranslate"><span class="pre">build-requirements-{debian,centos8}.txt</span></code>.
 To install them on Debian-based systems, one could run:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>sudo apt update
-xargs sudo apt install -y -qq --no-install-recommends &lt; build-requirements-debian.txt
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt<span class="w"> </span>update
+xargs<span class="w"> </span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>-qq<span class="w"> </span>--no-install-recommends<span class="w"> </span>&lt;<span class="w"> </span>build-requirements-debian.txt
 </pre></div>
 </div>
 <p>While to install on a CentOS 8 system:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>xargs sudo dnf install -y &lt; build-requirements-centos8.txt
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>xargs<span class="w"> </span>sudo<span class="w"> </span>dnf<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>&lt;<span class="w"> </span>build-requirements-centos8.txt
 </pre></div>
 </div>
 </section>
@@ -388,28 +388,28 @@ successfully, and we recommend fetching the latest <em>nightlies</em> for
 pytorch and also cuda.</p>
 <section id="installing-the-python-dependencies-in-a-conda-environment">
 <h4>Installing the python dependencies in a <code class="docutils literal notranslate"><span class="pre">conda</span></code> environment:<a class="headerlink" href="#installing-the-python-dependencies-in-a-conda-environment" title="Permalink to this heading">¶</a></h4>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>conda create -n newenv
-conda activate newenv
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>newenv
+conda<span class="w"> </span>activate<span class="w"> </span>newenv
 
-conda install <span class="nv">python</span><span class="o">=</span><span class="m">3</span>.8 <span class="c1"># or 3.8/3.10</span>
-conda install -c conda-forge libpython-static<span class="o">=</span><span class="m">3</span>.8 <span class="c1"># or 3.8/3.10</span>
+conda<span class="w"> </span>install<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.8<span class="w"> </span><span class="c1"># or 3.8/3.10</span>
+conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>libpython-static<span class="o">=</span><span class="m">3</span>.8<span class="w"> </span><span class="c1"># or 3.8/3.10</span>
 
 <span class="c1"># install your desired flavor of pytorch from https://pytorch.org/get-started/locally/</span>
-conda install pytorch torchvision torchaudio cpuonly -c pytorch-nightly
+conda<span class="w"> </span>install<span class="w"> </span>pytorch<span class="w"> </span>torchvision<span class="w"> </span>torchaudio<span class="w"> </span>cpuonly<span class="w"> </span>-c<span class="w"> </span>pytorch-nightly
 </pre></div>
 </div>
 </section>
 <section id="installing-the-python-dependencies-in-a-pyenv-virtualenv-setup">
 <h4>Installing the python dependencies in a  <code class="docutils literal notranslate"><span class="pre">pyenv</span></code> / <code class="docutils literal notranslate"><span class="pre">virtualenv</span></code> setup<a class="headerlink" href="#installing-the-python-dependencies-in-a-pyenv-virtualenv-setup" title="Permalink to this heading">¶</a></h4>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># feel free to replace 3.8.6 with any python version &gt; 3.7.0</span>
-<span class="nb">export</span> <span class="nv">CFLAGS</span><span class="o">=</span><span class="s2">&quot;-fPIC -g&quot;</span>
-~/.pyenv/bin/pyenv install --force <span class="m">3</span>.8.6
-virtualenv -p ~/.pyenv/versions/3.8.6/bin/python3 ~/venvs/multipy
-<span class="nb">source</span> ~/venvs/multipy/bin/activate
-pip install -r dev-requirements.txt
+<span class="nb">export</span><span class="w"> </span><span class="nv">CFLAGS</span><span class="o">=</span><span class="s2">&quot;-fPIC -g&quot;</span>
+~/.pyenv/bin/pyenv<span class="w"> </span>install<span class="w"> </span>--force<span class="w"> </span><span class="m">3</span>.8.6
+virtualenv<span class="w"> </span>-p<span class="w"> </span>~/.pyenv/versions/3.8.6/bin/python3<span class="w"> </span>~/venvs/multipy
+<span class="nb">source</span><span class="w"> </span>~/venvs/multipy/bin/activate
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>dev-requirements.txt
 
 <span class="c1"># install your desired flavor of pytorch from https://pytorch.org/get-started/locally/</span>
-pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cpu
+pip3<span class="w"> </span>install<span class="w"> </span>--pre<span class="w"> </span>torch<span class="w"> </span>torchvision<span class="w"> </span>torchaudio<span class="w"> </span>--extra-index-url<span class="w"> </span>https://download.pytorch.org/whl/nightly/cpu
 </pre></div>
 </div>
 </section>
@@ -421,16 +421,16 @@ including a <code class="docutils literal notranslate"><span class="pre">-fPIC</
 can run the following, in either <code class="docutils literal notranslate"><span class="pre">conda</span></code> or <code class="docutils literal notranslate"><span class="pre">virtualenv</span></code>, to install
 both the python modules and the runtime/interpreter libraries:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># from base torch::deploy directory</span>
-pip install -e .
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
 <span class="c1"># alternatively one could run</span>
-python setup.py develop
+python<span class="w"> </span>setup.py<span class="w"> </span>develop
 </pre></div>
 </div>
 <p>The C++ binaries should be available in <code class="docutils literal notranslate"><span class="pre">/opt/dist</span></code>.</p>
 <p>Alternatively, one can install only the python modules without invoking
 <code class="docutils literal notranslate"><span class="pre">cmake</span></code> as follows:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># from base multipy directory</span>
-pip install  -e . --install-option<span class="o">=</span><span class="s2">&quot;--cmakeoff&quot;</span>
+pip<span class="w"> </span>install<span class="w">  </span>-e<span class="w"> </span>.<span class="w"> </span>--install-option<span class="o">=</span><span class="s2">&quot;--cmakeoff&quot;</span>
 </pre></div>
 </div>
 <div class="admonition warning">
@@ -455,21 +455,21 @@ that the following steps can be executed:</p>
 <section id="building">
 <h3>Building<a class="headerlink" href="#building" title="Permalink to this heading">¶</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># checkout repo</span>
-git checkout https://github.com/pytorch/multipy.git
-git submodule sync <span class="o">&amp;&amp;</span> git submodule update --init --recursive
+git<span class="w"> </span>checkout<span class="w"> </span>https://github.com/pytorch/multipy.git
+git<span class="w"> </span>submodule<span class="w"> </span>sync<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>submodule<span class="w"> </span>update<span class="w"> </span>--init<span class="w"> </span>--recursive
 
-<span class="nb">cd</span> multipy
+<span class="nb">cd</span><span class="w"> </span>multipy
 <span class="c1"># install python parts of `torch::deploy` in multipy/multipy/utils</span>
-pip install -e . --install-option<span class="o">=</span><span class="s2">&quot;--cmakeoff&quot;</span>
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.<span class="w"> </span>--install-option<span class="o">=</span><span class="s2">&quot;--cmakeoff&quot;</span>
 
-<span class="nb">cd</span> multipy/runtime
+<span class="nb">cd</span><span class="w"> </span>multipy/runtime
 
 <span class="c1"># build runtime</span>
-mkdir build
-<span class="nb">cd</span> build
+mkdir<span class="w"> </span>build
+<span class="nb">cd</span><span class="w"> </span>build
 <span class="c1"># use cmake -DABI_EQUALS_1=ON .. instead if you want ABI=1</span>
-cmake ..
-cmake --build . --config Release
+cmake<span class="w"> </span>..
+cmake<span class="w"> </span>--build<span class="w"> </span>.<span class="w"> </span>--config<span class="w"> </span>Release
 </pre></div>
 </div>
 </section>
@@ -480,9 +480,9 @@ cmake --build . --config Release
 python enviroment has <a class="reference external" href="https://pytorch.org">torch</a>. Afterwards, once
 <code class="docutils literal notranslate"><span class="pre">torch::deploy</span></code> is built, run the following (executed automatically
 for <code class="docutils literal notranslate"><span class="pre">docker</span></code> and <code class="docutils literal notranslate"><span class="pre">pip</span></code> above):</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> multipy/multipy/runtime
-python example/generate_examples.py
-<span class="nb">cd</span> build
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>multipy/multipy/runtime
+python<span class="w"> </span>example/generate_examples.py
+<span class="nb">cd</span><span class="w"> </span>build
 ./test_deploy
 </pre></div>
 </div>

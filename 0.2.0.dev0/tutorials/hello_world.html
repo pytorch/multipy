@@ -329,25 +329,25 @@ without using <code class="docutils literal notranslate"><span class="pre">torch
 <code class="docutils literal notranslate"><span class="pre">InterpreterSession</span></code>, and use it to print <code class="docutils literal notranslate"><span class="pre">Hello</span> <span class="pre">World</span></code> directly.</p>
 <section id="printing-hello-world-with-torch-deploy">
 <h2>Printing Hello World with <code class="docutils literal notranslate"><span class="pre">torch::deploy</span></code><a class="headerlink" href="#printing-hello-world-with-torch-deploy" title="Permalink to this heading">¶</a></h2>
-<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;multipy/runtime/deploy.h&gt;</span><span class="cp"></span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;multipy/runtime/path_environment.h&gt;</span><span class="cp"></span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;torch/script.h&gt;</span><span class="cp"></span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;torch/torch.h&gt;</span><span class="cp"></span>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;multipy/runtime/deploy.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;multipy/runtime/path_environment.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;torch/script.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;torch/torch.h&gt;</span>
 
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span><span class="cp"></span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;memory&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;memory&gt;</span>
 
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">argv</span><span class="p">[])</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">argv</span><span class="p">[])</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="c1">// create two interpreters</span>
-<span class="w">  </span><span class="n">multipy</span><span class="o">::</span><span class="n">runtime</span><span class="o">::</span><span class="n">InterpreterManager</span><span class="w"> </span><span class="n">manager</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span><span class="w"></span>
+<span class="w">  </span><span class="n">multipy</span><span class="o">::</span><span class="n">runtime</span><span class="o">::</span><span class="n">InterpreterManager</span><span class="w"> </span><span class="n">manager</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
 
 <span class="w">  </span><span class="c1">// Acquire a session on one of the interpreters</span>
-<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">I</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">manager</span><span class="p">.</span><span class="n">acquireOne</span><span class="p">();</span><span class="w"></span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">I</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">manager</span><span class="p">.</span><span class="n">acquireOne</span><span class="p">();</span>
 
 <span class="w">  </span><span class="c1">// from builtins import print</span>
 <span class="w">  </span><span class="c1">// print(&quot;Hello world!&quot;)</span>
-<span class="w">  </span><span class="n">I</span><span class="p">.</span><span class="n">global</span><span class="p">(</span><span class="s">&quot;builtins&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;print&quot;</span><span class="p">)({</span><span class="s">&quot;Hello world!&quot;</span><span class="p">});</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="w">  </span><span class="n">I</span><span class="p">.</span><span class="n">global</span><span class="p">(</span><span class="s">&quot;builtins&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;print&quot;</span><span class="p">)({</span><span class="s">&quot;Hello world!&quot;</span><span class="p">});</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 <p>Here we introduce the pythonic nature of <code class="docutils literal notranslate"><span class="pre">torch::deploy</span></code>’s
@@ -392,10 +392,10 @@ look like:</p>
 </pre></div>
 </div>
 <p>From here we execute the hello world program</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mkdir build
-<span class="nb">cd</span> build
-cmake -S . -B build/ -DMULTIPY_PATH<span class="o">=</span><span class="s2">&quot;&lt;Path to Multipy Library&gt;&quot;</span> -DPython3_EXECUTABLE<span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>which python3<span class="k">)</span><span class="s2">&quot;</span> <span class="o">&amp;&amp;</span> <span class="se">\</span>
-cmake --build build/ --config Release -j
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mkdir<span class="w"> </span>build
+<span class="nb">cd</span><span class="w"> </span>build
+cmake<span class="w"> </span>-S<span class="w"> </span>.<span class="w"> </span>-B<span class="w"> </span>build/<span class="w"> </span>-DMULTIPY_PATH<span class="o">=</span><span class="s2">&quot;&lt;Path to Multipy Library&gt;&quot;</span><span class="w"> </span>-DPython3_EXECUTABLE<span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>which<span class="w"> </span>python3<span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
+cmake<span class="w"> </span>--build<span class="w"> </span>build/<span class="w"> </span>--config<span class="w"> </span>Release<span class="w"> </span>-j
 ./hello_world
 </pre></div>
 </div>
