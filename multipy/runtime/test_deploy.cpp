@@ -88,6 +88,10 @@ TEST(TorchpyTest, SimpleModel) {
   compare_torchpy_jit(path("SIMPLE", simple), path("SIMPLE_JIT", simple_jit));
 }
 
+TEST(TorchpyTest, DynamoTest) {
+
+}
+
 #ifdef FBCODE_CAFFE2
 TEST(TorchpyTest, LoadTextAndBinary) {
   torch::deploy::InterpreterManager manager(1);
