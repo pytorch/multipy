@@ -9,6 +9,7 @@ import unittest
 import torch
 import torch._dynamo
 
+
 class TestCompat(unittest.TestCase):
     def test_torchvision(self):
         import torchvision  # noqa: F401
@@ -57,6 +58,7 @@ class TestCompat(unittest.TestCase):
 
         c_fn = torch.compile(fn)
         c_fn(torch.randn(10), torch.randn(10))
+
 
 if __name__ == "__main__":
     unittest.main()
