@@ -6,7 +6,6 @@
 
 #include <ATen/Parallel.h>
 #include <gtest/gtest.h>
-#include <libgen.h>
 #include <cstring>
 
 #include <c10/util/irange.h>
