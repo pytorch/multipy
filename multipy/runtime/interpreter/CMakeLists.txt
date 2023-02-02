@@ -101,9 +101,9 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 endif()
 
 target_include_directories(torch_deployinterpreter PRIVATE ${INTERPRETER_DIR})
-target_include_directories(torch_deployinterpreter BEFORE PUBLIC ${Python3_INCLUDE_DIRS})
+target_include_directories(torch_deployinterpreter BEFORE PUBLIC  "-Wl,--no-as-needed -rdynamic" ${Python3_INCLUDE_DIRS})
 
 target_link_libraries(torch_deployinterpreter PRIVATE fmt::fmt-header-only)
 target_link_libraries(torch_deployinterpreter PRIVATE gtest)
-target_link_libraries(torch_deployinterpreter PRIVATE torch_python)
+target_link_libraries(torch_deployinterpreter PRIVATE  "-Wl,--no-as-needed -rdynamic -Wno-undef" torch_python)
 target_link_libraries(torch_deployinterpreter PRIVATE multipy_torch)
