@@ -179,6 +179,7 @@ except ModuleNotFoundError:
   _v.git_version = 'fake'
   _v.hip = None
 
+sys.using_multipy_interpreter = True
 
 if torch.cuda.is_available():
   torch.zeros(1).cuda() # force cuda init...
