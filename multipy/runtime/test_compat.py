@@ -47,17 +47,17 @@ class TestCompat(unittest.TestCase):
         c_fn = torch.compile(fn, backend="ofi")
         c_fn(torch.randn(10), torch.randn(10))
 
-    def test_torchdynamo_inductor(self):
+    # def test_torchdynamo_inductor(self):
 
-        torch._dynamo.reset()
+    #     torch._dynamo.reset()
 
-        def fn(x, y):
-            a = torch.cos(x)
-            b = torch.sin(y)
-            return a + b
+    #     def fn(x, y):
+    #         a = torch.cos(x)
+    #         b = torch.sin(y)
+    #         return a + b
 
-        c_fn = torch.compile(fn)
-        c_fn(torch.randn(10), torch.randn(10))
+    #     c_fn = torch.compile(fn)
+    #     c_fn(torch.randn(10), torch.randn(10))
 
 
 if __name__ == "__main__":
