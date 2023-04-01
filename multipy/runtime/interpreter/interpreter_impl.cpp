@@ -131,8 +131,16 @@ import importlib.abc
 import linecache
 from zipfile import ZipFile
 
+class DummyMultiPyModule:
+    def __getattr__(self, key):
+        return self
+
+    def __call__(self, *args, **kwargs):
+        return self
+
 # Disable Python library registration since it's not compatible with multipy.
-sys.modules["torch._meta_registrations"] = object
+sys.modules["torch._meta_registrations"] = DummyMultiPyModule()
+sys.modules["torch._decomp"] = DummyMultiPyModule()
 
 class RegisterModuleImporter(importlib.abc.InspectLoader):
     def __init__(self, find_module_source):
@@ -166,6 +174,8 @@ class RegisterModuleImporter(importlib.abc.InspectLoader):
 # print(f"modules: {sys.modules}", file=sys.stderr)
 
 import torch # has to be done serially otherwise things will segfault
+torch._decomp = DummyMultiPyModule()
+
 import multipy.utils
 try:
   import torch.version # for some reason torch doesn't import this and cuda fails?
