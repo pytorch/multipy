@@ -46,8 +46,8 @@ jobs:
         conda install -y -c conda-forge libpython-static=${python_version}
         echo "conda install -y mkl-include pyyaml numpy ipython"
         conda install -y mkl mkl-include pyyaml numpy ipython
-        echo "conda install -y pytorch torchvision torchaudio cpuonly -c pytorch"
-        conda install -y pytorch torchvision torchaudio cpuonly -c pytorch
+        echo "conda install -y pytorch torchaudio cpuonly -c pytorch"
+        conda install -y pytorch torchaudio cpuonly -c pytorch
         conda clean -ya;
         echo "::endgroup::"
 
