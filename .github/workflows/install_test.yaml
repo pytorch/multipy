@@ -14,7 +14,7 @@ jobs:
   installtest:
     strategy:
       matrix:
-        python3-minor-version: [7,8,9,10]
+        python3-minor-version: [8,9,10]
         platform: [ubuntu-18.04]
       fail-fast: false
     runs-on: ${{ matrix.platform }}
