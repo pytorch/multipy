@@ -40,24 +40,15 @@ jobs:
         echo "::endgroup::"
 
         echo "::group::Setup virtual environment"
-        if [[ ${{ inputs.python3-minor-version }} -gt 7 ]];
-        then
-          conda install -y python=${python_version} mkl mkl-include conda-build pyyaml numpy ipython
-          conda install -y -c conda-forge libpython-static=${python_version}
-          conda install -y pytorch torchvision torchaudio cpuonly -c pytorch
-          conda clean -ya;
-        else
-          conda deactivate
-          pip install virtualenv
-          git clone https://github.com/pyenv/pyenv.git ~/.pyenv
-          export CFLAGS="-fPIC -g"
-          ~/.pyenv/bin/pyenv install --force ${python_version}
-          virtualenv -p ~/.pyenv/versions/$(~/.pyenv/bin/pyenv latest ${python_version})/bin/python3 ~/venvs/multipy
-          source ~/venvs/multipy/bin/activate
-          pip install \
-          torch torchvision torchaudio \
-          --extra-index-url https://download.pytorch.org/whl/cpu;
-        fi
+        echo "conda install -y python=${python_version}"
+        conda install -y python=${python_version}
+        echo "conda install -y -c conda-forge libpython-static=${python_version}"
+        conda install -y -c conda-forge libpython-static=${python_version}
+        echo "conda install -y mkl-include pyyaml numpy ipython"
+        conda install -y mkl mkl-include pyyaml numpy ipython
+        echo "conda install -y pytorch torchaudio cpuonly -c pytorch"
+        conda install -y pytorch torchaudio cpuonly -c pytorch
+        conda clean -ya;
         echo "::endgroup::"
 
         echo "::group::Install"
@@ -94,13 +85,10 @@ jobs:
         ./multipy/runtime/build/deploy_benchmark 2 none jit multipy/runtime/example/generated/resnet
         echo "::endgroup::"
 
-        if [[ ${{ inputs.python3-minor-version }} -gt 7 ]];
-        then
-          echo "::group::Compat test"
-          pip install -r compat-requirements.txt
-          multipy/runtime/build/interactive_embedded_interpreter --pyscript multipy/runtime/test_compat.py
-          echo "::endgroup::";
-        fi
+        echo "::group::Compat test"
+        pip install -r compat-requirements.txt
+        multipy/runtime/build/interactive_embedded_interpreter --pyscript multipy/runtime/test_compat.py
+        echo "::endgroup::";
 
         echo "::group::Test GPU"
         # Separating GPU tests due to issues with py37 and py38: https://github.com/pytorch/multipy/issues/239
