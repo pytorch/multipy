@@ -40,10 +40,12 @@ jobs:
         echo "::endgroup::"
 
         echo "::group::Setup virtual environment"
-        echo "conda install -y python=${python_version} mkl mkl-include pyyaml numpy ipython"
-        conda install -y python=${python_version} mkl mkl-include pyyaml numpy ipython
+        echo "conda install -y python=${python_version}"
+        conda install -y python=${python_version}
         echo "conda install -y -c conda-forge libpython-static=${python_version}"
         conda install -y -c conda-forge libpython-static=${python_version}
+        echo "conda install -y mkl-include pyyaml numpy ipython"
+        conda install -y mkl mkl-include pyyaml numpy ipython
         ehco "conda install -y pytorch torchvision torchaudio cpuonly -c pytorch"
         conda install -y pytorch torchvision torchaudio cpuonly -c pytorch
         conda clean -ya;
