@@ -7,8 +7,8 @@
 #pragma once
 #include <dlfcn.h>
 #include <elf.h>
-#include <multipy/runtime/interpreter/Optional.hpp>
 #include <memory>
+#include <optional>
 
 namespace torch {
 namespace deploy {
@@ -25,10 +25,10 @@ struct TLSIndex {
 
 struct SymbolProvider {
   SymbolProvider() = default;
-  virtual multipy::optional<Elf64_Addr> sym(
+  virtual std::optional<Elf64_Addr> sym(
       const char* name,
       const char* version = nullptr) const = 0;
-  virtual multipy::optional<TLSIndex> tls_sym(const char* name) const = 0;
+  virtual std::optional<TLSIndex> tls_sym(const char* name) const = 0;
   SymbolProvider(const SymbolProvider&) = delete;
   SymbolProvider& operator=(const SymbolProvider&) = delete;
   virtual ~SymbolProvider() = default;

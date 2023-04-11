@@ -59,9 +59,9 @@
 #include <vector>
 // Get PAGE_SIZE and PAGE_MASK.
 #include <sys/user.h>
+#include <optional>
 
 #include <c10/util/irange.h>
-#include <multipy/runtime/interpreter/Optional.hpp>
 
 #include <fmt/format.h>
 #include <multipy/runtime/loader.h>
@@ -312,17 +312,16 @@ struct __attribute__((visibility("hidden"))) SystemLibraryImpl
   SystemLibraryImpl(void* handle, bool steal)
       : handle_(handle), own_handle_(steal && handle != RTLD_DEFAULT) {}
 
-  multipy::optional<Elf64_Addr> sym(
-      const char* name,
-      const char* version = nullptr) const override {
+  std::optional<Elf64_Addr> sym(const char* name, const char* version = nullptr)
+      const override {
     void* r = version ? dlvsym(handle_, name, version) : dlsym(handle_, name);
     if (!r) {
-      return multipy::nullopt;
+      return std::nullopt;
     }
     return (Elf64_Addr)r;
   }
 
-  multipy::optional<TLSIndex> tls_sym(const char* name) const override;
+  std::optional<TLSIndex> tls_sym(const char* name) const override;
 
   ~SystemLibraryImpl() override {
     if (own_handle_) {
@@ -561,11 +560,11 @@ struct ElfDynamicInfo {
     }
   }
 
-  multipy::optional<Elf64_Addr> sym(
+  std::optional<Elf64_Addr> sym(
       const char* name,
       GnuHash* precomputed_hash = nullptr) const {
     if (!gnu_bucket_) {
-      return multipy::nullopt; // no hashtable was loaded
+      return std::nullopt; // no hashtable was loaded
     }
     GnuHash hash_obj = precomputed_hash ? *precomputed_hash : GnuHash(name);
     auto hash = hash_obj.hash;
@@ -578,12 +577,12 @@ struct ElfDynamicInfo {
     const uint32_t h2 = (hash >> gnu_shift2_) % kBloomMaskBits;
 
     if ((1 & (bloom_word >> h1) & (bloom_word >> h2)) != 1) {
-      return multipy::nullopt;
+      return std::nullopt;
     }
 
     uint32_t sym_idx = gnu_bucket_[hash % gnu_nbucket_];
     if (sym_idx == 0) {
-      return multipy::nullopt;
+      return std::nullopt;
     }
 
     uint32_t chain_value = 0;
@@ -601,12 +600,12 @@ struct ElfDynamicInfo {
                 ((ELF64_ST_TYPE(sym->st_info) == STT_TLS) ? 0 : load_bias_);
           }
           // symbol isn't defined
-          return multipy::nullopt;
+          return std::nullopt;
         }
       }
       ++sym_idx;
     } while ((chain_value & 1) == 0);
-    return multipy::nullopt;
+    return std::nullopt;
   }
 };
 
@@ -640,7 +639,7 @@ struct AlreadyLoadedSymTable {
     dyninfo_.initialize_from_dynamic_section(name, dynamic, load_bias, true);
   }
 
-  multipy::optional<Elf64_Addr> sym(const char* name) {
+  std::optional<Elf64_Addr> sym(const char* name) {
     return dyninfo_.sym(name);
   }
 };
@@ -653,8 +652,8 @@ static int iterate_cb(struct dl_phdr_info* info, size_t size, void* data) {
 // with a normal dlsym call. Instead we iterate through all loaded libraries and
 // check their symbol tables for the symbol. The value of the symbol is the TLS
 // offset. When we find the library we also get the module id.
-multipy::optional<TLSIndex> slow_find_tls_symbol_offset(const char* sym_name) {
-  multipy::optional<TLSIndex> result = multipy::nullopt;
+std::optional<TLSIndex> slow_find_tls_symbol_offset(const char* sym_name) {
+  std::optional<TLSIndex> result = std::nullopt;
   std::function<int(struct dl_phdr_info*, size_t)> cb =
       [&](struct dl_phdr_info* info, size_t size) {
         // std::cout << "SEARCHING .. " << info->dlpi_name << "\n";
@@ -677,11 +676,11 @@ multipy::optional<TLSIndex> slow_find_tls_symbol_offset(const char* sym_name) {
   return result;
 }
 
-multipy::optional<TLSIndex> SystemLibraryImpl::tls_sym(const char* name) const {
+std::optional<TLSIndex> SystemLibraryImpl::tls_sym(const char* name) const {
   if (!sym(name)) {
-    return multipy::nullopt; // before we do a bunch of slow lookups to find the
-                             // module_id, check that this even defines the
-                             // symbol
+    return std::nullopt; // before we do a bunch of slow lookups to find the
+                         // module_id, check that this even defines the
+                         // symbol
   }
   if (handle_ == RTLD_DEFAULT) {
     return slow_find_tls_symbol_offset(name);
@@ -703,7 +702,7 @@ multipy::optional<TLSIndex> SystemLibraryImpl::tls_sym(const char* name) const {
         "failed to query dlinfo for module_id");
     return TLSIndex{module_id, *r};
   }
-  return multipy::nullopt;
+  return std::nullopt;
 }
 
 // dlopen does not accept additional search paths as an argument.
@@ -994,7 +993,7 @@ struct __attribute__((visibility("hidden"))) CustomLibraryImpl
         dyninfo_.needed_);
   }
 
-  multipy::optional<Elf64_Addr> lookup_symbol(Elf64_Xword r_info) {
+  std::optional<Elf64_Addr> lookup_symbol(Elf64_Xword r_info) {
     const uint32_t r_type = ELF64_R_TYPE(r_info);
     const uint32_t r_sym = ELF64_R_SYM(r_info);
 
@@ -1058,10 +1057,10 @@ struct __attribute__((visibility("hidden"))) CustomLibraryImpl
           version,
           versym);
     }
-    return multipy::nullopt;
+    return std::nullopt;
   }
 
-  multipy::optional<TLSIndex> tls_lookup_symbol(Elf64_Xword r_info) {
+  std::optional<TLSIndex> tls_lookup_symbol(Elf64_Xword r_info) {
     const uint32_t r_sym = ELF64_R_SYM(r_info);
 
     if (r_sym == 0) {
@@ -1089,7 +1088,7 @@ struct __attribute__((visibility("hidden"))) CustomLibraryImpl
           name_.c_str(),
           sym_name);
     }
-    return multipy::nullopt;
+    return std::nullopt;
   }
 
   void relocate_one(const Elf64_Rela& reloc) {
@@ -1258,20 +1257,19 @@ struct __attribute__((visibility("hidden"))) CustomLibraryImpl
     f(argc_, argv_, environ);
   }
 
-  multipy::optional<Elf64_Addr> sym(
-      const char* name,
-      const char* version = nullptr) const override {
+  std::optional<Elf64_Addr> sym(const char* name, const char* version = nullptr)
+      const override {
     // We ignore version since this is looking up symbols in this file and there
     // should only be one.
     return dyninfo_.sym(name);
   }
 
-  multipy::optional<TLSIndex> tls_sym(const char* name) const override {
+  std::optional<TLSIndex> tls_sym(const char* name) const override {
     auto r = dyninfo_.sym(name);
     if (r) {
       return TLSIndex{module_id(), *r};
     }
-    return multipy::nullopt;
+    return std::nullopt;
   }
 
   void* tls_addr(size_t offset) {

@@ -4,14 +4,14 @@
 // This source code is licensed under the BSD-style license found in the
 // LICENSE file in the root directory of this source tree.
 
+#include <c10/util/irange.h>
 #include <dlfcn.h>
 #include <link.h>
-#include <fstream>
-
-#include <c10/util/irange.h>
 #include <multipy/runtime/Exception.h>
 #include <multipy/runtime/elf_file.h>
-#include <multipy/runtime/interpreter/Optional.hpp>
+
+#include <fstream>
+#include <optional>
 
 namespace torch {
 namespace deploy {
@@ -38,9 +38,9 @@ ElfFile::ElfFile(const char* filename)
   }
 }
 
-multipy::optional<Section> ElfFile::findSection(const char* name) const {
+std::optional<Section> ElfFile::findSection(const char* name) const {
   MULTIPY_CHECK(name != nullptr, "Null name");
-  multipy::optional<Section> found = multipy::nullopt;
+  std::optional<Section> found = std::nullopt;
   for (const auto& section : sections_) {
     if (strcmp(name, section.name) == 0) {
       found = section;
@@ -72,7 +72,7 @@ inline bool exists(const char* name) {
 }
 } // namespace
 
-multipy::optional<Section> searchForSection(const char* name) {
+std::optional<Section> searchForSection(const char* name) {
   {
     ElfFile elfFile("/proc/self/exe");
     auto section = elfFile.findSection(name);
@@ -83,7 +83,7 @@ multipy::optional<Section> searchForSection(const char* name) {
 
   struct context {
     const char* name;
-    multipy::optional<Section> section{};
+    std::optional<Section> section{};
   };
   context ctx;
   ctx.name = name;

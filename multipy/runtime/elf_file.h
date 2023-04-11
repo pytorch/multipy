@@ -8,9 +8,10 @@
 
 #include <elf.h>
 #include <multipy/runtime/Exception.h>
-#include <multipy/runtime/interpreter/Optional.hpp>
 #include <multipy/runtime/mem_file.h>
+
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace torch {
@@ -47,8 +48,8 @@ class ElfFile {
   explicit ElfFile(const char* filename);
 
   /// Finds and return a `Section` with the corresponding `name`.  If nothing is
-  /// found, then a `multipy::nullopt` is returned.
-  multipy::optional<Section> findSection(const char* name) const;
+  /// found, then a `std::nullopt` is returned.
+  std::optional<Section> findSection(const char* name) const;
 
  private:
   Section toSection(Elf64_Shdr* shdr) {
@@ -79,7 +80,7 @@ class ElfFile {
   std::vector<Section> sections_;
 };
 
-multipy::optional<Section> searchForSection(const char* name);
+std::optional<Section> searchForSection(const char* name);
 
 } // namespace deploy
 } // namespace torch

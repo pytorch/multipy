@@ -5,6 +5,8 @@
 // LICENSE file in the root directory of this source tree.
 
 #include <multipy/runtime/loader.h>
+
+#include <cassert>
 #include <iostream>
 #include <sstream>
 #include <vector>
