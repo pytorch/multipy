@@ -11,11 +11,10 @@
 #include <multipy/runtime/noop_environment.h>
 #include <torch/csrc/api/include/torch/imethod.h>
 #include <torch/csrc/jit/serialization/import.h>
-
-#include <multipy/runtime/interpreter/Optional.hpp>
 #include <cassert>
 #include <fstream>
 #include <functional>
+#include <optional>
 #include <string>
 #include <thread>
 #include <vector>
@@ -92,7 +91,7 @@ class TORCH_API Interpreter {
   std::shared_ptr<Environment> env_;
 
   EmbeddedFile interpreterFile_;
-  multipy::optional<EmbeddedFile> torchPluginFile_;
+  std::optional<EmbeddedFile> torchPluginFile_;
 
  public:
   /// Creates an Interpreter which is managed by `manager` and using the

@@ -88,7 +88,6 @@ set(INTERPRETER_LIB_SOURCES
   ${LINKER_SCRIPT}
 )
 add_library(torch_deployinterpreter SHARED ${INTERPRETER_LIB_SOURCES} ${LINKER_SCRIPT})
-
 add_library(multipy_torch SHARED plugin_torch.cpp)
 
 add_dependencies(torch_deployinterpreter libpython_multipy)
@@ -99,7 +98,6 @@ target_link_libraries(torch_deployinterpreter PRIVATE  "-Wl,--no-as-needed -rdyn
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   target_compile_options(torch_deployinterpreter PRIVATE -fno-gnu-unique)
 endif()
-
 target_include_directories(torch_deployinterpreter PRIVATE ${INTERPRETER_DIR})
 target_include_directories(torch_deployinterpreter BEFORE PUBLIC ${Python3_INCLUDE_DIRS})
 

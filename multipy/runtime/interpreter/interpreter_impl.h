@@ -11,7 +11,8 @@
 #include <caffe2/serialize/inline_container.h>
 
 #include <multipy/runtime/Exception.h>
-#include <multipy/runtime/interpreter/Optional.hpp>
+
+#include <optional>
 
 namespace torch {
 namespace deploy {
@@ -157,7 +158,7 @@ struct InterpreterSessionImpl {
 struct InterpreterImpl {
   virtual InterpreterSessionImpl* acquireSession() = 0;
   virtual void setFindModule(
-      std::function<multipy::optional<std::string>(const std::string&)>
+      std::function<std::optional<std::string>(const std::string&)>
           find_module) = 0;
   virtual ~InterpreterImpl() = default; // this will uninitialize python
 };

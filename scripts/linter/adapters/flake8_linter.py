@@ -358,7 +358,7 @@ def main() -> None:
     severities: Dict[str, LintSeverity] = {}
     if args.severity:
         for severity in args.severity:
-            parts = severity.split(":", 1)
+            parts = severity.split(1)
             assert len(parts) == 2, f"invalid severity `{severity}`"
             severities[parts[0]] = LintSeverity(parts[1])
 

@@ -10,6 +10,7 @@
 #include <multipy/runtime/embedded_file.h>
 #include <torch/cuda.h>
 #include <fstream>
+#include <optional>
 
 namespace torch {
 namespace deploy {
@@ -27,10 +28,10 @@ EmbeddedFile::EmbeddedFile(
   const char* payloadStart = nullptr;
   size_t size = 0;
   // payloadSection needs to be kept to ensure the source file is still mapped.
-  multipy::optional<Section> payloadSection;
+  std::optional<Section> payloadSection;
   for (const auto& s : sections) {
     payloadSection = searchForSection(s.sectionName);
-    if (payloadSection != multipy::nullopt) {
+    if (payloadSection != std::nullopt) {
       payloadStart = payloadSection->start;
       customLoader = s.customLoader;
       size = payloadSection->len;
