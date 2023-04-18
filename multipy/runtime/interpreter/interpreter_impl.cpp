@@ -132,6 +132,8 @@ import linecache
 from zipfile import ZipFile
 
 # Disable Python library registration since it's not compatible with multipy.
+# PyTorch depends on this line to detect if it's running under multipy and avoid any dynamic library registration
+# >>DO NOT<< change this line without first coordinating with PyTorch
 sys.modules["torch._meta_registrations"] = object
 
 class RegisterModuleImporter(importlib.abc.InspectLoader):
