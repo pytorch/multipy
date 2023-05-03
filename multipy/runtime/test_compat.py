@@ -59,6 +59,12 @@ class TestCompat(unittest.TestCase):
         c_fn = torch.compile(fn)
         c_fn(torch.randn(10), torch.randn(10))
 
+    def test_functional_collectives(self):
+        with self.assertWarns(Warning):
+            # Functional collectives don't work with torchdeploy
+            # but we want to make sure the import doesn't totally crash
+            import torch.distributed._functional_collectives
+
 
 if __name__ == "__main__":
     unittest.main()
