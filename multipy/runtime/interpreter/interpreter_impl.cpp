@@ -92,17 +92,17 @@ class MultiPySafeRethrow {
         auto code = err.value().attr("code").cast<int>();
         std::exit(code);
       }
-      throw torch::deploy::MultipyEmbeddedException(
+      throw std::runtime_error(
           std::string(file_) + ":" + std::to_string(line_) +
           ": Exception Caught inside torch::deploy embedded library: \n" +
           err.what());
     } catch (std::exception& err) {
-      throw torch::deploy::MultipyEmbeddedException(
+      throw std::runtime_error(
           std::string(file_) + ":" + std::to_string(line_) +
           ": Exception Caught inside torch::deploy embedded library: \n" +
           err.what());
     } catch (...) {
-      throw torch::deploy::MultipyEmbeddedException(
+      throw std::runtime_error(
           std::string(file_) + ":" + std::to_string(line_) +
           ": Unknown Exception Caught inside torch::deploy embedded library");
     }
