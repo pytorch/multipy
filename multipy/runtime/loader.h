@@ -9,6 +9,7 @@
 #include <elf.h>
 #include <memory>
 #include <optional>
+#include <stdexcept>
 
 namespace torch {
 namespace deploy {
