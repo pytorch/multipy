@@ -24,7 +24,7 @@ message(STATUS "CMAKE_BUILD_TYPE - ${CMAKE_BUILD_TYPE}" )
 set(DEPLOY_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 get_filename_component(MULTIPY_DIR ${CMAKE_CURRENT_SOURCE_DIR} DIRECTORY)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fabi-version=11 -fno-lto -fPIC")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-lto -fPIC")
 include(${DEPLOY_DIR}/utils.cmake)
 
 add_subdirectory(interpreter)
