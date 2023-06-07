@@ -19,9 +19,25 @@ if (NOT DEFINED _GLIBCXX_USE_CXX11_ABI)
     message(FATAL_ERROR "Failed to detect ABI version")
   endif()
 endif()
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${_GLIBCXX_USE_CXX11_ABI}")
+string(APPEND CMAKE_CXX_FLAGS " -D_GLIBCXX_USE_CXX11_ABI=${_GLIBCXX_USE_CXX11_ABI}")
 add_definitions(-D_GLIBCXX_USE_CXX11_ABI=${_GLIBCXX_USE_CXX11_ABI})
 message(STATUS "_GLIBCXX_USE_CXX11_ABI - ${_GLIBCXX_USE_CXX11_ABI}")
+
+if (NOT DEFINED _CXX_ABI_VERSION)
+  # infer the ABI setting from the installed version of PyTorch
+  execute_process(
+	  COMMAND python -c "import torch; print(torch._C._PYBIND11_BUILD_ABI[-2:])"
+	  OUTPUT_VARIABLE _CXX_ABI_VERSION
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    RESULT_VARIABLE ret
+  )
+  if(ret EQUAL "1")
+    message(WARNING "Failed to detect ABI version, reseting to 11")
+    set(_CXX_ABI_VERSION 11)
+  endif()
+endif()
+string(APPEND CMAKE_CXX_FLAGS " -fabi-version=${_CXX_ABI_VERSION}")
+message(STATUS "_CXX_ABI_VERSION - ${_CXX_ABI_VERSION}")
 
 set(Python3_FIND_STRATEGY LOCATION)
 
