@@ -195,34 +195,34 @@ command = [
     '@{{PATHSFILE}}'
 ]
 
-# [[linter]]
-# code = 'TABS'
-# include_patterns = ['**']
-# exclude_patterns = [
-#     '.git/**',
-#     '**/build/**',
-#     '**/__pycache__/**',
-#     '**/third_party/**',
-#     'scripts/linter/adapters/**',
-#     'multipy/runtime/example/generated/**',
-#     '.lintrunner.toml',
-#     '.clang-format',
-#     'README.md',
-# ]
-# command = [
-#     'python3',
-#     'scripts/linter/adapters/grep_linter.py',
-#     # @lint-ignore TXT2
-#     '--pattern= ',
-#     '--linter-name=TABS',
-#     '--error-name=saw some tabs',
-#     '--replace-pattern=s/\t/    /',
-#     """--error-description=\
-#         This line has tabs; please replace them with spaces.\
-#     """,
-#     '--',
-#     '@{{PATHSFILE}}'
-# ]
+[[linter]]
+code = 'TABS'
+include_patterns = ['**']
+exclude_patterns = [
+    '.git/**',
+    '**/build/**',
+    '**/__pycache__/**',
+    '**/third_party/**',
+    'scripts/linter/adapters/**',
+    'multipy/runtime/example/generated/**',
+    '.lintrunner.toml',
+    '.clang-format',
+    'README.md',
+]
+command = [
+    'python3',
+    'scripts/linter/adapters/grep_linter.py',
+    # @lint-ignore TXT2
+    '--pattern= ',
+    '--linter-name=TABS',
+    '--error-name=saw some tabs',
+    '--replace-pattern=s/\t/    /',
+    """--error-description=\
+        This line has tabs; please replace them with spaces.\
+    """,
+    '--',
+    '@{{PATHSFILE}}'
+]
 
 [[linter]]
 code = 'INCLUDE'
