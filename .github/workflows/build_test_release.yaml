@@ -48,7 +48,7 @@ jobs:
           conda clean -ya;
         else
           conda deactivate
-          pip install virtualenv
+          pip install virtualenv='20.17.1'
           git clone https://github.com/pyenv/pyenv.git ~/.pyenv
           export CFLAGS="-fPIC -g"
           ~/.pyenv/bin/pyenv install --force ${python_version}
@@ -61,7 +61,7 @@ jobs:
         echo "::endgroup::"
 
         echo "::group::Install"
-        python -m pip install -e . --install-option="--cudatests"
+        BUILD_CUDA_TESTS=1 python -m pip install -e ."
         echo "::endgroup::"
 
         echo "::group::Generate examples"

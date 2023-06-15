@@ -21,7 +21,7 @@ jobs:
     steps:
       - name: Set Python Version
         run: |
-          echo "python-version=3.${{ matrix.python3-minor-version }}" >> $GITHUB_ENV
+          echo "python-version=3.${{ matrix.python3-minor-version }}" >> "$GITHUB_ENV"
       - name: Setup Python ${{ env.python-version }}
         uses: actions/setup-python@v2
         with:
@@ -51,7 +51,7 @@ jobs:
       - name: Set up virtual environment
         run: |
           set -eux
-          pip3 install virtualenv
+          pip3 install virtualenv='20.17.1'
           git clone https://github.com/pyenv/pyenv.git ~/.pyenv
           export CFLAGS="-fPIC -g"
           declare -A py_version_dict
@@ -66,22 +66,22 @@ jobs:
       - name: Install dependencies
         run: |
           set -eux
-          source ~/venvs/multipy/bin/activate
-          pip install -r dev-requirements.txt
+          source "$HOME/venvs/multipy/bin/activate"
+          python -m pip install -r dev-requirements.txt
           pip3 install --pre torch
           deactivate
 
       - name: Run lightweight pip install within virtualenv
         run: |
           set -eux
-          source ~/venvs/multipy/bin/activate
-          pip install -e . --install-option="--cmakeoff"
+          source "$HOME/venvs/multipy/bin/activate"
+          INSTALL_PYTHON_ONLY=1 python -m pip install -e .
           deactivate
 
       - name: Run pip editable install within virtualenv
         run: |
           set -eux
-          source ~/venvs/multipy/bin/activate
+          source "$HOME/venvs/multipy/bin/activate"
           rm -rf multipy/runtime/build*
           pip install -e .
           deactivate
@@ -89,7 +89,7 @@ jobs:
       - name: Run setup.py install within virtualenv
         run: |
           set -eux
-          source ~/venvs/multipy/bin/activate
+          source "$HOME/venvs/multipy/bin/activate"
           python setup.py install
           test -e ~/venvs/multipy/lib/python3.${{ matrix.python3-minor-version }}/site-packages/multipy/runtime/build/libtorch_deploy.a
           deactivate
@@ -97,7 +97,7 @@ jobs:
       - name: Install sdist
         run: |
           set -eux
-          source ~/venvs/multipy/bin/activate
+          source "$HOME/venvs/multipy/bin/activate"
           python setup.py sdist
           pip install dist/*.tar.gz --force-reinstall
           test -e ~/venvs/multipy/lib/python3.${{ matrix.python3-minor-version }}/site-packages/multipy/runtime/build/libtorch_deploy.a
@@ -106,18 +106,18 @@ jobs:
       - name: Install bdist_wheel
         run: |
           set -eux
-          source ~/venvs/multipy/bin/activate
+          source "$HOME/venvs/multipy/bin/activate"
           python setup.py bdist_wheel
           pip install dist/*.whl --force-reinstall
           test -e ~/venvs/multipy/lib/python3.${{ matrix.python3-minor-version }}/site-packages/multipy/runtime/build/libtorch_deploy.a
           deactivate
 
-      - name: Install bdist_wheel with cudatests
+      - name: Install bdist_wheel with cuda tests
         run: |
           set -eux
-          source ~/venvs/multipy/bin/activate
+          source "$HOME/venvs/multipy/bin/activate"
           python setup.py bdist_wheel
-          pip install dist/*.whl --force-reinstall --install-option="--cudatests"
+          BUILD_CUDA_TESTS=1 pip install dist/*.whl --force-reinstall"
           test -e ~/venvs/multipy/lib/python3.${{ matrix.python3-minor-version }}/site-packages/multipy/runtime/build/libtorch_deploy.a
           deactivate
 

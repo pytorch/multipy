@@ -21,6 +21,7 @@
 #include <torch/csrc/DynamicTypes.h>
 #include <torch/csrc/autograd/generated/variable_factories.h>
 #include <torch/csrc/jit/frontend/tracer.h>
+#include <torch/csrc/utils/pybind.h>
 #include <cassert>
 #include <cstdio>
 #include <iostream>
@@ -639,8 +640,10 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
     };
   }
 
-  static py::object
-  call(py::handle object, py::handle args, py::handle kwargs = nullptr) {
+  static py::object call(
+      py::handle object,
+      py::handle args,
+      py::handle kwargs = nullptr) {
     MULTIPY_SAFE_RETHROW {
       PyObject* result = PyObject_Call(object.ptr(), args.ptr(), kwargs.ptr());
       if (!result) {
@@ -674,8 +677,8 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterSessionImpl
   ScopedAcquire acquire_;
 };
 
-torch::deploy::InterpreterSessionImpl*
-ConcreteInterpreterImpl::acquireSession() {
+torch::deploy::InterpreterSessionImpl* ConcreteInterpreterImpl::
+    acquireSession() {
   return new ConcreteInterpreterSessionImpl(this);
 }
 

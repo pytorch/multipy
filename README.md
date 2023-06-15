@@ -140,7 +140,7 @@ The C++ binaries should be available in `/opt/dist`.
 
 Alternatively, one can install only the python modules without invoking `cmake` as follows:
 ```shell
-pip install  -e . --install-option="--cmakeoff"
+INSTALL_PYTHON_ONLY=1 pip install  -e .
 ```
 
 > **NOTE** As of 10/11/2022 the linking of prebuilt static fPIC versions of python downloaded from `conda-forge` can be problematic on certain systems (for example Centos 8), with linker errors like `libpython_multipy.a: error adding symbols: File format not recognized`. This seems to be an issue with `binutils`, and the steps in https://wiki.gentoo.org/wiki/Project:Toolchain/Binutils_2.32_upgrade_notes/elfutils_0.175:_unable_to_initialize_decompress_status_for_section_.debug_info can help. Alternatively, the user can go with the `virtualenv`/`pyenv` flow above.
@@ -164,7 +164,7 @@ cd multipy
 git submodule sync && git submodule update --init --recursive
 
 # install python parts of `torch::deploy` in multipy/multipy/utils
-pip install -e . --install-option="--cmakeoff"
+INSTALL_PYTHON_ONLY=1 pip install -e .
 
 cd multipy/runtime
 

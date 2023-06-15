@@ -5,6 +5,16 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
+
+# Environment variables you are probably interested in:
+#
+# BUILD_CUDA_TESTS=0
+#     Build cuda tests
+#
+# INSTALL_PYTHON_ONLY=0
+#     install only the python parts of multipy
+#
+
 import os
 import os.path
 import re
@@ -16,8 +26,6 @@ from distutils.command.clean import clean
 
 from setuptools import Extension, find_packages, setup
 from setuptools.command.build_ext import build_ext
-from setuptools.command.develop import develop
-from setuptools.command.install import install
 
 
 class MultipyRuntimeExtension(Extension):
@@ -30,34 +38,9 @@ def get_cmake_version():
     return output.splitlines()[0].split()[2]
 
 
-class MultipyRuntimeCmake(object):
-    user_options = [
-        ("cmakeoff", None, None),
-        ("cudatests", None, None),
-    ]
-
-
-class MultipyRuntimeDevelop(MultipyRuntimeCmake, develop):
-    user_options = develop.user_options + MultipyRuntimeCmake.user_options
-
-    def initialize_options(self):
-        develop.initialize_options(self)
-        self.cmakeoff = None
-
-        self.cudatests = None
-
-    def finalize_options(self):
-        develop.finalize_options(self)
-        if self.cmakeoff is not None:
-            self.distribution.get_command_obj("build_ext").cmake_off = True
-        if self.cudatests is not None:
-            self.distribution.get_command_obj("build_ext").cuda_tests_flag = "ON"
-
-
-class MultipyRuntimeBuild(MultipyRuntimeCmake, build_ext):
-    user_options = build_ext.user_options + MultipyRuntimeCmake.user_options
-    cmake_off = False
-    cuda_tests_flag = "OFF"
+class MultipyRuntimeBuild(build_ext):
+    cmake_off = os.environ.get("INSTALL_PYTHON_ONLY", 0)
+    cuda_tests_flag = os.environ.get("BUILD_CUDA_TESTS", 0)
 
     def run(self):
         if self.cmake_off:
@@ -145,44 +128,6 @@ class MultipyRuntimeClean(clean):
         super().run()
 
 
-class MultipyRuntimeInstall(MultipyRuntimeCmake, install):
-    user_options = install.user_options + MultipyRuntimeCmake.user_options
-
-    def initialize_options(self):
-        install.initialize_options(self)
-        self.cmakeoff = None
-        self.cudatests = None
-
-    def finalize_options(self):
-        install.finalize_options(self)
-        if self.cmakeoff is not None:
-            self.distribution.get_command_obj("build_ext").cmake_off = True
-        if self.cudatests is not None:
-            self.distribution.get_command_obj("build_ext").cuda_tests_flag = "ON"
-
-    def run(self):
-        # Setuptools/setup.py on docker image has some interesting behavior, in that the
-        # optional "--cmakeoff" flag gets applied to dependencies specified in
-        # requirements.txt as well (installed using "install-requires" argument of setup()).
-        # Since we obviously don't want things like "pip install numpy --install-option=--cmakeoff",
-        # we install these deps directly in this overridden install command without
-        # spurious options, instead of using "install-requires".
-        base_dir = os.path.abspath(os.path.dirname(__file__))
-        try:
-            reqs_filename = "requirements.txt"
-            subprocess.run(
-                [f"pip install -r {reqs_filename}"],
-                cwd=base_dir,
-                shell=True,
-                check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-            )
-        except subprocess.CalledProcessError as e:
-            raise RuntimeError(e.output.decode("utf-8")) from None
-        install.run(self)
-
-
 ext_modules = [
     MultipyRuntimeExtension("multipy.so"),
 ]
@@ -206,7 +151,7 @@ def get_nightly_version():
 if __name__ == "__main__":
     if sys.version_info < (3, 7):
         sys.exit("python >= 3.7 required for multipy")
-
+    print("hello world")
     name = "torchdeploy"
     NAME_ARG = "--override-name"
     if NAME_ARG in sys.argv:
@@ -214,7 +159,7 @@ if __name__ == "__main__":
         name = sys.argv.pop(idx + 1)
         sys.argv.pop(idx)
     is_nightly = "nightly" in name
-
+    print("sys.argv" + " " + str(sys.argv))
     with open("README.md", encoding="utf8") as f:
         readme = f.read()
 
@@ -230,7 +175,7 @@ if __name__ == "__main__":
         version=version,
         author="MultiPy Devs",
         # TODO: @sahanp create email for MultiPy
-        author_email="sahanp@fb.com",
+        author_email="sahanp@meta.com",
         description="torch::deploy (multipy) is a C++ library that makes it easier to run eager PyTorch models in production by using independent python interpreters to avoid the GIL.",
         long_description=readme,
         long_description_content_type="text/markdown",
@@ -251,8 +196,6 @@ if __name__ == "__main__":
         ext_modules=ext_modules,
         cmdclass={
             "build_ext": MultipyRuntimeBuild,
-            "develop": MultipyRuntimeDevelop,
-            "install": MultipyRuntimeInstall,
             "clean": MultipyRuntimeClean,
         },
         package_data={

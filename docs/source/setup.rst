@@ -132,7 +132,7 @@ Alternatively, one can install only the python modules without invoking
 .. code:: shell
 
    # from base multipy directory
-   pip install  -e . --install-option="--cmakeoff"
+   INSTALL_PYTHON_ONLY=1 pip install  -e .
 
 .. warning::
    As of 10/11/2022 the linking of prebuilt static ``-fPIC``
@@ -164,7 +164,7 @@ Building
 
    cd multipy
    # install python parts of `torch::deploy` in multipy/multipy/utils
-   pip install -e . --install-option="--cmakeoff"
+   INSTALL_PYTHON_ONLY=1 pip install -e .
 
    cd multipy/runtime
 
