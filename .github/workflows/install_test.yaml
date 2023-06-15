@@ -51,7 +51,7 @@ jobs:
       - name: Set up virtual environment
         run: |
           set -eux
-          pip3 install virtualenv='20.17.1'
+          pip3 install virtualenv
           git clone https://github.com/pyenv/pyenv.git ~/.pyenv
           export CFLAGS="-fPIC -g"
           declare -A py_version_dict
