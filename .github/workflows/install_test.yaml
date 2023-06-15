@@ -117,7 +117,7 @@ jobs:
           set -eux
           source "$HOME/venvs/multipy/bin/activate"
           python setup.py bdist_wheel
-          BUILD_CUDA_TESTS=1 pip install dist/*.whl --force-reinstall"
+          BUILD_CUDA_TESTS=1 pip install dist/*.whl "--force-reinstall"
           test -e ~/venvs/multipy/lib/python3.${{ matrix.python3-minor-version }}/site-packages/multipy/runtime/build/libtorch_deploy.a
           deactivate
 

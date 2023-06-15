@@ -151,7 +151,6 @@ def get_nightly_version():
 if __name__ == "__main__":
     if sys.version_info < (3, 7):
         sys.exit("python >= 3.7 required for multipy")
-    print("hello world")
     name = "torchdeploy"
     NAME_ARG = "--override-name"
     if NAME_ARG in sys.argv:
@@ -159,7 +158,6 @@ if __name__ == "__main__":
         name = sys.argv.pop(idx + 1)
         sys.argv.pop(idx)
     is_nightly = "nightly" in name
-    print("sys.argv" + " " + str(sys.argv))
     with open("README.md", encoding="utf8") as f:
         readme = f.read()
 
