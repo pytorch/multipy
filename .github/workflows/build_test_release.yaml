@@ -61,7 +61,7 @@ jobs:
         echo "::endgroup::"
 
         echo "::group::Install"
-        python -m pip install -e . --install-option="--cudatests"
+        BUILD_CUDA_TESTS=1 python -m pip install -e .
         echo "::endgroup::"
 
         echo "::group::Generate examples"

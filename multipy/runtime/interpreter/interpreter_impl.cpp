@@ -21,6 +21,7 @@
 #include <torch/csrc/DynamicTypes.h>
 #include <torch/csrc/autograd/generated/variable_factories.h>
 #include <torch/csrc/jit/frontend/tracer.h>
+#include <torch/csrc/utils/pybind.h>
 #include <cassert>
 #include <cstdio>
 #include <iostream>
