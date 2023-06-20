@@ -156,7 +156,7 @@ class MultiReturn(torch.nn.Module):
         self, t: Tuple[Tensor, Tensor]
     ) -> Tuple[Tuple[Tensor, Tensor], Tuple[Tensor, Tensor]]:
         a, b = t
-        result = ((a.masked_fill_(b, 0.1), b), (torch.ones_like(a), b))
+        result = ((a.masked_fill_(b.to(torch.bool), 0.1), b), (torch.ones_like(a), b))
         return result
 
 
