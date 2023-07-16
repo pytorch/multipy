@@ -11,7 +11,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # multipy currently does not pass pybind11's GIL checks.
 #
-# This usually indicates undefined behavior or a bug within extensions, but we don't have the resources to debug
+# This usually indicates undefined behavior or bugs within extensions, but we don't have the resources to debug
 # this package right now.
 #
 # In the future, someone should find out why this code fails to work when these checks are enabled.
