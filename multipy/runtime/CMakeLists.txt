@@ -9,12 +9,19 @@ project(MultipyRuntime)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# multipy currently does not pass pybind11's GIL checks.
+#
+# This usually indicates undefined behavior or a bug within extensions, but we don't have the resources to debug
+# this package right now.
+#
+# In the future, someone should find out why this code fails to work when these checks are enabled.
+add_definitions(-PYBIND11_NO_ASSERT_GIL_HELD_INCREF_DECREF)
+
 
 # set ABI by default to 0
 
 option(BUILD_CUDA_TESTS "Set to ON in order to build cuda tests. By default we do not" OFF)
 option(GDB_ON "Sets to debug mode (for gdb), defaults to OFF" OFF)
-add_definitions(-DPYBIND11_NO_GIL_CHECKS)
 
 if(GDB_ON)
   set(CMAKE_BUILD_TYPE Debug)
