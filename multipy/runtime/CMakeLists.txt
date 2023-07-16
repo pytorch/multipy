@@ -14,6 +14,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(BUILD_CUDA_TESTS "Set to ON in order to build cuda tests. By default we do not" OFF)
 option(GDB_ON "Sets to debug mode (for gdb), defaults to OFF" OFF)
+add_definitions(-PYBIND11_NO_GIL_CHECKS)
 
 if(GDB_ON)
   set(CMAKE_BUILD_TYPE Debug)
