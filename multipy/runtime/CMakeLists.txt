@@ -15,7 +15,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # this package right now.
 #
 # In the future, someone should find out why this code fails to work when these checks are enabled.
-add_definitions(-PYBIND11_NO_ASSERT_GIL_HELD_INCREF_DECREF)
+add_definitions(-DPYBIND11_NO_ASSERT_GIL_HELD_INCREF_DECREF)
 
 
 # set ABI by default to 0
