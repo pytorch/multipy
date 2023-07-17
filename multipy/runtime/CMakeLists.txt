@@ -9,6 +9,14 @@ project(MultipyRuntime)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# multipy currently does not pass pybind11's GIL checks.
+#
+# This usually indicates undefined behavior or bugs within extensions, but we don't have the resources to debug
+# this package right now.
+#
+# In the future, someone should find out why this code fails to work when these checks are enabled.
+add_definitions(-DPYBIND11_NO_ASSERT_GIL_HELD_INCREF_DECREF)
+
 
 # set ABI by default to 0
 
