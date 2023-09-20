@@ -53,13 +53,11 @@
 #include <cstring>
 #include <functional>
 #include <iostream>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <thread>
 #include <vector>
-// Get PAGE_SIZE and PAGE_MASK.
-#include <sys/user.h>
-#include <optional>
 
 #include <c10/util/irange.h>
 
@@ -154,25 +152,28 @@ std::string stringf(const char* format, Args... args) {
   return result;
 }
 
-#ifndef PAGE_MASK
-// This must match the compiled kernel config settings.
-#ifndef CONFIG_ARM64_PAGE_SHIFT
-#define CONFIG_ARM64_PAGE_SHIFT 12
-#endif
-#define PAGE_SHIFT CONFIG_ARM64_PAGE_SHIFT
-#define PAGE_SIZE (1 << PAGE_SHIFT)
-#define PAGE_MASK (~(PAGE_SIZE - 1))
-#endif
+namespace {
+Elf64_Addr get_page_size() {
+  static Elf64_Addr sPageSize = sysconf(_SC_PAGESIZE);
+  return sPageSize;
+}
 
-// Returns the address of the page containing address 'x'.
-#define PAGE_START(x) ((x)&PAGE_MASK)
+Elf64_Addr get_page_mask() {
+  return ~(get_page_size() - 1);
+}
 
-// Returns the offset of address 'x' in its page.
-#define PAGE_OFFSET(x) ((x) & ~PAGE_MASK)
+Elf64_Addr get_page_start(Elf64_Addr addr) {
+  return addr & get_page_mask();
+}
 
-// Returns the address of the next page after address 'x', unless 'x' is
-// itself at the start of a page.
-#define PAGE_END(x) PAGE_START((x) + (PAGE_SIZE - 1))
+Elf64_Addr get_page_end(Elf64_Addr addr) {
+  return get_page_start(addr) + (get_page_size() - 1);
+}
+
+Elf64_Addr get_page_offset(Elf64_Addr addr) {
+  return addr & ~get_page_mask();
+}
+} // namespace
 
 // from bionic
 // returns the size a shared library will take in memory
@@ -205,8 +206,8 @@ size_t phdr_table_get_load_size(
     min_vaddr = 0;
   }
 
-  min_vaddr = PAGE_START(min_vaddr);
-  max_vaddr = PAGE_END(max_vaddr);
+  min_vaddr = get_page_start(min_vaddr);
+  max_vaddr = get_page_end(max_vaddr);
 
   if (out_min_vaddr != nullptr) {
     *out_min_vaddr = min_vaddr;
@@ -886,8 +887,8 @@ struct __attribute__((visibility("hidden"))) CustomLibraryImpl
         continue;
       }
 
-      Elf64_Addr seg_page_start = PAGE_START(seg_start);
-      Elf64_Addr seg_page_end = PAGE_END(seg_end);
+      Elf64_Addr seg_page_start = get_page_start(seg_start);
+      Elf64_Addr seg_page_end = get_page_end(seg_end);
 
       Elf64_Addr seg_file_end = seg_start + phdr->p_filesz;
 
@@ -895,7 +896,7 @@ struct __attribute__((visibility("hidden"))) CustomLibraryImpl
       Elf64_Addr file_start = phdr->p_offset;
       Elf64_Addr file_end = file_start + phdr->p_filesz;
 
-      Elf64_Addr file_page_start = PAGE_START(file_start);
+      Elf64_Addr file_page_start = get_page_start(file_start);
       Elf64_Addr file_length = file_end - file_page_start;
 
       if (contents_.size() <= 0) {
@@ -941,14 +942,14 @@ struct __attribute__((visibility("hidden"))) CustomLibraryImpl
 
       // if the segment is writable, and does not end on a page boundary,
       // zero-fill it until the page limit.
-      if ((phdr->p_flags & PF_W) != 0 && PAGE_OFFSET(seg_file_end) > 0) {
+      if ((phdr->p_flags & PF_W) != 0 && get_page_offset(seg_file_end) > 0) {
         memset(
             reinterpret_cast<void*>(seg_file_end),
             0,
-            PAGE_SIZE - PAGE_OFFSET(seg_file_end));
+            get_page_size() - get_page_offset(seg_file_end));
       }
 
-      seg_file_end = PAGE_END(seg_file_end);
+      seg_file_end = get_page_end(seg_file_end);
 
       // seg_file_end is now the first page address after the file
       // content. If seg_end is larger, we need to zero anything
