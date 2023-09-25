@@ -1,0 +1,5 @@
+SECTIONS {
+  .data_embedded_interpreter : {
+    */embedded_interpreter_*.a:embedded_interpreter_*.o(.data)
+  }
+} INSERT AFTER .bss
