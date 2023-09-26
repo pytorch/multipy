@@ -511,7 +511,7 @@ TEST(TorchpyTest, TestPyYAML) {
   torch::deploy::InterpreterManager m(2);
   auto I = m.acquireOne();
 
-  auto load = I.global("yaml", "load")({kDocument});
+  auto load = I.global("yaml", "full_load")({kDocument});
   EXPECT_EQ(1, load.attr("__getitem__")({"a"}).toIValue().toInt());
 
   auto dump = I.global("yaml", "dump")({load});
