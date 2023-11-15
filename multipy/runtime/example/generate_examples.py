@@ -88,7 +88,8 @@ parser = argparse.ArgumentParser(description="Generate Examples")
 parser.add_argument("--install_dir", help="Root directory for all output files")
 
 
-if __name__ == "__main__":
+def main() -> None:
+    global p
     args = parser.parse_args()
     if args.install_dir is None:
         p = Path(__file__).parent / "generated"
@@ -150,3 +151,7 @@ if __name__ == "__main__":
         e.mock("iopath.**")
         e.intern("**")
         e.save_pickle("make_trt_module", "model.pkl", make_trt_module)
+
+
+if __name__ == "__main__":
+    main()  # pragma: no cover
