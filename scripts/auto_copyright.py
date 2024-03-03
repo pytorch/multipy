@@ -9,21 +9,25 @@ import os
 import sys
 from typing import List, Tuple
 
-COPYRIGHT_NOTICE_PYTHON: str = """
+COPYRIGHT_NOTICE_PYTHON: str = (
+    """
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 #
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 """.strip()
+)
 
-COPYRIGHT_NOTICE_C: str = """
+COPYRIGHT_NOTICE_C: str = (
+    """
 // Copyright (c) Meta Platforms, Inc. and affiliates.
 // All rights reserved.
 //
 // This source code is licensed under the BSD-style license found in the
 // LICENSE file in the root directory of this source tree.
 """.strip()
+)
 
 
 def get_all_files_with_extension(directories: List[str], extensions: Tuple[str]):

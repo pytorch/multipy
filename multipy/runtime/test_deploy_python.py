@@ -9,6 +9,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+
 # we've taken steps to clear out the embedded python environment,
 # so we have to go searching for real python to figure out where its libraries are installed.
 def python_path(cpath):

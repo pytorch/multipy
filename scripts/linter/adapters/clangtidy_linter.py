@@ -22,6 +22,7 @@ result = subprocess.run(
 PYTORCH_ROOT = result.stdout.decode("utf-8").strip()
 IS_WINDOWS: bool = os.name == "nt"
 
+
 # Returns '/usr/local/include/python<version number>'
 def get_python_include_dir() -> str:
     return gp()["include"]
@@ -149,7 +150,7 @@ def check_file(
         proc = run_command(
             [binary, f"-p={build_dir}", *include_args, filename],
         )
-    except (OSError) as err:
+    except OSError as err:
         return [
             LintMessage(
                 path=filename,
@@ -178,9 +179,12 @@ def check_file(
                 name=match["code"],
                 description=match["message"],
                 line=int(match["line"]),
-                char=int(match["column"])
-                if match["column"] is not None and not match["column"].startswith("-")
-                else None,
+                char=(
+                    int(match["column"])
+                    if match["column"] is not None
+                    and not match["column"].startswith("-")
+                    else None
+                ),
                 code="CLANGTIDY",
                 severity=severities.get(match["severity"], LintSeverity.ERROR),
                 original=None,
@@ -225,11 +229,11 @@ def main() -> None:
 
     logging.basicConfig(
         format="<%(threadName)s:%(levelname)s> %(message)s",
-        level=logging.NOTSET
-        if args.verbose
-        else logging.DEBUG
-        if len(args.filenames) < 1000
-        else logging.INFO,
+        level=(
+            logging.NOTSET
+            if args.verbose
+            else logging.DEBUG if len(args.filenames) < 1000 else logging.INFO
+        ),
         stream=sys.stderr,
     )
 

@@ -1,6 +1,7 @@
 """
 NEWLINE: Checks files to make sure there are no trailing newlines.
 """
+
 import argparse
 import json
 import logging
@@ -145,11 +146,11 @@ if __name__ == "__main__":
 
     logging.basicConfig(
         format="<%(threadName)s:%(levelname)s> %(message)s",
-        level=logging.NOTSET
-        if args.verbose
-        else logging.DEBUG
-        if len(args.filenames) < 1000
-        else logging.INFO,
+        level=(
+            logging.NOTSET
+            if args.verbose
+            else logging.DEBUG if len(args.filenames) < 1000 else logging.INFO
+        ),
         stream=sys.stderr,
     )
 
