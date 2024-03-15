@@ -44,10 +44,12 @@ const std::initializer_list<InterpreterSymbol> pythonInterpreterSymbols = {
      "_binary_libtorch_deployinterpreter_hip_so_end",
      false},
 };
+#ifndef FBCODE_CAFFE2
 const std::initializer_list<ExeSection> multipyTorchSections = {
     {".torch_deploy_payload.multipy_torch", false},
 };
 const std::initializer_list<InterpreterSymbol> multipyTorchSymbols = {};
+#endif
 
 InterpreterManager::InterpreterManager(
     size_t nInterp,
