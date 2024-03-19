@@ -293,7 +293,7 @@ __attribute__((noinline)) void __deploy_register_code() {
   for (i = 0; i < 10; i++) {
     __asm__ volatile("" : "+g"(i) : :);
   }
-};
+}
 
 struct DeployModuleInfo {
   const char* name;
