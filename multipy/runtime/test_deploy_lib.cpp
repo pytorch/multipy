@@ -54,7 +54,7 @@ bool raise_and_catch_exception(bool except) {
       throw MyError("yep");
     }
     return false;
-  } catch (MyError& c) {
+  } catch (MyError&) {
     return true;
   }
 }
