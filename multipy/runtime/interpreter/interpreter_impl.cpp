@@ -680,11 +680,11 @@ ConcreteInterpreterImpl::acquireSession() {
   return new ConcreteInterpreterSessionImpl(this);
 }
 
-extern "C" __attribute__((visibility("default")))
-torch::deploy::InterpreterImpl*
-newInterpreterImpl(
-    const std::vector<std::string>& extra_python_paths,
-    const std::vector<std::string>& plugin_paths) {
+extern "C"
+    __attribute__((visibility("default"))) torch::deploy::InterpreterImpl*
+    newInterpreterImpl(
+        const std::vector<std::string>& extra_python_paths,
+        const std::vector<std::string>& plugin_paths) {
   ConcreteInterpreterImplConstructorCommon(extra_python_paths, plugin_paths);
 
   int r = PyRun_SimpleString(start);

@@ -690,8 +690,7 @@ std::optional<TLSIndex> SystemLibraryImpl::tls_sym(const char* name) const {
   struct link_map* lm = nullptr;
   DEPLOY_CHECK(
       0 == dlinfo(handle_, RTLD_DI_LINKMAP, &lm), "failed to query dlinfo");
-  std::cout << "TLS dlinfo LOOKUP " << lm->l_name << " " << name << " "
-            << "\n";
+  std::cout << "TLS dlinfo LOOKUP " << lm->l_name << " " << name << " " << "\n";
 
   ElfDynamicInfo info;
   info.initialize_from_dynamic_section(lm->l_name, lm->l_ld, lm->l_addr, true);
@@ -873,8 +872,8 @@ struct __attribute__((visibility("hidden"))) CustomLibraryImpl
               eh_frame_hdr_->eh_frame_ptr_enc == 0x1b,
               "unsupported eh_frame_pointer_enc {}",
               eh_frame_hdr_->eh_frame_ptr_enc);
-          eh_frame_ =
-              (void*)((int64_t)&eh_frame_hdr_->eh_frame_ptr + eh_frame_hdr_->eh_frame_ptr);
+          eh_frame_ = (void*)((int64_t)&eh_frame_hdr_->eh_frame_ptr +
+                              eh_frame_hdr_->eh_frame_ptr);
           break;
         case PT_TLS:
           tls_file_size_ = phdr->p_filesz;
