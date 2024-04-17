@@ -172,7 +172,7 @@ inline at::IValue Obj::toIValue() const {
 
 inline Obj Obj::operator()(at::ArrayRef<Obj> args) {
   std::vector<std::shared_ptr<torch::deploy::InterpreterObj>> copy;
-  for (Obj arg : args) {
+  for (const Obj& arg : args) {
     copy.push_back(arg.baseObj_);
   }
   return baseObj_->call(copy);

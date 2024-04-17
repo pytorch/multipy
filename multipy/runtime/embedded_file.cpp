@@ -20,7 +20,7 @@ EmbeddedFile::EmbeddedFile(
     const std::initializer_list<ExeSection>& sections,
     const std::initializer_list<InterpreterSymbol> symbols)
     : libraryName("/tmp/multipy_" + name + "XXXXXX") {
-  int fd = mkstemp(&libraryName[0]);
+  int fd = mkstemp(libraryName.data());
   MULTIPY_INTERNAL_ASSERT(fd != -1, "failed to create temporary file");
   FILE* dst = fdopen(fd, "wb");
   MULTIPY_INTERNAL_ASSERT(dst);

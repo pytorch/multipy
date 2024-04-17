@@ -19,7 +19,7 @@ namespace deploy {
 
 /// A section of an ElfFile.
 struct Section {
-  Section() {}
+  Section() = default;
   explicit Section(
       std::shared_ptr<MemFile> _memfile,
       const char* _name,

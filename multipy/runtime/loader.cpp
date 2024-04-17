@@ -100,10 +100,10 @@ std::vector<std::string> split_path(const std::string& s, char delim) {
     // non-zero amount of chars
     const char* next = strchr(cur, delim);
     if (!next) {
-      result.emplace_back(std::string(cur, end));
+      result.emplace_back(cur, end);
       break;
     }
-    result.emplace_back(std::string(cur, next));
+    result.emplace_back(cur, next);
     cur = next + 1;
   }
   return result;
@@ -114,8 +114,9 @@ void replace_all(
     std::string& str,
     const std::string& from,
     const std::string& to) {
-  if (from.empty())
+  if (from.empty()) {
     return;
+  }
   size_t start_pos = 0;
   while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
     str.replace(start_pos, from.length(), to);
@@ -746,7 +747,7 @@ void resolve_needed_libraries(
       continue;
     }
 
-    std::string library_path = "";
+    std::string library_path;
     // (2) it is an absolute path
     if (strchr(name, '/') != nullptr) {
       library_path = name;
@@ -1247,13 +1248,15 @@ struct __attribute__((visibility("hidden"))) CustomLibraryImpl
     pthread_key_delete(tls_key_);
   }
   void call_function(linker_dtor_function_t f) {
-    if (f == nullptr || (int64_t)f == -1)
+    if (f == nullptr || (int64_t)f == -1) {
       return;
+    }
     f();
   }
   void call_function(linker_ctor_function_t f) {
-    if (f == nullptr || (int64_t)f == -1)
+    if (f == nullptr || (int64_t)f == -1) {
       return;
+    }
     f(argc_, argv_, environ);
   }
 

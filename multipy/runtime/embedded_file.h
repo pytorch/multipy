@@ -29,7 +29,7 @@ struct InterpreterSymbol {
 /// EmbeddedFile makes it easier to load a custom interpreter embedded within
 /// the binary.
 struct EmbeddedFile {
-  std::string libraryName{""};
+  std::string libraryName;
   bool customLoader{false};
 
   EmbeddedFile(

@@ -27,7 +27,7 @@ void loadSearchFile(const char* pathname) {
   CustomLibrary& lib = *search_files_.back();
   lib.add_search_library(SystemLibrary::create(deploy_self));
   lib.add_search_library(SystemLibrary::create());
-  for (auto f : search_files_) {
+  for (const auto& f : search_files_) {
     if (f.get() == &lib) {
       continue;
     }
@@ -58,7 +58,7 @@ extern "C" dl_funcptr _PyImport_FindSharedFuncptr(
   assert(deploy_self);
   lib.add_search_library(SystemLibrary::create(deploy_self));
   lib.add_search_library(SystemLibrary::create());
-  for (auto f : search_files_) {
+  for (const auto& f : search_files_) {
     lib.add_search_library(f);
   }
   lib.load();

@@ -301,7 +301,7 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterObj
     MULTIPY_SAFE_RETHROW {
       py::tuple m_args(args.size());
       size_t i = 0;
-      for (std::shared_ptr<torch::deploy::InterpreterObj> iObj : args) {
+      for (const std::shared_ptr<torch::deploy::InterpreterObj>& iObj : args) {
         std::shared_ptr<ConcreteInterpreterObj> cObj =
             std::dynamic_pointer_cast<ConcreteInterpreterObj>(iObj);
         m_args[i++] = cObj->getPyObject();
@@ -432,7 +432,7 @@ ConcreteInterpreterImplConstructorCommon(
   if (plugin_paths.size() > 0) {
     auto sys_path = global_impl("sys", "path").cast<std::vector<std::string>>();
     std::string libtorch_python_path;
-    for (auto path : sys_path) {
+    for (const auto& path : sys_path) {
       auto file = path + "/torch/lib/libtorch_python.so";
       if (file_exists(file)) {
         libtorch_python_path = file;
@@ -440,7 +440,7 @@ ConcreteInterpreterImplConstructorCommon(
       }
     }
     loadSearchFile(libtorch_python_path.c_str());
-    for (auto path : plugin_paths) {
+    for (const auto& path : plugin_paths) {
       loadSearchFile(path.c_str());
     }
   }
