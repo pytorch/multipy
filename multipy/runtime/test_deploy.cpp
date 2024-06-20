@@ -283,7 +283,7 @@ TEST(TorchpyTest, TaggingRace) {
         try {
           I.fromIValue(t);
           success++;
-        } catch (const std::runtime_error& e) {
+        } catch (const std::runtime_error&) {
           failed++;
         }
       }
