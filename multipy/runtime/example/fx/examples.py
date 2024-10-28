@@ -9,6 +9,7 @@ import torch.fx
 try:
     from .some_dependency import a_non_torch_leaf
 except ImportError:
+    # pyre-fixme[21]: Could not find module `some_dependency`.
     from some_dependency import a_non_torch_leaf
 
 

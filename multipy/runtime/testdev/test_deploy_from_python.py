@@ -6,6 +6,7 @@
 
 import unittest
 
+# pyre-fixme[21]: Could not find module `test_deploy_python_ext`.
 # @manual=//multipy/runtime:test_deploy_python_ext
 import test_deploy_python_ext
 

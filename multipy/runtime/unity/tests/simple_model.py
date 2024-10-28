@@ -5,9 +5,12 @@
 # LICENSE file in the root directory of this source tree.
 
 import torch
+
+# pyre-fixme[21]: Could not find name `nn` in `torch`.
 from torch import nn
 
 
+# pyre-fixme[11]: Annotation `Module` is not defined as a type.
 class SimpleModel(nn.Module):
     def __init__(self):
         super(SimpleModel, self).__init__()

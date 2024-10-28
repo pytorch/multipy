@@ -24,6 +24,7 @@ try:
         Simple,
     )
 except ImportError:
+    # pyre-fixme[21]: Could not find module `examples`.
     from examples import (
         BatchedModel,
         load_library,
@@ -36,11 +37,13 @@ except ImportError:
 try:
     from .fx.examples import SimpleWithLeaf
 except ImportError:
+    # pyre-fixme[21]: Could not find module `fx.examples`.
     from fx.examples import SimpleWithLeaf
 
 try:
     from .tensorrt_example import make_trt_module
 except ImportError:
+    # pyre-fixme[21]: Could not find module `tensorrt_example`.
     from tensorrt_example import make_trt_module
 
 
@@ -92,6 +95,7 @@ def main() -> None:
     global p
     args = parser.parse_args()
     if args.install_dir is None:
+        # pyre-fixme[10]: Name `p` is used but not defined.
         p = Path(__file__).parent / "generated"
         p.mkdir(exist_ok=True)
     else:
