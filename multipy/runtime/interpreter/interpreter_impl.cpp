@@ -360,7 +360,6 @@ struct __attribute__((visibility("hidden"))) ConcreteInterpreterObj
 
   torch::deploy::Obj attr(const char* attribute) override {
     MULTIPY_SAFE_RETHROW {
-      bool a = hasattr(attribute);
       py::object pyObj = getPyObject().attr(attribute);
       std::shared_ptr<ConcreteInterpreterObj> cObj =
           std::make_shared<ConcreteInterpreterObj>(pyObj, owningSession_);
