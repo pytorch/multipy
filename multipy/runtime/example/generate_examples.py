@@ -7,6 +7,7 @@
 """
 Generate the example files that torchpy_test uses.
 """
+
 import argparse
 from pathlib import Path
 

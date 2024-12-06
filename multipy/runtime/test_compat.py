@@ -24,7 +24,6 @@ class TestCompat(unittest.TestCase):
         import tokenizers  # noqa: F401
 
     def test_torchdynamo_eager(self):
-
         torch._dynamo.reset()
 
         def fn(x, y):
@@ -36,7 +35,6 @@ class TestCompat(unittest.TestCase):
         c_fn(torch.randn(10), torch.randn(10))
 
     def test_torchdynamo_ofi(self):
-
         torch._dynamo.reset()
 
         def fn(x, y):
@@ -48,7 +46,6 @@ class TestCompat(unittest.TestCase):
         c_fn(torch.randn(10), torch.randn(10))
 
     def test_torchdynamo_inductor(self):
-
         torch._dynamo.reset()
 
         def fn(x, y):
