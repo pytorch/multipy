@@ -1165,10 +1165,9 @@ struct __attribute__((visibility("hidden"))) CustomLibraryImpl
         DEPLOY_ERROR(
             "R_AARCH64_TLSDESC is not supported yet -- recompile with -mtls-dialect=trad. "
             "https://github.com/pytorch/multipy/issues/64");
-      } break;
+      }
       default:
         DEPLOY_ERROR("unknown reloc type {} in \"{}\"", r_type, name_.c_str());
-        break;
     }
   }
 
