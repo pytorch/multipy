@@ -8,7 +8,6 @@
 #include <pybind11/pybind11.h>
 #include <cstdint>
 #include <cstdio>
-#include <iostream>
 
 bool run() {
   torch::deploy::InterpreterManager m(2);

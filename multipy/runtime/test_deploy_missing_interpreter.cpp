@@ -6,7 +6,6 @@
 
 #include <gtest/gtest.h>
 #include <multipy/runtime/deploy.h>
-#include <torch/torch.h>
 
 int main(int argc, char* argv[]) {
   ::testing::InitGoogleTest(&argc, argv);
