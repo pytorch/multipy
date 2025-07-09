@@ -3,6 +3,12 @@
 
 # `torch::deploy` (MultiPy)
 
+> [!CAUTION]
+> MultiPy has been unmaintained for some time and is going to be archived soon. We recommend
+> users to look at the new [Free Threaded CPython](https://docs.python.org/3/howto/free-threading-python.html) version available starting with CPthon 3.13 as a long term solution to enable efficient multi-threading inference in CPython.
+> For users looking to serve LLMs on server, we recommend higher level solutions such as [vLLM](https://docs.vllm.ai/en/latest/) as a good alternative.
+
+
 `torch::deploy` (MultiPy for non-PyTorch use cases) is a C++ library that enables you to run eager mode PyTorch models in production without any modifications to your model to support tracing. `torch::deploy` provides a way to run using multiple independent Python interpreters in a single process without a shared global interpreter lock (GIL). For more information on how `torch::deploy` works
 internally, please see the related [arXiv paper](https://arxiv.org/pdf/2104.00254.pdf).
 
